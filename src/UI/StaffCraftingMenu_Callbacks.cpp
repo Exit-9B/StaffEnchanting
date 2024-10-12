@@ -30,7 +30,8 @@ namespace UI
 		const auto index = a_params[0].GetNumber();
 		const auto menu = static_cast<StaffCraftingMenu*>(a_params.GetHandler());
 
-		if (menu->hasHighlight = index >= 0) {
+		menu->hasHighlight = index >= 0;
+		if (index >= 0) {
 			auto pos = static_cast<std::uint32_t>(index);
 			pos = std::min(pos, menu->listEntries.size() - 1);
 			if (pos != menu->highlightIndex) {

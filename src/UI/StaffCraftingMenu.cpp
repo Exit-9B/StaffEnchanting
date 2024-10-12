@@ -18,7 +18,7 @@ namespace UI
 		const auto scaleformManager = RE::BSScaleformManager::GetSingleton();
 		assert(scaleformManager);
 		// TODO: change to bespoke staff crafting menu
-		const bool movieLoaded = scaleformManager->LoadMovie(this, uiMovie, "CraftingMenu");
+		[[maybe_unused]] const bool movieLoaded = scaleformManager->LoadMovie(this, uiMovie, "CraftingMenu");
 		assert(movieLoaded);
 		assert(uiMovie);
 
