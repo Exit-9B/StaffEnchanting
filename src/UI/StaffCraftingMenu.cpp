@@ -381,5 +381,19 @@ namespace UI
 				a_entry->selected = true;
 			}
 		}
+		else if (a_entry->filterFlag == FilterFlag::Morpholith) {
+			const auto itemEntry = static_cast<ItemEntry*>(a_entry.get());
+			if (morpholith.get() == itemEntry) {
+				morpholith = nullptr;
+				a_entry->selected = false;
+			}
+			else {
+				if (morpholith) {
+					morpholith->selected = false;
+				}
+				morpholith.reset(itemEntry);
+				a_entry->selected = true;
+			}
+		}
 	}
 }
