@@ -176,14 +176,14 @@ namespace UI
 		uiMovie->CreateObject(&staff);
 		staff.SetMember("Name", selected.staff ? selected.staff->GetName() : "Staff");
 		staff.SetMember("RequiredCount", 1);
-		staff.SetMember("PlayerCount", selected.staff != nullptr);
+		staff.SetMember("PlayerCount", selected.staff ? 1 : 0);
 		ingredients.PushBack(staff);
 
 		RE::GFxValue spell;
 		uiMovie->CreateObject(&spell);
 		spell.SetMember("Name", selected.spell ? selected.spell->GetName() : "Spell");
 		spell.SetMember("RequiredCount", 1);
-		spell.SetMember("PlayerCount", selected.spell != nullptr);
+		spell.SetMember("PlayerCount", selected.spell ? 1 : 0);
 		ingredients.PushBack(spell);
 
 		RE::GFxValue morpholith;
@@ -192,7 +192,7 @@ namespace UI
 			"Name",
 			selected.morpholith ? selected.morpholith->GetName() : "Morpholith");
 		morpholith.SetMember("RequiredCount", 1);
-		morpholith.SetMember("PlayerCount", selected.morpholith != nullptr);
+		morpholith.SetMember("PlayerCount", selected.morpholith ? 1 : 0);
 		ingredients.PushBack(morpholith);
 
 		menu.Invoke(
