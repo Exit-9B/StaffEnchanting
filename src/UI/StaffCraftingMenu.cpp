@@ -61,19 +61,40 @@ namespace UI
 		const auto playerRef = RE::PlayerCharacter::GetSingleton();
 		assert(playerRef);
 
+		const auto dataHandler = RE::TESDataHandler::GetSingleton();
+		const auto idx_StaffEnchanting = dataHandler
+			? dataHandler->GetModIndex("StaffEnchanting.esp"sv)
+			: std::nullopt;
+		RE::FormID morpholithKwd = idx_StaffEnchanting ?
+			(*idx_StaffEnchanting << 24) | 0x800 : 0x0;
+
 		auto inventory = playerRef->GetInventory(
-			[](RE::TESBoundObject& baseObj) -> bool
+			[&morpholithKwd](RE::TESBoundObject& baseObj) -> bool
 			{
 				if (const auto weap = baseObj.As<RE::TESObjectWEAP>()) {
 					return weap->IsStaff();
+				}
+				else if (morpholithKwd != 0) {
+					auto keywordForm = baseObj.As<RE::BGSKeywordForm>();
+					return keywordForm ?
+						keywordForm->HasKeyword(morpholithKwd) : false;
 				}
 				return false;
 			});
 
 		for (auto& [baseObj, extra] : inventory) {
 			auto& [count, entry] = extra;
-			listEntries.push_back(RE::BSTSmartPointer(
-				RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Staff)));
+			if (baseObj->IsWeapon()) {
+				listEntries.push_back(RE::BSTSmartPointer(
+					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Staff)));
+			}
+			else if (const auto keywordForm = baseObj->As<RE::BGSKeywordForm>()) {
+				if (!keywordForm->HasKeyword(morpholithKwd))
+					continue;
+
+				listEntries.push_back(RE::BSTSmartPointer(
+					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Morpholith)));
+			}
 		}
 
 		const auto playerBase = playerRef->GetActorBase();
