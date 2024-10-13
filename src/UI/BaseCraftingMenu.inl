@@ -1,0 +1,322 @@
+#include "BaseCraftingMenu.h"
+
+#include "RE/Misc.h"
+
+namespace UI
+{
+	template <typename Impl>
+	BaseCraftingMenu<Impl>::BaseCraftingMenu(const char* a_movieFrame) : movieFrame{ a_movieFrame }
+	{
+		menuFlags = {
+			RE::UI_MENU_FLAGS::kDontHideCursorWhenTopmost,
+			RE::UI_MENU_FLAGS::kInventoryItemMenu,
+			RE::UI_MENU_FLAGS::kUpdateUsesCursor,
+			RE::UI_MENU_FLAGS::kDisablePauseMenu,
+			RE::UI_MENU_FLAGS::kUsesMenuContext
+		};
+		const auto scaleformManager = RE::BSScaleformManager::GetSingleton();
+		assert(scaleformManager);
+		[[maybe_unused]] const bool
+			movieLoaded = scaleformManager->LoadMovie(this, uiMovie, GetImpl()->GetMoviePath());
+		assert(movieLoaded);
+		assert(uiMovie);
+
+		const auto controlMap = RE::ControlMap::GetSingleton();
+		assert(controlMap);
+		controlMap->StoreControls();
+		controlMap->ToggleControls(RE::UserEvents::USER_EVENT_FLAG::kVATS, false, false);
+		controlMap->ToggleControls(RE::UserEvents::USER_EVENT_FLAG::kLooking, false, false);
+		controlMap->ToggleControls(RE::UserEvents::USER_EVENT_FLAG::kPOVSwitch, false, false);
+		controlMap->ToggleControls(RE::UserEvents::USER_EVENT_FLAG::kWheelZoom, false, false);
+
+		const auto uiBlurManager = RE::UIBlurManager::GetSingleton();
+		assert(uiBlurManager);
+		uiBlurManager->IncrementBlurCount();
+	}
+
+	template <typename Impl>
+	BaseCraftingMenu<Impl>::~BaseCraftingMenu()
+	{
+		const auto controlMap = RE::ControlMap::GetSingleton();
+		assert(controlMap);
+		controlMap->LoadStoredControls();
+
+		const auto uiBlurManager = RE::UIBlurManager::GetSingleton();
+		assert(uiBlurManager);
+		uiBlurManager->DecrementBlurCount();
+
+		itemCard.reset();
+		bottomBar.reset();
+
+		const auto inventory3D = RE::Inventory3DManager::GetSingleton();
+		assert(inventory3D);
+		if (inventory3D->state) {
+			inventory3D->End3D();
+		}
+
+		const auto eventSource = RE::ScriptEventSourceHolder::GetSingleton();
+		assert(eventSource);
+		eventSource->RemoveEventSink(this);
+	}
+
+	template <typename Impl>
+	void BaseCraftingMenu<Impl>::Accept(CallbackProcessor* a_processor)
+	{
+		Impl::RegisterFuncs(a_processor);
+	}
+
+	template <typename Impl>
+	RE::UI_MESSAGE_RESULTS BaseCraftingMenu<Impl>::ProcessMessage(RE::UIMessage& a_message)
+	{
+		RE::UI_MESSAGE_RESULTS result = RE::UI_MESSAGE_RESULTS::kHandled;
+
+		switch (a_message.type.get()) {
+		case RE::UI_MESSAGE_TYPE::kUpdate:
+			Update(static_cast<RE::BSUIMessageData*>(a_message.data));
+			break;
+
+		case RE::UI_MESSAGE_TYPE::kShow:
+			Show();
+			break;
+
+		case RE::UI_MESSAGE_TYPE::kUserEvent:
+			UserEvent(static_cast<RE::BSUIMessageData*>(a_message.data));
+			break;
+
+		case RE::UI_MESSAGE_TYPE::kInventoryUpdate:
+			InventoryUpdate(static_cast<RE::InventoryUpdateData*>(a_message.data));
+			break;
+
+		default:
+			result = RE::IMenu::ProcessMessage(a_message);
+			break;
+		}
+
+		return result;
+	}
+
+	template <typename Impl>
+	void BaseCraftingMenu<Impl>::Update(const RE::BSUIMessageData* a_data)
+	{
+		if (!a_data) {
+			return;
+		}
+
+		const auto& ev = a_data->fixedStr;
+		if (ev != "VirtualKeyboardCancelled"sv && ev != "VirtualKeyboardDone"sv) {
+			return;
+		}
+
+		// TODO: virtual keyboard events
+	}
+
+	template <typename Impl>
+	void BaseCraftingMenu<Impl>::Show()
+	{
+#if 0
+		RE::TESObjectREFRPtr furnitureRef;
+		const auto playerRef = RE::PlayerCharacter::GetSingleton();
+		if (playerRef && playerRef->currentProcess) {
+			furnitureRef = playerRef->currentProcess->GetOccupiedFurniture().get();
+		}
+		const auto furnitureObj = furnitureRef ? furnitureRef->GetBaseObject() : nullptr;
+		furniture = furnitureObj ? furnitureObj->As<RE::TESFurniture>() : nullptr;
+#endif
+
+		// Common crafting setup
+		assert(uiMovie);
+		uiMovie->GetVariable(&menu, "Menu");
+		menu.Invoke("gotoAndStop", std::to_array<RE::GFxValue>({ movieFrame }));
+		menu.Invoke("Initialize");
+
+		uiMovie->GetVariable(&itemList, "Menu.ItemList");
+		uiMovie->GetVariable(&itemInfo, "Menu.ItemInfo");
+		uiMovie->GetVariable(&bottomBarInfo, "Menu.BottomBarInfo");
+		uiMovie->GetVariable(&additionalDescription, "Menu.AdditionalDescription");
+		uiMovie->GetVariable(&menuName, "Menu.MenuName");
+		uiMovie->GetVariable(&buttonText, "Menu.ButtonText");
+
+		itemCard = std::make_unique<RE::ItemCard>(uiMovie.get());
+		bottomBar = std::make_unique<RE::BottomBar>(uiMovie.get());
+
+		if (buttonText.IsArray()) {
+			buttonText.SetElement(0, *"sSelect"_gs);
+			buttonText.SetElement(1, *"sExit"_gs);
+			buttonText.SetElement(3, *"sCraft"_gs);
+		}
+
+		menu.Invoke("UpdateButtonText");
+		const auto inventory3D = RE::Inventory3DManager::GetSingleton();
+		assert(inventory3D);
+		inventory3D->Begin3D(1);
+
+		const auto eventSource = RE::ScriptEventSourceHolder::GetSingleton();
+		assert(eventSource);
+		eventSource->AddEventSink(this);
+
+		GetImpl()->Init();
+	}
+
+	template <typename Impl>
+	void BaseCraftingMenu<Impl>::ExitCraftingWorkbench()
+	{
+		const auto uiMessageQueue = RE::UIMessageQueue::GetSingleton();
+		assert(uiMessageQueue);
+		uiMessageQueue->AddMessage(Impl::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+
+		const auto playerRef = RE::PlayerCharacter::GetSingleton();
+		assert(playerRef);
+		assert(playerRef->currentProcess);
+		const auto furnitureRef = playerRef->currentProcess->GetOccupiedFurniture().get();
+		if (!furnitureRef || RE::GetFurnitureMarkerNode(furnitureRef->Get3D())) {
+			if (playerRef->actorState1.sitSleepState == RE::SIT_SLEEP_STATE::kIsSitting) {
+				playerRef->InitiateGetUpPackage();
+			}
+		}
+		else {
+			RE::ClearFurniture(playerRef->currentProcess);
+		}
+	}
+
+	template <typename Impl>
+	void BaseCraftingMenu<Impl>::UserEvent(const RE::BSUIMessageData* a_data)
+	{
+		assert(a_data);
+		const RE::BSFixedString& userEvent = a_data->fixedStr;
+
+		const auto userEvents = RE::UserEvents::GetSingleton();
+		assert(userEvents);
+		if (userEvent == userEvents->cancel) {
+			if (!GetImpl()->ProcessUserEvent(userEvent)) {
+				ExitCraftingWorkbench();
+			}
+		}
+		else {
+			GetImpl()->ProcessUserEvent(userEvent);
+		}
+	}
+
+	template <typename Impl>
+	void BaseCraftingMenu<Impl>::InventoryUpdate(
+		[[maybe_unused]] const RE::InventoryUpdateData* a_data)
+	{
+#if 0
+		assert(a_data);
+		const auto handle = a_data->unk10;
+		static const REL::Relocation<RE::RefHandle*> playerHandle{ REL::ID(403520) };
+		if (handle && handle == *playerHandle && !a_data->unk18) {
+			;
+		}
+#endif
+	}
+
+	template <typename Impl>
+	void BaseCraftingMenu<Impl>::PostDisplay()
+	{
+		const auto inventory3D = RE::Inventory3DManager::GetSingleton();
+		assert(inventory3D);
+
+		if (GetImpl()->RenderItem3DOnTop()) {
+			uiMovie->Display();
+			inventory3D->Render();
+		}
+		else {
+			inventory3D->Render();
+			uiMovie->Display();
+		}
+	}
+
+	template <typename Impl>
+	RE::BSEventNotifyControl BaseCraftingMenu<Impl>::ProcessEvent(
+		const RE::TESFurnitureEvent* a_event,
+		[[maybe_unused]] RE::BSTEventSource<RE::TESFurnitureEvent>* a_eventSource)
+	{
+		using enum RE::BSEventNotifyControl;
+		assert(a_event);
+		assert(a_event->actor);
+		if (a_event->type == RE::TESFurnitureEvent::FurnitureEventType::kExit &&
+			a_event->actor->IsPlayerRef()) {
+			const auto uiMessageQueue = RE::UIMessageQueue::GetSingleton();
+			assert(uiMessageQueue);
+			uiMessageQueue->AddMessage(Impl::MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
+		}
+
+		return kContinue;
+	}
+
+	template <typename Impl>
+	void BaseCraftingMenu<Impl>::SetMenuDescription(const char* a_description)
+	{
+		RE::GFxValue menuDescription;
+		if (menu.GetMember("MenuDescription", &menuDescription)) {
+			menuDescription.SetMember("text", a_description);
+		}
+	}
+
+	template <typename Impl>
+	void BaseCraftingMenu<Impl>::UpdateItemCard(const RE::InventoryEntryData* a_item)
+	{
+		if (!itemInfo.IsObject()) {
+			return;
+		}
+
+		auto& obj = itemCard->obj;
+		if (a_item) {
+			itemCard->SetItem(a_item, false);
+		}
+		else {
+			obj.SetMember("type", nullptr);
+		}
+
+		if (!showItemCardName && obj.HasMember("name")) {
+			obj.DeleteMember("name");
+		}
+
+		itemInfo.SetMember("itemInfo", obj);
+	}
+
+	template <typename Impl>
+	void BaseCraftingMenu<Impl>::UpdateItemCard(const RE::TESForm* a_form)
+	{
+		if (!itemInfo.IsObject()) {
+			return;
+		}
+
+		auto& obj = itemCard->obj;
+		if (a_form) {
+			itemCard->SetForm(a_form);
+		}
+		else {
+			obj.SetMember("type", nullptr);
+		}
+
+		if (!showItemCardName && obj.HasMember("name")) {
+			obj.DeleteMember("name");
+		}
+
+		itemInfo.SetMember("itemInfo", obj);
+	}
+
+	template <typename Impl>
+	void BaseCraftingMenu<Impl>::UpdateBottomBar(RE::ActorValue a_skill)
+	{
+		if (bottomBarInfo.IsObject()) {
+			const auto playerRef = RE::PlayerCharacter::GetSingleton();
+			assert(playerRef);
+			const auto playerSkills = playerRef->skills;
+			assert(playerSkills);
+			assert(playerSkills->data);
+			const auto&
+				skillData = playerSkills->data->skills[SKSE::stl::to_underlying(a_skill) - 6];
+			const float xp = skillData.xp;
+			const float levelThreshold = skillData.levelThreshold;
+
+			bottomBarInfo.Invoke(
+				"UpdateCraftingInfo",
+				std::to_array<RE::GFxValue>(
+					{ RE::GetActorValueName(a_skill),
+					  playerRef->GetActorValue(a_skill),
+					  (xp / levelThreshold) * 100.0 }));
+		}
+	}
+}

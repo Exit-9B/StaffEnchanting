@@ -1,14 +1,13 @@
-#include "StaffCraftingMenu_Callbacks.h"
 #include "StaffCraftingMenu.h"
 
 namespace UI
 {
-	void StaffCraftingMenu_Callbacks::Register(CallbackProcessor* a_processor)
+	void StaffCraftingMenu::RegisterFuncs(CallbackProcessor* a_processor)
 	{
-		a_processor->Process("SetSelectedItem", &SetSelectedItem);
-		a_processor->Process("SetSelectedCategory", &SetSelectedCategory);
-		a_processor->Process("ChooseItem", &ChooseItem);
-		a_processor->Process("ShowItem3D", &ShowItem3D);
+		a_processor->Process("SetSelectedItem", &StaffCraftingMenu::SetSelectedItem);
+		a_processor->Process("SetSelectedCategory", &StaffCraftingMenu::SetSelectedCategory);
+		a_processor->Process("ChooseItem", &StaffCraftingMenu::ChooseItem);
+		a_processor->Process("ShowItem3D", &StaffCraftingMenu::ShowItem3D);
 		// TODO: figure out which callback functions need to be here
 		// CanFadeItemInfo
 		// EndItemRename
@@ -21,7 +20,7 @@ namespace UI
 		// AuxButtonPress
 	}
 
-	void StaffCraftingMenu_Callbacks::SetSelectedItem(const RE::FxDelegateArgs& a_params)
+	void StaffCraftingMenu::SetSelectedItem(const RE::FxDelegateArgs& a_params)
 	{
 		if (a_params.GetArgCount() < 1) {
 			return;
@@ -43,7 +42,7 @@ namespace UI
 		menu->UpdateInterface();
 	}
 
-	void StaffCraftingMenu_Callbacks::SetSelectedCategory(const RE::FxDelegateArgs& a_params)
+	void StaffCraftingMenu::SetSelectedCategory(const RE::FxDelegateArgs& a_params)
 	{
 		if (a_params.GetArgCount() < 1) {
 			return;
@@ -52,7 +51,7 @@ namespace UI
 		// TODO: see 51419
 	}
 
-	void StaffCraftingMenu_Callbacks::ChooseItem(const RE::FxDelegateArgs& a_params)
+	void StaffCraftingMenu::ChooseItem(const RE::FxDelegateArgs& a_params)
 	{
 		if (a_params.GetArgCount() < 1) {
 			return;
@@ -64,7 +63,7 @@ namespace UI
 		menu->ChooseItem(static_cast<std::uint32_t>(index));
 	}
 
-	void StaffCraftingMenu_Callbacks::ShowItem3D(const RE::FxDelegateArgs& a_params)
+	void StaffCraftingMenu::ShowItem3D(const RE::FxDelegateArgs& a_params)
 	{
 		if (a_params.GetArgCount() < 1) {
 			return;

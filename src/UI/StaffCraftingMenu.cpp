@@ -1,156 +1,12 @@
 #include "StaffCraftingMenu.h"
-#include "StaffCraftingMenu_Callbacks.h"
 
 #include "RE/Misc.h"
 #include "RE/Offset.h"
 
 namespace UI
 {
-	StaffCraftingMenu::StaffCraftingMenu()
+	void StaffCraftingMenu::Init()
 	{
-		menuFlags = {
-			RE::UI_MENU_FLAGS::kDontHideCursorWhenTopmost,
-			RE::UI_MENU_FLAGS::kInventoryItemMenu,
-			RE::UI_MENU_FLAGS::kUpdateUsesCursor,
-			RE::UI_MENU_FLAGS::kDisablePauseMenu,
-			RE::UI_MENU_FLAGS::kUsesMenuContext
-		};
-		const auto scaleformManager = RE::BSScaleformManager::GetSingleton();
-		assert(scaleformManager);
-		// TODO: change to bespoke staff crafting menu
-		[[maybe_unused]] const bool movieLoaded = scaleformManager->LoadMovie(this, uiMovie, "CraftingMenu");
-		assert(movieLoaded);
-		assert(uiMovie);
-
-		const auto controlMap = RE::ControlMap::GetSingleton();
-		assert(controlMap);
-		controlMap->StoreControls();
-		controlMap->ToggleControls(RE::UserEvents::USER_EVENT_FLAG::kVATS, false, false);
-		controlMap->ToggleControls(RE::UserEvents::USER_EVENT_FLAG::kLooking, false, false);
-		controlMap->ToggleControls(RE::UserEvents::USER_EVENT_FLAG::kPOVSwitch, false, false);
-		controlMap->ToggleControls(RE::UserEvents::USER_EVENT_FLAG::kWheelZoom, false, false);
-
-		const auto uiBlurManager = RE::UIBlurManager::GetSingleton();
-		assert(uiBlurManager);
-		uiBlurManager->IncrementBlurCount();
-	}
-
-	StaffCraftingMenu::~StaffCraftingMenu()
-	{
-		const auto controlMap = RE::ControlMap::GetSingleton();
-		assert(controlMap);
-		controlMap->LoadStoredControls();
-
-		const auto uiBlurManager = RE::UIBlurManager::GetSingleton();
-		assert(uiBlurManager);
-		uiBlurManager->DecrementBlurCount();
-
-		itemCard.reset();
-		bottomBar.reset();
-
-		const auto inventory3D = RE::Inventory3DManager::GetSingleton();
-		assert(inventory3D);
-		if (inventory3D->state) {
-			inventory3D->End3D();
-		}
-
-		const auto eventSource = RE::ScriptEventSourceHolder::GetSingleton();
-		assert(eventSource);
-		eventSource->RemoveEventSink(this);
-	}
-
-	void StaffCraftingMenu::Accept(CallbackProcessor* a_processor)
-	{
-		StaffCraftingMenu_Callbacks::Register(a_processor);
-	}
-
-	RE::UI_MESSAGE_RESULTS StaffCraftingMenu::ProcessMessage(RE::UIMessage& a_message)
-	{
-		RE::UI_MESSAGE_RESULTS result = RE::UI_MESSAGE_RESULTS::kHandled;
-
-		switch (a_message.type.get()) {
-		case RE::UI_MESSAGE_TYPE::kUpdate:
-			Update(static_cast<RE::BSUIMessageData*>(a_message.data), result);
-			break;
-
-		case RE::UI_MESSAGE_TYPE::kShow:
-			Show(result);
-			break;
-
-		case RE::UI_MESSAGE_TYPE::kUserEvent:
-			UserEvent(static_cast<RE::BSUIMessageData*>(a_message.data), result);
-			break;
-
-		case RE::UI_MESSAGE_TYPE::kInventoryUpdate:
-			InventoryUpdate(static_cast<RE::InventoryUpdateData*>(a_message.data), result);
-			break;
-
-		default:
-			result = RE::IMenu::ProcessMessage(a_message);
-			break;
-		}
-
-		return result;
-	}
-
-	void StaffCraftingMenu::Update(
-		const RE::BSUIMessageData* a_data,
-		[[maybe_unused]] RE::UI_MESSAGE_RESULTS& a_result)
-	{
-		if (!a_data) {
-			return;
-		}
-
-		const auto& ev = a_data->fixedStr;
-		if (ev != "VirtualKeyboardCancelled"sv && ev != "VirtualKeyboardDone"sv) {
-			return;
-		}
-
-		// TODO: virtual keyboard events
-	}
-
-	void StaffCraftingMenu::Show([[maybe_unused]] RE::UI_MESSAGE_RESULTS& a_result)
-	{
-		RE::TESObjectREFRPtr furnitureRef;
-		const auto playerRef = RE::PlayerCharacter::GetSingleton();
-		if (playerRef && playerRef->currentProcess) {
-			furnitureRef = playerRef->currentProcess->GetOccupiedFurniture().get();
-		}
-		const auto furnitureObj = furnitureRef ? furnitureRef->GetBaseObject() : nullptr;
-		furniture = furnitureObj ? furnitureObj->As<RE::TESFurniture>() : nullptr;
-
-		// Common crafting setup
-		assert(uiMovie);
-		uiMovie->GetVariable(&menu, "Menu");
-		menu.Invoke("gotoAndStop", std::to_array<RE::GFxValue>({ "EnchantConstruct" }));
-		menu.Invoke("Initialize");
-
-		uiMovie->GetVariable(&itemList, "Menu.ItemList");
-		uiMovie->GetVariable(&itemInfo, "Menu.ItemInfo");
-		uiMovie->GetVariable(&bottomBarInfo, "Menu.BottomBarInfo");
-		uiMovie->GetVariable(&additionalDescription, "Menu.AdditionalDescription");
-		uiMovie->GetVariable(&menuName, "Menu.MenuName");
-		uiMovie->GetVariable(&buttonText, "Menu.ButtonText");
-
-		itemCard = std::make_unique<RE::ItemCard>(uiMovie.get());
-		bottomBar = std::make_unique<RE::BottomBar>(uiMovie.get());
-
-		if (buttonText.IsArray()) {
-			buttonText.SetElement(0, *"sSelect"_gs);
-			buttonText.SetElement(1, *"sExit"_gs);
-			buttonText.SetElement(3, *"sCraft"_gs);
-		}
-
-		menu.Invoke("UpdateButtonText");
-		const auto inventory3D = RE::Inventory3DManager::GetSingleton();
-		assert(inventory3D);
-		inventory3D->Begin3D(1);
-
-		const auto eventSource = RE::ScriptEventSourceHolder::GetSingleton();
-		assert(eventSource);
-		eventSource->AddEventSink(this);
-
-		// Workbench-specific setup
 		// TODO: localization
 		SetMenuDescription(
 			"Staff Enchanting: Combine a Staff, Spell, and Morpholith to create magic staves");
@@ -195,7 +51,7 @@ namespace UI
 		}
 
 		UpdateInterface();
-		UpdateBottomBar();
+		UpdateBottomBar(RE::ActorValue::kEnchanting);
 	}
 
 	void StaffCraftingMenu::PopulateEntryList()
@@ -301,48 +157,6 @@ namespace UI
 		UpdateInterface();
 	}
 
-	void StaffCraftingMenu::UpdateItemCard(const RE::InventoryEntryData* a_item)
-	{
-		if (!itemInfo.IsObject()) {
-			return;
-		}
-
-		auto& obj = itemCard->obj;
-		if (a_item) {
-			itemCard->SetItem(a_item, false);
-		}
-		else {
-			obj.SetMember("type", nullptr);
-		}
-
-		if (!showItemCardName && obj.HasMember("name")) {
-			obj.DeleteMember("name");
-		}
-
-		itemInfo.SetMember("itemInfo", obj);
-	}
-
-	void StaffCraftingMenu::UpdateItemCard(const RE::TESForm* a_form)
-	{
-		if (!itemInfo.IsObject()) {
-			return;
-		}
-
-		auto& obj = itemCard->obj;
-		if (a_form) {
-			itemCard->SetForm(a_form);
-		}
-		else {
-			obj.SetMember("type", nullptr);
-		}
-
-		if (!showItemCardName && obj.HasMember("name")) {
-			obj.DeleteMember("name");
-		}
-
-		itemInfo.SetMember("itemInfo", obj);
-	}
-
 	void StaffCraftingMenu::UpdateEnabledEntries(std::uint32_t a_flags, bool a_fullRebuild)
 	{
 		(void)a_flags;
@@ -413,45 +227,16 @@ namespace UI
 		}
 	}
 
-	void StaffCraftingMenu::UpdateBottomBar()
+	bool StaffCraftingMenu::ProcessUserEvent(const RE::BSFixedString& a_userEvent)
 	{
-		if (bottomBarInfo.IsObject()) {
-			const auto playerRef = RE::PlayerCharacter::GetSingleton();
-			assert(playerRef);
-			const auto playerSkills = playerRef->skills;
-			assert(playerSkills);
-			assert(playerSkills->data);
-			const auto& skillData =
-				playerSkills->data
-					->skills[RE::PlayerCharacter::PlayerSkills::Data::Skill::kEnchanting];
-			const float xp = skillData.xp;
-			const float levelThreshold = skillData.levelThreshold;
-
-			bottomBarInfo.Invoke(
-				"UpdateCraftingInfo",
-				std::to_array<RE::GFxValue>(
-					{ RE::GetActorValueName(RE::ActorValue::kEnchanting),
-					  playerRef->GetActorValue(RE::ActorValue::kEnchanting),
-					  (xp / levelThreshold) * 100.0 }));
-		}
-	}
-
-	void StaffCraftingMenu::UserEvent(
-		const RE::BSUIMessageData* a_data,
-		[[maybe_unused]] RE::UI_MESSAGE_RESULTS& a_result)
-	{
-		assert(a_data);
-		const RE::BSFixedString& userEvent = a_data->fixedStr;
-
 		// TBD: magnitude slider
 
 		const auto userEvents = RE::UserEvents::GetSingleton();
 		assert(userEvents);
-		if (userEvent == userEvents->cancel) {
+		if (a_userEvent == userEvents->cancel) {
 			// TODO: skip confirmation if nothing selected
 			if (exiting) {
-				ExitCraftingWorkbench();
-				return;
+				return false;
 			}
 
 			const auto msgBoxData = new RE::MessageBoxData();
@@ -496,80 +281,23 @@ namespace UI
 
 			msgBoxData->QueueMessage();
 			exiting = true;
-			a_result = RE::UI_MESSAGE_RESULTS::kHandled;
+			return true;
 		}
-		else if (userEvent == userEvents->xButton) {
+		else if (a_userEvent == userEvents->xButton) {
 			// TODO: craft
+			return true;
 		}
-		else if (userEvent == userEvents->yButton) {
+		else if (a_userEvent == userEvents->yButton) {
 			// TODO: edit name
+			return true;
 		}
+
+		return false;
 	}
 
-	void StaffCraftingMenu::ExitCraftingWorkbench()
+	bool StaffCraftingMenu::RenderItem3DOnTop() const
 	{
-		const auto uiMessageQueue = RE::UIMessageQueue::GetSingleton();
-		assert(uiMessageQueue);
-		uiMessageQueue->AddMessage(MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-
-		const auto playerRef = RE::PlayerCharacter::GetSingleton();
-		assert(playerRef);
-		assert(playerRef->currentProcess);
-		const auto furnitureRef = playerRef->currentProcess->GetOccupiedFurniture().get();
-		if (!furnitureRef || RE::GetFurnitureMarkerNode(furnitureRef->Get3D())) {
-			if (playerRef->actorState1.sitSleepState == RE::SIT_SLEEP_STATE::kIsSitting) {
-				playerRef->InitiateGetUpPackage();
-			}
-		}
-		else {
-			RE::ClearFurniture(playerRef->currentProcess);
-		}
-	}
-
-	void StaffCraftingMenu::InventoryUpdate(
-		[[maybe_unused]] const RE::InventoryUpdateData* a_data,
-		[[maybe_unused]] RE::UI_MESSAGE_RESULTS& a_result)
-	{
-#if 0
-		assert(a_data);
-		const auto handle = a_data->unk10;
-		static const REL::Relocation<RE::RefHandle*> playerHandle{ REL::ID(403520) };
-		if (handle && handle == *playerHandle && !a_data->unk18) {
-			;
-		}
-#endif
-	}
-
-	void StaffCraftingMenu::PostDisplay()
-	{
-		const auto inventory3D = RE::Inventory3DManager::GetSingleton();
-		assert(inventory3D);
-
-		if (currentCategory != Category::Spell || craftItemPreview) {
-			uiMovie->Display();
-			inventory3D->Render();
-		}
-		else {
-			inventory3D->Render();
-			uiMovie->Display();
-		}
-	}
-
-	RE::BSEventNotifyControl StaffCraftingMenu::ProcessEvent(
-		const RE::TESFurnitureEvent* a_event,
-		[[maybe_unused]] RE::BSTEventSource<RE::TESFurnitureEvent>* a_eventSource)
-	{
-		using enum RE::BSEventNotifyControl;
-		assert(a_event);
-		assert(a_event->actor);
-		if (a_event->type == RE::TESFurnitureEvent::FurnitureEventType::kExit &&
-			a_event->actor->IsPlayerRef()) {
-			const auto uiMessageQueue = RE::UIMessageQueue::GetSingleton();
-			assert(uiMessageQueue);
-			uiMessageQueue->AddMessage(MENU_NAME, RE::UI_MESSAGE_TYPE::kHide, nullptr);
-		}
-
-		return kContinue;
+		return currentCategory != Category::Spell || craftItemPreview;
 	}
 
 	void StaffCraftingMenu::ChooseItem(std::uint32_t a_index)
@@ -582,76 +310,5 @@ namespace UI
 		RE::PlaySound(entry->selected ? "UISelectOff" : "UISelectOn");
 
 		// TODO: see 51344
-	}
-
-	void StaffCraftingMenu::CategoryListEntry::SetupEntryObject(RE::GFxValue& a_entryObj) const
-	{
-		a_entryObj.SetMember("filterFlag", filterFlag);
-		a_entryObj.SetMember("enabled", enabled);
-		a_entryObj.SetMember("equipState", selected ? 1 : 0);
-		SetupEntryObjectByType(a_entryObj);
-	}
-
-	void StaffCraftingMenu::ItemEntry::ShowInItemCard(StaffCraftingMenu* a_menu) const
-	{
-		a_menu->UpdateItemCard(data.get());
-	}
-
-	void StaffCraftingMenu::ItemEntry::ShowItem3D(bool a_show) const
-	{
-		const auto inventory3D = RE::Inventory3DManager::GetSingleton();
-		assert(inventory3D);
-		if (a_show) {
-			inventory3D->UpdateItem3D(data.get());
-		}
-		else {
-			inventory3D->Clear3D();
-		}
-	}
-
-	const char* StaffCraftingMenu::ItemEntry::GetName() const
-	{
-		return data ? data->GetDisplayName() : "";
-	}
-
-	void StaffCraftingMenu::ItemEntry::SetupEntryObjectByType(RE::GFxValue& a_entryObj) const
-	{
-		a_entryObj.SetMember("text", GetName());
-		a_entryObj.SetMember("count", data->countDelta);
-	}
-
-	void StaffCraftingMenu::SpellEntry::ShowInItemCard(StaffCraftingMenu* a_menu) const
-	{
-		a_menu->UpdateItemCard(data);
-	}
-
-	void StaffCraftingMenu::SpellEntry::ShowItem3D(bool a_show) const
-	{
-		const auto inventory3D = RE::Inventory3DManager::GetSingleton();
-		assert(inventory3D);
-		if (a_show && data) {
-			inventory3D->UpdateMagic3D(const_cast<RE::SpellItem*>(data), 0);
-		}
-		else {
-			inventory3D->Clear3D();
-		}
-	}
-
-	const char* StaffCraftingMenu::SpellEntry::GetName() const
-	{
-		return data ? data->GetFullName() : "";
-	}
-
-	void StaffCraftingMenu::SpellEntry::SetupEntryObjectByType(RE::GFxValue& a_entryObj) const
-	{
-		a_entryObj.SetMember("text", GetName());
-	}
-
-	void StaffCraftingMenu::SetMenuDescription(const char* a_description)
-	{
-		RE::GFxValue menuDescription;
-		if (menu.GetMember("MenuDescription", &menuDescription)) {
-			menuDescription.SetMember("text", a_description);
-		}
 	}
 }
