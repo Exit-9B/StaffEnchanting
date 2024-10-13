@@ -61,19 +61,34 @@ namespace UI
 		const auto playerRef = RE::PlayerCharacter::GetSingleton();
 		assert(playerRef);
 
+		const auto dataHandler = RE::TESDataHandler::GetSingleton();
+		const auto idx_dragonrborn = dataHandler
+			? dataHandler->GetModIndex("Dragonborn.esm"sv)
+			: std::nullopt;
+		const RE::FormID heartstoneID = idx_dragonrborn ? (*idx_dragonrborn << 24) | 0x17749 : 0x0;
+
 		auto inventory = playerRef->GetInventory(
-			[](RE::TESBoundObject& baseObj) -> bool
+			[heartstoneID](RE::TESBoundObject& baseObj) -> bool
 			{
 				if (const auto weap = baseObj.As<RE::TESObjectWEAP>()) {
 					return weap->IsStaff();
 				}
-				return false;
+				return baseObj.formID == heartstoneID;
 			});
 
 		for (auto& [baseObj, extra] : inventory) {
 			auto& [count, entry] = extra;
-			listEntries.push_back(RE::BSTSmartPointer(
-				RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Staff)));
+			if (baseObj->IsWeapon()) {
+				listEntries.push_back(RE::BSTSmartPointer(
+					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Staff)));
+			}
+			else if (const auto keywordForm = baseObj->As<RE::BGSKeywordForm>()) {
+				if (baseObj->formID != heartstoneID)
+					continue;
+
+				listEntries.push_back(RE::BSTSmartPointer(
+					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Morpholith)));
+			}
 		}
 
 		const auto playerBase = playerRef->GetActorBase();
@@ -357,6 +372,20 @@ namespace UI
 					staff->selected = false;
 				}
 				staff.reset(itemEntry);
+				a_entry->selected = true;
+			}
+		}
+		else if (a_entry->filterFlag == FilterFlag::Morpholith) {
+			const auto itemEntry = static_cast<ItemEntry*>(a_entry.get());
+			if (morpholith.get() == itemEntry) {
+				morpholith = nullptr;
+				a_entry->selected = false;
+			}
+			else {
+				if (morpholith) {
+					morpholith->selected = false;
+				}
+				morpholith.reset(itemEntry);
 				a_entry->selected = true;
 			}
 		}

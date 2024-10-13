@@ -82,7 +82,8 @@ namespace UI
 			void Toggle(const RE::BSTSmartPointer<CategoryListEntry>& a_entry);
 
 			// members
-			RE::BSTSmartPointer<ItemEntry> staff;
+			RE::BSTSmartPointer<ItemEntry>  staff;
+			RE::BSTSmartPointer<ItemEntry>  morpholith;
 			RE::BSTSmartPointer<SpellEntry> spell;
 		};
 
