@@ -75,13 +75,15 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 	Hooks::Workbench::Install();
 
 	const auto messaging = SKSE::GetMessagingInterface();
-	messaging->RegisterListener([](SKSE::MessagingInterface::Message* msg) {
-		switch (msg->type) {
-		case SKSE::MessagingInterface::kDataLoaded:
-			UI::StaffCraftingMenu::Register();
-			break;
-		}
-	});
+	messaging->RegisterListener(
+		[](SKSE::MessagingInterface::Message* msg)
+		{
+			switch (msg->type) {
+			case SKSE::MessagingInterface::kDataLoaded:
+				UI::StaffCraftingMenu::Register();
+				break;
+			}
+		});
 
 	return true;
 }
