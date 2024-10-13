@@ -65,10 +65,10 @@ namespace UI
 		const auto idx_dragonrborn = dataHandler
 			? dataHandler->GetModIndex("Dragonborn.esm"sv)
 			: std::nullopt;
-		RE::FormID heartstoneID = idx_dragonrborn ? (*idx_dragonrborn << 24) | 0x17749 : 0x0;
+		const RE::FormID heartstoneID = idx_dragonrborn ? (*idx_dragonrborn << 24) | 0x17749 : 0x0;
 
 		auto inventory = playerRef->GetInventory(
-			[&heartstoneID](RE::TESBoundObject& baseObj) -> bool
+			[heartstoneID](RE::TESBoundObject& baseObj) -> bool
 			{
 				if (const auto weap = baseObj.As<RE::TESObjectWEAP>()) {
 					return weap->IsStaff();
