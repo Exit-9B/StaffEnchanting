@@ -112,27 +112,12 @@ namespace UI
 	void StaffCraftingMenu::ClearEntryList()
 	{
 		listEntries.clear();
-		DeselectAll();
+		selected.Clear();
 		UpdateItemPreview(nullptr);
 		UpdateEnabledEntries();
 		UpdateAdditionalDescription();
 		UpdateItemList(listEntries, false);
 		// createEffectFunctor.ClearEffects();
-	}
-
-	void StaffCraftingMenu::DeselectAll()
-	{
-		if (selectedItem) {
-			selectedItem->selected = false;
-		}
-
-		selectedItem.reset();
-
-		if (selectedSpell) {
-			selectedSpell->selected = false;
-		}
-
-		selectedSpell.reset();
 	}
 
 	void StaffCraftingMenu::UpdateItemPreview(std::unique_ptr<RE::InventoryEntryData> a_item)
@@ -310,5 +295,70 @@ namespace UI
 		RE::PlaySound(entry->selected ? "UISelectOff" : "UISelectOn");
 
 		// TODO: see 51344
+		if (entry->filterFlag != FilterFlag::Recipe) {
+			if (CanSelectEntry(a_index, true)) {
+				selected.Toggle(entry);
+				// TODO: update preview, enchantment, and charge amount
+				UpdateItemList(listEntries, false);
+				UpdateAdditionalDescription();
+				// TBD: slider
+			}
+		}
+	}
+
+	bool StaffCraftingMenu::CanSelectEntry(std::uint32_t a_index, bool a_showNotification)
+	{
+		(void)a_index;
+		(void)a_showNotification;
+		// TODO
+		return true;
+	}
+
+	void StaffCraftingMenu::Selection::Clear()
+	{
+		if (staff) {
+			staff->selected = false;
+		}
+
+		staff.reset();
+
+		if (spell) {
+			spell->selected = false;
+		}
+
+		spell.reset();
+	}
+
+	void StaffCraftingMenu::Selection::Toggle(
+		const RE::BSTSmartPointer<CategoryListEntry>& a_entry)
+	{
+		if (a_entry->filterFlag == FilterFlag::Spell) {
+			const auto spellEntry = static_cast<SpellEntry*>(a_entry.get());
+			if (spell.get() == spellEntry) {
+				spell = nullptr;
+				a_entry->selected = false;
+			}
+			else {
+				if (spell) {
+					spell->selected = false;
+				}
+				spell.reset(spellEntry);
+				a_entry->selected = true;
+			}
+		}
+		else if (a_entry->filterFlag == FilterFlag::Staff) {
+			const auto itemEntry = static_cast<ItemEntry*>(a_entry.get());
+			if (staff.get() == itemEntry) {
+				staff = nullptr;
+				a_entry->selected = false;
+			}
+			else {
+				if (staff) {
+					staff->selected = false;
+				}
+				staff.reset(itemEntry);
+				a_entry->selected = true;
+			}
+		}
 	}
 }

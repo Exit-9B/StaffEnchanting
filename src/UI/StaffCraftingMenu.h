@@ -16,6 +16,7 @@ namespace UI
 			Staff = 0x1,
 			Spell = 0x2,
 			Morpholith = 0x4,
+			Recipe = 0x8,
 
 			All = 0x7F,
 		};
@@ -55,8 +56,7 @@ namespace UI
 		static void ShowItem3D(const RE::FxDelegateArgs& a_params);
 
 		void ChooseItem(std::uint32_t a_index);
-
-		void DeselectAll();
+		bool CanSelectEntry(std::uint32_t a_index, bool a_showNotification = false);
 
 		void UpdateItemPreview(std::unique_ptr<RE::InventoryEntryData> a_item);
 		void UpdateEnabledEntries(std::uint32_t a_flags = 0x7F, bool a_fullRebuild = false);
@@ -75,21 +75,28 @@ namespace UI
 		void UpdateInterface();
 
 	private:
-		// enchant menu data
+		class Selection
+		{
+		public:
+			void Clear();
+			void Toggle(const RE::BSTSmartPointer<CategoryListEntry>& a_entry);
+
+			// members
+			RE::BSTSmartPointer<ItemEntry> staff;
+			RE::BSTSmartPointer<SpellEntry> spell;
+		};
+
 		RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>> listEntries;
 		RE::BSString customName;
 		RE::GFxValue inventoryLists;
 		RE::GFxValue categoryEntryList;
 
-		// selections
-		RE::BSTSmartPointer<ItemEntry> selectedItem;
-		RE::BSTSmartPointer<SpellEntry> selectedSpell;
+		Selection selected;
 
 		std::unique_ptr<RE::InventoryEntryData> craftItemPreview;
 		std::uint32_t highlightIndex;
 		Category currentCategory;
 
-		// input state
 		bool exiting{ false };
 		bool hasHighlight{ false };
 	};
