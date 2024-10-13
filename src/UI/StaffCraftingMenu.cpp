@@ -62,24 +62,18 @@ namespace UI
 		assert(playerRef);
 
 		const auto dataHandler = RE::TESDataHandler::GetSingleton();
-		const auto idx_StaffEnchanting = dataHandler
-			? dataHandler->GetModIndex("StaffEnchanting.esp"sv)
+		const auto idx_dragonrborn = dataHandler
+			? dataHandler->GetModIndex("Dragonborn.esm"sv)
 			: std::nullopt;
-		RE::FormID morpholithKwd = idx_StaffEnchanting ?
-			(*idx_StaffEnchanting << 24) | 0x800 : 0x0;
+		RE::FormID heartstoneID = idx_dragonrborn ? (*idx_dragonrborn << 24) | 0x17749 : 0x0;
 
 		auto inventory = playerRef->GetInventory(
-			[&morpholithKwd](RE::TESBoundObject& baseObj) -> bool
+			[&heartstoneID](RE::TESBoundObject& baseObj) -> bool
 			{
 				if (const auto weap = baseObj.As<RE::TESObjectWEAP>()) {
 					return weap->IsStaff();
 				}
-				else if (morpholithKwd != 0) {
-					auto keywordForm = baseObj.As<RE::BGSKeywordForm>();
-					return keywordForm ?
-						keywordForm->HasKeyword(morpholithKwd) : false;
-				}
-				return false;
+				return baseObj.formID == heartstoneID;
 			});
 
 		for (auto& [baseObj, extra] : inventory) {
@@ -89,7 +83,7 @@ namespace UI
 					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Staff)));
 			}
 			else if (const auto keywordForm = baseObj->As<RE::BGSKeywordForm>()) {
-				if (!keywordForm->HasKeyword(morpholithKwd))
+				if (baseObj->formID != heartstoneID)
 					continue;
 
 				listEntries.push_back(RE::BSTSmartPointer(
