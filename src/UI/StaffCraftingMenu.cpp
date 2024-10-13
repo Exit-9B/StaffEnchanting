@@ -121,7 +121,7 @@ namespace UI
 		// TBD: constructible object recipes
 
 		UpdateEnabledEntries();
-		UpdateAdditionalDescription();
+		UpdateIngredients();
 	}
 
 	void StaffCraftingMenu::ClearEntryList()
@@ -130,7 +130,7 @@ namespace UI
 		selected.Clear();
 		UpdateItemPreview(nullptr);
 		UpdateEnabledEntries();
-		UpdateAdditionalDescription();
+		UpdateIngredients();
 		UpdateItemList(listEntries, false);
 		// createEffectFunctor.ClearEffects();
 	}
@@ -167,9 +167,37 @@ namespace UI
 		}
 	}
 
-	void StaffCraftingMenu::UpdateAdditionalDescription()
+	void StaffCraftingMenu::UpdateIngredients()
 	{
-		// TODO: see 51457
+		RE::GFxValue ingredients;
+		uiMovie->CreateArray(&ingredients);
+
+		RE::GFxValue staff;
+		uiMovie->CreateObject(&staff);
+		staff.SetMember("Name", selected.staff ? selected.staff->GetName() : "Staff");
+		staff.SetMember("RequiredCount", 1);
+		staff.SetMember("PlayerCount", selected.staff ? 1 : 0);
+		ingredients.PushBack(staff);
+
+		RE::GFxValue spell;
+		uiMovie->CreateObject(&spell);
+		spell.SetMember("Name", selected.spell ? selected.spell->GetName() : "Spell");
+		spell.SetMember("RequiredCount", 1);
+		spell.SetMember("PlayerCount", selected.spell ? 1 : 0);
+		ingredients.PushBack(spell);
+
+		RE::GFxValue morpholith;
+		uiMovie->CreateObject(&morpholith);
+		morpholith.SetMember(
+			"Name",
+			selected.morpholith ? selected.morpholith->GetName() : "Morpholith");
+		morpholith.SetMember("RequiredCount", 1);
+		morpholith.SetMember("PlayerCount", selected.morpholith ? 1 : 0);
+		ingredients.PushBack(morpholith);
+
+		menu.Invoke(
+			"UpdateIngredients",
+			std::to_array<RE::GFxValue>({ *"sRequirementsText"_gs, ingredients, false }));
 	}
 
 	void StaffCraftingMenu::UpdateItemList(
@@ -315,7 +343,7 @@ namespace UI
 				selected.Toggle(entry);
 				// TODO: update preview, enchantment, and charge amount
 				UpdateItemList(listEntries, false);
-				UpdateAdditionalDescription();
+				UpdateIngredients();
 				// TBD: slider
 			}
 		}
