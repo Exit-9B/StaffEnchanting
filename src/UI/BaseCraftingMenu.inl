@@ -5,7 +5,8 @@
 namespace UI
 {
 	template <typename Impl>
-	BaseCraftingMenu<Impl>::BaseCraftingMenu(const char* a_movieFrame) : movieFrame{ a_movieFrame }
+	inline BaseCraftingMenu<Impl>::BaseCraftingMenu(const char* a_movieFrame)
+		: movieFrame{ a_movieFrame }
 	{
 		menuFlags = {
 			RE::UI_MENU_FLAGS::kDontHideCursorWhenTopmost,
@@ -42,7 +43,7 @@ namespace UI
 	}
 
 	template <typename Impl>
-	BaseCraftingMenu<Impl>::~BaseCraftingMenu()
+	inline BaseCraftingMenu<Impl>::~BaseCraftingMenu()
 	{
 		const auto controlMap = RE::ControlMap::GetSingleton();
 		assert(controlMap);
@@ -69,13 +70,13 @@ namespace UI
 	}
 
 	template <typename Impl>
-	void BaseCraftingMenu<Impl>::Accept(CallbackProcessor* a_processor)
+	inline void BaseCraftingMenu<Impl>::Accept(CallbackProcessor* a_processor)
 	{
 		Impl::RegisterFuncs(a_processor);
 	}
 
 	template <typename Impl>
-	RE::UI_MESSAGE_RESULTS BaseCraftingMenu<Impl>::ProcessMessage(RE::UIMessage& a_message)
+	inline RE::UI_MESSAGE_RESULTS BaseCraftingMenu<Impl>::ProcessMessage(RE::UIMessage& a_message)
 	{
 		RE::UI_MESSAGE_RESULTS result = RE::UI_MESSAGE_RESULTS::kHandled;
 
@@ -105,7 +106,7 @@ namespace UI
 	}
 
 	template <typename Impl>
-	void BaseCraftingMenu<Impl>::Update(const RE::BSUIMessageData* a_data)
+	inline void BaseCraftingMenu<Impl>::Update(const RE::BSUIMessageData* a_data)
 	{
 		if (!a_data) {
 			return;
@@ -120,7 +121,7 @@ namespace UI
 	}
 
 	template <typename Impl>
-	void BaseCraftingMenu<Impl>::Show()
+	inline void BaseCraftingMenu<Impl>::Show()
 	{
 #if 0
 		RE::TESObjectREFRPtr furnitureRef;
@@ -167,7 +168,7 @@ namespace UI
 	}
 
 	template <typename Impl>
-	void BaseCraftingMenu<Impl>::ExitCraftingWorkbench()
+	inline void BaseCraftingMenu<Impl>::ExitCraftingWorkbench()
 	{
 		const auto uiMessageQueue = RE::UIMessageQueue::GetSingleton();
 		assert(uiMessageQueue);
@@ -188,7 +189,7 @@ namespace UI
 	}
 
 	template <typename Impl>
-	void BaseCraftingMenu<Impl>::UserEvent(const RE::BSUIMessageData* a_data)
+	inline void BaseCraftingMenu<Impl>::UserEvent(const RE::BSUIMessageData* a_data)
 	{
 		assert(a_data);
 		const RE::BSFixedString& userEvent = a_data->fixedStr;
@@ -206,7 +207,7 @@ namespace UI
 	}
 
 	template <typename Impl>
-	void BaseCraftingMenu<Impl>::InventoryUpdate(
+	inline void BaseCraftingMenu<Impl>::InventoryUpdate(
 		[[maybe_unused]] const RE::InventoryUpdateData* a_data)
 	{
 #if 0
@@ -220,7 +221,7 @@ namespace UI
 	}
 
 	template <typename Impl>
-	void BaseCraftingMenu<Impl>::PostDisplay()
+	inline void BaseCraftingMenu<Impl>::PostDisplay()
 	{
 		const auto inventory3D = RE::Inventory3DManager::GetSingleton();
 		assert(inventory3D);
@@ -236,7 +237,7 @@ namespace UI
 	}
 
 	template <typename Impl>
-	RE::BSEventNotifyControl BaseCraftingMenu<Impl>::ProcessEvent(
+	inline RE::BSEventNotifyControl BaseCraftingMenu<Impl>::ProcessEvent(
 		const RE::TESFurnitureEvent* a_event,
 		[[maybe_unused]] RE::BSTEventSource<RE::TESFurnitureEvent>* a_eventSource)
 	{
@@ -254,7 +255,7 @@ namespace UI
 	}
 
 	template <typename Impl>
-	void BaseCraftingMenu<Impl>::SetMenuDescription(const char* a_description)
+	inline void BaseCraftingMenu<Impl>::SetMenuDescription(const char* a_description)
 	{
 		RE::GFxValue menuDescription;
 		if (menu.GetMember("MenuDescription", &menuDescription)) {
@@ -263,7 +264,7 @@ namespace UI
 	}
 
 	template <typename Impl>
-	void BaseCraftingMenu<Impl>::UpdateItemCard(const RE::InventoryEntryData* a_item)
+	inline void BaseCraftingMenu<Impl>::UpdateItemCard(const RE::InventoryEntryData* a_item)
 	{
 		if (!itemInfo.IsObject()) {
 			return;
@@ -285,7 +286,7 @@ namespace UI
 	}
 
 	template <typename Impl>
-	void BaseCraftingMenu<Impl>::UpdateItemCard(const RE::TESForm* a_form)
+	inline void BaseCraftingMenu<Impl>::UpdateItemCard(const RE::TESForm* a_form)
 	{
 		if (!itemInfo.IsObject()) {
 			return;
@@ -307,7 +308,7 @@ namespace UI
 	}
 
 	template <typename Impl>
-	void BaseCraftingMenu<Impl>::UpdateBottomBar(RE::ActorValue a_skill)
+	inline void BaseCraftingMenu<Impl>::UpdateBottomBar(RE::ActorValue a_skill)
 	{
 		if (bottomBarInfo.IsObject()) {
 			const auto playerRef = RE::PlayerCharacter::GetSingleton();
