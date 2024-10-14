@@ -16,10 +16,29 @@ namespace UI
 		};
 		const auto scaleformManager = RE::BSScaleformManager::GetSingleton();
 		assert(scaleformManager);
-		[[maybe_unused]] const bool
-			movieLoaded = scaleformManager->LoadMovie(this, uiMovie, GetImpl()->GetMoviePath());
+		[[maybe_unused]] const bool movieLoaded = scaleformManager->LoadMovie(
+			this,
+			uiMovie,
+			GetImpl()->GetMoviePath(),
+			RE::GFxMovieView::ScaleModeType::kNoBorder);
 		assert(movieLoaded);
 		assert(uiMovie);
+
+		depthPriority = 0;
+		inputContext = Context::kItemMenu;
+
+		const auto uiMessageQueue = RE::UIMessageQueue::GetSingleton();
+		const auto interfaceStrings = RE::InterfaceStrings::GetSingleton();
+		assert(uiMessageQueue);
+		assert(interfaceStrings);
+		if (const auto hudData = static_cast<RE::HUDData*>(
+				uiMessageQueue->CreateUIMessageData(interfaceStrings->hudData))) {
+			hudData->unk40 = 1;
+			hudData->text = "InventoryMode";
+			hudData->type = static_cast<RE::HUDData::Type>(23);
+			uiMessageQueue
+				->AddMessage(RE::HUDMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kUpdate, hudData);
+		}
 
 		const auto controlMap = RE::ControlMap::GetSingleton();
 		assert(controlMap);
@@ -40,6 +59,19 @@ namespace UI
 		const auto controlMap = RE::ControlMap::GetSingleton();
 		assert(controlMap);
 		controlMap->LoadStoredControls();
+
+		const auto uiMessageQueue = RE::UIMessageQueue::GetSingleton();
+		const auto interfaceStrings = RE::InterfaceStrings::GetSingleton();
+		assert(uiMessageQueue);
+		assert(interfaceStrings);
+		if (const auto hudData = static_cast<RE::HUDData*>(
+				uiMessageQueue->CreateUIMessageData(interfaceStrings->hudData))) {
+			hudData->unk40 = 0;
+			hudData->text = "InventoryMode";
+			hudData->type = static_cast<RE::HUDData::Type>(23);
+			uiMessageQueue
+				->AddMessage(RE::HUDMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kUpdate, hudData);
+		}
 
 		const auto uiBlurManager = RE::UIBlurManager::GetSingleton();
 		assert(uiBlurManager);
