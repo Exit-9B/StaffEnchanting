@@ -21,13 +21,20 @@ namespace UI
 			All = 0x7F,
 		};
 
-		enum class Category
+		struct CATEGORY
 		{
-			None,
-			Staff,
-			Spell,
-			Morpholith,
+			enum Category
+			{
+				Recipe,
+				Divider,
+				Staff,
+				Spell,
+				Morpholith,
+
+				TOTAL
+			};
 		};
+		using Category = CATEGORY::Category;
 
 		class CategoryListEntry;
 		class SpellEntry;
@@ -37,6 +44,8 @@ namespace UI
 
 	public:
 		StaffCraftingMenu() : BaseCraftingMenu("EnchantConstruct") {}
+
+		~StaffCraftingMenu() override;
 
 		// TODO: change to bespoke staff crafting menu
 		[[nodiscard]] constexpr static const char* GetMoviePath() { return "CraftingMenu"; }
