@@ -58,7 +58,7 @@ namespace UI
 
 			if (categoryEntryList.IsArray()) {
 				RE::GFxValue divider;
-				if (categoryEntryList.GetElement(1, &divider)) {
+				if (categoryEntryList.GetElement(Category::Divider, &divider)) {
 					divider.SetMember("divider", true);
 				}
 				inventoryLists.Invoke("InvalidateListData");
