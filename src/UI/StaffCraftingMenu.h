@@ -21,9 +21,9 @@ namespace UI
 			All = 0x7F,
 		};
 
-		struct Category
+		struct CATEGORY
 		{
-			enum INDEX
+			enum Category
 			{
 				Recipe,
 				Divider,
@@ -34,6 +34,7 @@ namespace UI
 				TOTAL
 			};
 		};
+		using Category = CATEGORY::Category;
 
 		class CategoryListEntry;
 		class SpellEntry;
@@ -104,7 +105,7 @@ namespace UI
 
 		std::unique_ptr<RE::InventoryEntryData> craftItemPreview;
 		std::uint32_t highlightIndex;
-		Category::INDEX currentCategory;
+		Category currentCategory;
 
 		bool exiting{ false };
 		bool hasHighlight{ false };

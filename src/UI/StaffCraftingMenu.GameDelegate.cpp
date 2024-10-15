@@ -48,7 +48,7 @@ namespace UI
 			return;
 		}
 
-		const auto category = static_cast<Category::INDEX>(a_params[0].GetNumber());
+		const auto category = static_cast<Category>(a_params[0].GetNumber());
 		const auto menu = static_cast<StaffCraftingMenu*>(a_params.GetHandler());
 
 		if (category >= Category::TOTAL) {
