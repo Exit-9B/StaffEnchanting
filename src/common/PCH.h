@@ -19,6 +19,7 @@ namespace logger = SKSE::log;
 namespace util
 {
 	using SKSE::stl::report_and_fail;
+	using SKSE::stl::to_underlying;
 }
 
 #define DLLEXPORT __declspec(dllexport)

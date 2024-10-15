@@ -21,12 +21,18 @@ namespace UI
 			All = 0x7F,
 		};
 
-		enum class Category
+		struct Category
 		{
-			None,
-			Staff,
-			Spell,
-			Morpholith,
+			enum INDEX
+			{
+				Recipe,
+				Divider,
+				Staff,
+				Spell,
+				Morpholith,
+
+				TOTAL
+			};
 		};
 
 		class CategoryListEntry;
@@ -37,6 +43,8 @@ namespace UI
 
 	public:
 		StaffCraftingMenu() : BaseCraftingMenu("EnchantConstruct") {}
+
+		~StaffCraftingMenu() override;
 
 		// TODO: change to bespoke staff crafting menu
 		[[nodiscard]] constexpr static const char* GetMoviePath() { return "CraftingMenu"; }
@@ -96,7 +104,7 @@ namespace UI
 
 		std::unique_ptr<RE::InventoryEntryData> craftItemPreview;
 		std::uint32_t highlightIndex;
-		Category currentCategory;
+		Category::INDEX currentCategory;
 
 		bool exiting{ false };
 		bool hasHighlight{ false };
