@@ -5,6 +5,15 @@
 
 namespace UI
 {
+	StaffCraftingMenu::~StaffCraftingMenu()
+	{
+		const auto inventory3D = RE::Inventory3DManager::GetSingleton();
+		assert(inventory3D);
+		inventory3D->unk159 = 1;
+		inventory3D->unk158 = 1;
+		UpdateItemPreview(nullptr);
+	}
+
 	void StaffCraftingMenu::Init()
 	{
 		// TODO: localization
@@ -13,9 +22,10 @@ namespace UI
 		menu.SetMember("bCanCraft", true);
 		menu.GetMember("CategoryList", &inventoryLists);
 		if (inventoryLists.IsObject()) {
-			std::array<const char*, 5> labels{ "", "", "Staff", "Spell", "Morpholith" };
+			const std::array<const char*, Category::TOTAL>
+				labels{ "", "", "Staff", "Spell", "Morpholith" };
 
-			std::array<FilterFlag, 5> filters{
+			const std::array<FilterFlag, Category::TOTAL> filters{
 				FilterFlag::None,
 				FilterFlag::None,
 				FilterFlag::Staff,
@@ -23,12 +33,19 @@ namespace UI
 				FilterFlag::Morpholith
 			};
 
-			std::array<RE::GFxValue, 15> categories;
+			enum
+			{
+				Text,
+				Flag,
+				DontHide,
+				NumObjKeys
+			};
 
-			for (const auto i : std::views::iota(0ull, 5ull)) {
-				categories[i * 3 + 0] = labels[i];
-				categories[i * 3 + 1] = filters[i];
-				categories[i * 3 + 2] = true;
+			std::array<RE::GFxValue, Category::TOTAL * util::to_underlying(NumObjKeys)> categories;
+			for (const auto i : std::views::iota(0ull, Category::TOTAL)) {
+				categories[i * NumObjKeys + Text] = labels[i];
+				categories[i * NumObjKeys + Flag] = filters[i];
+				categories[i * NumObjKeys + DontHide] = true;
 			}
 
 			inventoryLists.Invoke("SetCategoriesList", categories);
@@ -41,7 +58,7 @@ namespace UI
 
 			if (categoryEntryList.IsArray()) {
 				RE::GFxValue divider;
-				if (categoryEntryList.GetElement(1, &divider)) {
+				if (categoryEntryList.GetElement(Category::Divider, &divider)) {
 					divider.SetMember("divider", true);
 				}
 				inventoryLists.Invoke("InvalidateListData");
@@ -167,6 +184,33 @@ namespace UI
 		}
 	}
 
+	void StaffCraftingMenu::UpdateEnchantment()
+	{
+		if (!craftItemPreview || !selected.spell || !selected.staff) {
+			return;
+		}
+
+		const auto enchantment = GetChosenEnchantment();
+		if (!enchantment) {
+			return;
+		}
+
+		if (craftItemPreview.get()->extraLists && !craftItemPreview.get()->extraLists->empty()) {
+			const auto& extraLists = craftItemPreview.get()->extraLists;
+			for (auto* list : *extraLists) {
+				if (!list->HasType<RE::ExtraEnchantment>())
+					continue;
+
+				list->SetEnchantment(enchantment, 3000, false);
+				return;
+			}
+		}
+
+		auto newList = new RE::ExtraDataList();
+		newList->SetEnchantment(enchantment, 3000, false);
+		craftItemPreview.get()->AddExtraList(std::move(newList));
+	}
+
 	void StaffCraftingMenu::UpdateIngredients()
 	{
 		RE::GFxValue ingredients;
@@ -241,9 +285,35 @@ namespace UI
 		a_entries.push_back(RE::make_smart<SpellEntry>(a_spell));
 	}
 
+	RE::EnchantmentItem* StaffCraftingMenu::GetChosenEnchantment()
+	{
+		RE::EnchantmentItem* response = nullptr;
+		if (const auto selectedSpell = selected.spell.get(); selectedSpell->data) {
+			RE::BSTArray<RE::Effect> effects{};
+			for (const auto effect : selectedSpell->data->effects) {
+				effects.push_back(*effect);
+			}
+
+			if (!effects.empty()) {
+				response = RE::BGSCreatedObjectManager::GetSingleton()->CreateWeaponEnchantment(
+					effects);
+
+				// Needed for later.
+				response->data.castingType = selectedSpell->data->GetCastingType();
+				response->data.delivery = selectedSpell->data->GetDelivery();
+				response->data.chargeTime = selectedSpell->data->GetChargeTime();
+				response->data.spellType = RE::MagicSystem::SpellType::kStaffEnchantment;
+
+				// Optionally also handle charges here.
+			}
+		}
+		return response;
+	}
+
 	void StaffCraftingMenu::UpdateInterface()
 	{
 		// TODO: see 51459
+		UpdateEnchantment();
 		if (craftItemPreview) {
 			UpdateItemCard(craftItemPreview.get());
 		}
@@ -342,6 +412,12 @@ namespace UI
 		if (entry->filterFlag != FilterFlag::Recipe) {
 			if (CanSelectEntry(a_index, true)) {
 				selected.Toggle(entry);
+				if (selected.staff) {
+					auto itemPreview = std::make_unique<RE::InventoryEntryData>(
+						*selected.staff.get()->data);
+					UpdateItemPreview(std::move(itemPreview));
+				}
+				UpdateEnchantment();
 				// TODO: update preview, enchantment, and charge amount
 				UpdateItemList(listEntries, false);
 				UpdateIngredients();
