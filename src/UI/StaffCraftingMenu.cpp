@@ -167,6 +167,33 @@ namespace UI
 		}
 	}
 
+	void StaffCraftingMenu::UpdateEnchantment()
+	{
+		if (!craftItemPreview || !selected.spell || !selected.staff) {
+			return;
+		}
+
+		const auto enchantment = GetChosenEnchantment();
+		if (!enchantment) {
+			return;
+		}
+
+		if (craftItemPreview.get()->extraLists && !craftItemPreview.get()->extraLists->empty()) {
+			const auto& extraLists = craftItemPreview.get()->extraLists;
+			for (auto* list : *extraLists) {
+				if (!list->HasType<RE::ExtraEnchantment>())
+					continue;
+
+				list->SetEnchantment(enchantment, 3000, false);
+				return;
+			}
+		}
+
+		auto newList = new RE::ExtraDataList();
+		newList->SetEnchantment(enchantment, 3000, false);
+		craftItemPreview.get()->AddExtraList(std::move(newList));
+	}
+
 	void StaffCraftingMenu::UpdateIngredients()
 	{
 		RE::GFxValue ingredients;
@@ -241,9 +268,35 @@ namespace UI
 		a_entries.push_back(RE::make_smart<SpellEntry>(a_spell));
 	}
 
+	RE::EnchantmentItem* StaffCraftingMenu::GetChosenEnchantment()
+	{
+		RE::EnchantmentItem* response = nullptr;
+		if (const auto selectedSpell = selected.spell.get(); selectedSpell->data) {
+			RE::BSTArray<RE::Effect> effects{};
+			for (const auto effect : selectedSpell->data->effects) {
+				effects.push_back(*effect);
+			}
+
+			if (!effects.empty()) {
+				response = RE::BGSCreatedObjectManager::GetSingleton()->CreateWeaponEnchantment(
+					effects);
+
+				// Needed for later.
+				response->data.castingType = selectedSpell->data->GetCastingType();
+				response->data.delivery = selectedSpell->data->GetDelivery();
+				response->data.chargeTime = selectedSpell->data->GetChargeTime();
+				response->data.spellType = RE::MagicSystem::SpellType::kStaffEnchantment;
+
+				// Optionally also handle charges here.
+			}
+		}
+		return response;
+	}
+
 	void StaffCraftingMenu::UpdateInterface()
 	{
 		// TODO: see 51459
+		UpdateEnchantment();
 		if (craftItemPreview) {
 			UpdateItemCard(craftItemPreview.get());
 		}
@@ -342,6 +395,12 @@ namespace UI
 		if (entry->filterFlag != FilterFlag::Recipe) {
 			if (CanSelectEntry(a_index, true)) {
 				selected.Toggle(entry);
+				if (selected.staff) {
+					auto itemPreview = std::make_unique<RE::InventoryEntryData>(
+						*selected.staff.get()->data);
+					UpdateItemPreview(std::move(itemPreview));
+				}
+				UpdateEnchantment();
 				// TODO: update preview, enchantment, and charge amount
 				UpdateItemList(listEntries, false);
 				UpdateIngredients();
