@@ -48,7 +48,32 @@ namespace UI
 			return;
 		}
 
-		// TODO: see 51419
+		const auto category = static_cast<Category>(a_params[0].GetNumber());
+		const auto menu = static_cast<StaffCraftingMenu*>(a_params.GetHandler());
+
+		if (category >= Category::TOTAL) {
+			return;
+		}
+
+		const auto previousCategory = menu->currentCategory;
+		menu->currentCategory = category;
+		menu->UpdateInterface();
+
+		const auto inventory3D = RE::Inventory3DManager::GetSingleton();
+		assert(inventory3D);
+		inventory3D->unk159 = menu->currentCategory != Category::Spell;
+		inventory3D->unk158 = menu->currentCategory != Category::Spell;
+		if (menu->currentCategory != Category::Recipe) {
+			if (menu->craftItemPreview && previousCategory == Category::Recipe) {
+				menu->menu.Invoke("FadeInfoCard", std::to_array<RE::GFxValue>({ false }));
+				menu->UpdateItemCard(menu->craftItemPreview.get());
+				inventory3D->UpdateItem3D(menu->craftItemPreview.get());
+			}
+		}
+		else {
+			menu->menu.Invoke("FadeInfoCard", std::to_array<RE::GFxValue>({ true }));
+			inventory3D->Clear3D();
+		}
 	}
 
 	void StaffCraftingMenu::ChooseItem(const RE::FxDelegateArgs& a_params)

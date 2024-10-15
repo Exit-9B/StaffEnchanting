@@ -316,8 +316,7 @@ namespace UI
 			const auto playerSkills = playerRef->skills;
 			assert(playerSkills);
 			assert(playerSkills->data);
-			const auto&
-				skillData = playerSkills->data->skills[SKSE::stl::to_underlying(a_skill) - 6];
+			const auto& skillData = playerSkills->data->skills[util::to_underlying(a_skill) - 6];
 			const float xp = skillData.xp;
 			const float levelThreshold = skillData.levelThreshold;
 

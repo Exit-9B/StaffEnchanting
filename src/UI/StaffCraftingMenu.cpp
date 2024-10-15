@@ -5,6 +5,15 @@
 
 namespace UI
 {
+	StaffCraftingMenu::~StaffCraftingMenu()
+	{
+		const auto inventory3D = RE::Inventory3DManager::GetSingleton();
+		assert(inventory3D);
+		inventory3D->unk159 = 1;
+		inventory3D->unk158 = 1;
+		UpdateItemPreview(nullptr);
+	}
+
 	void StaffCraftingMenu::Init()
 	{
 		// TODO: localization
@@ -13,9 +22,10 @@ namespace UI
 		menu.SetMember("bCanCraft", true);
 		menu.GetMember("CategoryList", &inventoryLists);
 		if (inventoryLists.IsObject()) {
-			std::array<const char*, 5> labels{ "", "", "Staff", "Spell", "Morpholith" };
+			const std::array<const char*, Category::TOTAL>
+				labels{ "", "", "Staff", "Spell", "Morpholith" };
 
-			std::array<FilterFlag, 5> filters{
+			const std::array<FilterFlag, Category::TOTAL> filters{
 				FilterFlag::None,
 				FilterFlag::None,
 				FilterFlag::Staff,
@@ -23,12 +33,19 @@ namespace UI
 				FilterFlag::Morpholith
 			};
 
-			std::array<RE::GFxValue, 15> categories;
+			enum
+			{
+				Text,
+				Flag,
+				DontHide,
+				NumObjKeys
+			};
 
-			for (const auto i : std::views::iota(0ull, 5ull)) {
-				categories[i * 3 + 0] = labels[i];
-				categories[i * 3 + 1] = filters[i];
-				categories[i * 3 + 2] = true;
+			std::array<RE::GFxValue, Category::TOTAL * util::to_underlying(NumObjKeys)> categories;
+			for (const auto i : std::views::iota(0ull, Category::TOTAL)) {
+				categories[i * NumObjKeys + Text] = labels[i];
+				categories[i * NumObjKeys + Flag] = filters[i];
+				categories[i * NumObjKeys + DontHide] = true;
 			}
 
 			inventoryLists.Invoke("SetCategoriesList", categories);
@@ -41,7 +58,7 @@ namespace UI
 
 			if (categoryEntryList.IsArray()) {
 				RE::GFxValue divider;
-				if (categoryEntryList.GetElement(1, &divider)) {
+				if (categoryEntryList.GetElement(Category::Divider, &divider)) {
 					divider.SetMember("divider", true);
 				}
 				inventoryLists.Invoke("InvalidateListData");
