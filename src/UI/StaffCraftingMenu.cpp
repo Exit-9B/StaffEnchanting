@@ -194,7 +194,7 @@ namespace UI
 		if (!enchantment) {
 			return;
 		}
-
+		
 		if (craftItemPreview.get()->extraLists && !craftItemPreview.get()->extraLists->empty()) {
 			const auto& extraLists = craftItemPreview.get()->extraLists;
 			for (auto* list : *extraLists) {
@@ -287,27 +287,30 @@ namespace UI
 
 	RE::EnchantmentItem* StaffCraftingMenu::GetChosenEnchantment()
 	{
-		RE::EnchantmentItem* response = nullptr;
-		if (const auto selectedSpell = selected.spell.get(); selectedSpell->data) {
+		if (const auto selectedSpell = selected.spell.get();
+			selectedSpell && selectedSpell->data) {
 			RE::BSTArray<RE::Effect> effects{};
 			for (const auto effect : selectedSpell->data->effects) {
-				effects.push_back(*effect);
+				if (!(effect && effect->baseEffect))
+					continue;
+				effects.push_back(RE::Effect(*effect));
 			}
 
 			if (!effects.empty()) {
-				response = RE::BGSCreatedObjectManager::GetSingleton()->CreateWeaponEnchantment(
-					effects);
-
-				// Needed for later.
-				response->data.castingType = selectedSpell->data->GetCastingType();
-				response->data.delivery = selectedSpell->data->GetDelivery();
-				response->data.chargeTime = selectedSpell->data->GetChargeTime();
-				response->data.spellType = RE::MagicSystem::SpellType::kStaffEnchantment;
-
-				// Optionally also handle charges here.
+				RE::EnchantmentItem* tempEnchantment =
+					RE::BGSCreatedObjectManager::GetSingleton()->CreateWeaponEnchantment(effects);
+				
+				if (tempEnchantment) {
+					tempEnchantment->data.castingType = selectedSpell->data->GetCastingType();
+					tempEnchantment->data.delivery = selectedSpell->data->GetDelivery();
+					tempEnchantment->data.chargeTime = selectedSpell->data->GetChargeTime();
+					tempEnchantment->data
+						.spellType = RE::MagicSystem::SpellType::kStaffEnchantment;
+					return tempEnchantment;
+				}
 			}
 		}
-		return response;
+		return nullptr;
 	}
 
 	void StaffCraftingMenu::UpdateInterface()
@@ -417,7 +420,6 @@ namespace UI
 						*selected.staff.get()->data);
 					UpdateItemPreview(std::move(itemPreview));
 				}
-				UpdateEnchantment();
 				// TODO: update preview, enchantment, and charge amount
 				UpdateItemList(listEntries, false);
 				UpdateIngredients();
