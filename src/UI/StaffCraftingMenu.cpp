@@ -33,7 +33,8 @@ namespace UI
 				FilterFlag::Morpholith
 			};
 
-			enum {
+			enum
+			{
 				Text,
 				Flag,
 				DontHide,
