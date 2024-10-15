@@ -194,7 +194,7 @@ namespace UI
 		if (!enchantment) {
 			return;
 		}
-		
+
 		if (craftItemPreview.get()->extraLists && !craftItemPreview.get()->extraLists->empty()) {
 			const auto& extraLists = craftItemPreview.get()->extraLists;
 			for (auto* list : *extraLists) {
@@ -299,7 +299,7 @@ namespace UI
 			if (!effects.empty()) {
 				RE::EnchantmentItem* tempEnchantment =
 					RE::BGSCreatedObjectManager::GetSingleton()->CreateWeaponEnchantment(effects);
-				
+
 				if (tempEnchantment) {
 					tempEnchantment->data.castingType = selectedSpell->data->GetCastingType();
 					tempEnchantment->data.delivery = selectedSpell->data->GetDelivery();
