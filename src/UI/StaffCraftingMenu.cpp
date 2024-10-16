@@ -198,7 +198,7 @@ namespace UI
 	void StaffCraftingMenu::UpdateEnchantment()
 	{
 		if (craftItemPreview) {
-			if (craftItemPreview->extraLists) {
+			if (craftItemPreview->extraLists && !craftItemPreview->extraLists->empty()) {
 				const auto& extraList = craftItemPreview->extraLists->front();
 				extraList->SetEnchantment(nullptr, 0, false);
 			}
@@ -424,15 +424,9 @@ namespace UI
 				if (selected.staff) {
 					itemPreview = std::make_unique<RE::InventoryEntryData>(*selected.staff->data);
 					itemPreview->countDelta = 1;
-					if (itemPreview->extraLists) {
-						for (auto& extraList : *itemPreview->extraLists) {
-							if (extraList->HasType(RE::ExtraDataType::kWornLeft)) {
-								extraList->RemoveByType(RE::ExtraDataType::kWornLeft);
-							}
-							if (extraList->HasType(RE::ExtraDataType::kWorn)) {
-								extraList->RemoveByType(RE::ExtraDataType::kWorn);
-							}
-						}
+					if (itemPreview->IsWorn()) {
+						itemPreview->SetWorn(false, true);
+						itemPreview->SetWorn(false, false);
 					}
 				}
 				UpdateItemPreview(std::move(itemPreview));
