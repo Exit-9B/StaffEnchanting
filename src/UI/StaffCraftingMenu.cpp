@@ -419,9 +419,22 @@ namespace UI
 		if (entry->filterFlag != FilterFlag::Recipe) {
 			if (CanSelectEntry(a_index, true)) {
 				selected.Toggle(entry);
-				auto itemPreview = selected.staff
-					? std::make_unique<RE::InventoryEntryData>(*selected.staff->data)
-					: nullptr;
+
+				std::unique_ptr<RE::InventoryEntryData> itemPreview;
+				if (selected.staff) {
+					itemPreview = std::make_unique<RE::InventoryEntryData>(*selected.staff->data);
+					itemPreview->countDelta = 1;
+					if (itemPreview->extraLists) {
+						for (auto& extraList : *itemPreview->extraLists) {
+							if (extraList->HasType(RE::ExtraDataType::kWornLeft)) {
+								extraList->RemoveByType(RE::ExtraDataType::kWornLeft);
+							}
+							if (extraList->HasType(RE::ExtraDataType::kWorn)) {
+								extraList->RemoveByType(RE::ExtraDataType::kWorn);
+							}
+						}
+					}
+				}
 				UpdateItemPreview(std::move(itemPreview));
 				UpdateEnchantment();
 				// TODO: display error if insufficient charge
