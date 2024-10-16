@@ -64,11 +64,13 @@ namespace UI
 		static void ChooseItem(const RE::FxDelegateArgs& a_params);
 		static void ShowItem3D(const RE::FxDelegateArgs& a_params);
 
+		void ClearEffects();
 		void ChooseItem(std::uint32_t a_index);
 		bool CanSelectEntry(std::uint32_t a_index, bool a_showNotification = false);
 
-		void UpdateItemPreview(std::unique_ptr<RE::InventoryEntryData> a_item);
+		void UpdateItemPreview(std::unique_ptr<RE::InventoryEntryData>&& a_item);
 		void UpdateEnabledEntries(std::uint32_t a_flags = 0x7F, bool a_fullRebuild = false);
+		void UpdateEnchantment();
 		void UpdateIngredients();
 		void UpdateItemList(
 			RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>>& a_entries,
@@ -104,8 +106,11 @@ namespace UI
 		Selection selected;
 
 		std::unique_ptr<RE::InventoryEntryData> craftItemPreview;
+		RE::BSTArray<RE::Effect> createdEffects;
+		RE::EnchantmentItem* createdEnchantment{ nullptr };
 		std::uint32_t highlightIndex;
 		Category currentCategory;
+		float chargeAmount{ 0.0f };
 
 		bool exiting{ false };
 		bool hasHighlight{ false };
