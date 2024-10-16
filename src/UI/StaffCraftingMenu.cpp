@@ -7,11 +7,22 @@ namespace UI
 {
 	StaffCraftingMenu::~StaffCraftingMenu()
 	{
+		ClearEffects();
+
 		const auto inventory3D = RE::Inventory3DManager::GetSingleton();
 		assert(inventory3D);
 		inventory3D->unk159 = 1;
 		inventory3D->unk158 = 1;
 		UpdateItemPreview(nullptr);
+	}
+
+	void StaffCraftingMenu::ClearEffects()
+	{
+		const auto createdObjectManager = RE::BGSCreatedObjectManager::GetSingleton();
+		assert(createdObjectManager);
+		createdObjectManager->DestroyEnchantment(createdEnchantment, true);
+		createdEnchantment = nullptr;
+		createdEffects.clear();
 	}
 
 	void StaffCraftingMenu::Init()
@@ -149,10 +160,10 @@ namespace UI
 		UpdateEnabledEntries();
 		UpdateIngredients();
 		UpdateItemList(listEntries, false);
-		// createEffectFunctor.ClearEffects();
+		ClearEffects();
 	}
 
-	void StaffCraftingMenu::UpdateItemPreview(std::unique_ptr<RE::InventoryEntryData> a_item)
+	void StaffCraftingMenu::UpdateItemPreview(std::unique_ptr<RE::InventoryEntryData>&& a_item)
 	{
 		const auto inventory3D = RE::Inventory3DManager::GetSingleton();
 		assert(inventory3D);
@@ -181,6 +192,55 @@ namespace UI
 
 		if (menu.IsObject()) {
 			menu.Invoke("UpdateItemList", std::to_array<RE::GFxValue>({ a_fullRebuild }));
+		}
+	}
+
+	void StaffCraftingMenu::UpdateEnchantment()
+	{
+		if (craftItemPreview) {
+			if (craftItemPreview->extraLists) {
+				const auto& extraList = craftItemPreview->extraLists->front();
+				extraList->SetEnchantment(nullptr, 0, false);
+			}
+		}
+
+		ClearEffects();
+
+		if (selected.spell) {
+			// TODO: calculate correct charge amount
+			chargeAmount = static_cast<float>(*"iSoulLevelValueGrand"_gs);
+
+			for (const auto& effect : selected.spell->data->effects) {
+				auto& createdEffect = createdEffects.emplace_back();
+				createdEffect.Copy(effect);
+				// TODO: calculate magnitude and duration changes
+			}
+
+			if (!createdEffects.empty()) {
+				const auto createdObjectManager = RE::BGSCreatedObjectManager::GetSingleton();
+				assert(createdObjectManager);
+				createdEnchantment = createdObjectManager->AddWeaponEnchantment(createdEffects);
+			}
+		}
+
+		if (craftItemPreview && createdEnchantment) {
+			if (craftItemPreview->extraLists && !craftItemPreview->extraLists->empty()) {
+				const auto& extraList = craftItemPreview->extraLists->front();
+				extraList->SetEnchantment(
+					createdEnchantment,
+					static_cast<std::uint16_t>(chargeAmount),
+					false);
+			}
+			else {
+				const auto extraList = new RE::ExtraDataList();
+				extraList->SetEnchantment(
+					createdEnchantment,
+					static_cast<std::uint16_t>(chargeAmount),
+					false);
+				craftItemPreview->AddExtraList(extraList);
+			}
+
+			UpdateItemPreview(std::move(craftItemPreview));
 		}
 	}
 
@@ -359,7 +419,15 @@ namespace UI
 		if (entry->filterFlag != FilterFlag::Recipe) {
 			if (CanSelectEntry(a_index, true)) {
 				selected.Toggle(entry);
-				// TODO: update preview, enchantment, and charge amount
+				auto itemPreview = selected.staff
+					? std::make_unique<RE::InventoryEntryData>(*selected.staff->data)
+					: nullptr;
+				UpdateItemPreview(std::move(itemPreview));
+				UpdateEnchantment();
+				// TODO: display error if insufficient charge
+
+				UpdateInterface();
+				UpdateEnabledEntries();
 				UpdateItemList(listEntries, false);
 				UpdateIngredients();
 				// TBD: slider
