@@ -96,8 +96,9 @@ namespace UI
 		const RE::FormID heartstoneID = idx_dragonrborn ? (*idx_dragonrborn << 24) | 0x17749 : 0x0;
 
 		// Checking with GetModuleHandle requires windows.h - do we want that?
-		std::ifstream file("Data/SKSE/Plugins/po3_EssentialFavorites.ini");
-		bool isPO3Installed = file.good();
+		const auto module = SKSE::WinAPI::GetModuleHandle(
+			"Data/SKSE/Plugins/po3_EssentialFavorites");
+		bool isPO3Installed = module != NULL;
 
 		// Put this inside the inventory cha
 		auto inventory = playerRef->GetInventory(
