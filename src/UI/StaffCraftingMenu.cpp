@@ -95,12 +95,10 @@ namespace UI
 			: std::nullopt;
 		const RE::FormID heartstoneID = idx_dragonrborn ? (*idx_dragonrborn << 24) | 0x17749 : 0x0;
 
-		// Checking with GetModuleHandle requires windows.h - do we want that?
 		const auto module = SKSE::WinAPI::GetModuleHandle(
 			"Data/SKSE/Plugins/po3_EssentialFavorites");
 		bool isPO3Installed = module != NULL;
 
-		// Put this inside the inventory cha
 		auto inventory = playerRef->GetInventory(
 			[heartstoneID](RE::TESBoundObject& baseObj) -> bool
 			{
@@ -139,9 +137,8 @@ namespace UI
 				listEntries.push_back(RE::BSTSmartPointer(
 					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Staff)));
 			}
-			else if (const auto keywordForm = baseObj->As<RE::BGSKeywordForm>()) {  // Does this
-																					// need to be
-																					// cast?
+			// Does this need to be cast as Keyword form?
+			else if (const auto keywordForm = baseObj->As<RE::BGSKeywordForm>()) {
 				if (baseObj->formID != heartstoneID)
 					continue;
 
