@@ -138,8 +138,9 @@ namespace UI
 				listEntries.push_back(RE::BSTSmartPointer(
 					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Staff)));
 			}
-			else if (const auto keywordForm = baseObj->As<RE::BGSKeywordForm>()) {  // Does this need to
-																			        // be cast?
+			else if (const auto keywordForm = baseObj->As<RE::BGSKeywordForm>()) {  // Does this
+																					// need to be
+																					// cast?
 				if (baseObj->formID != heartstoneID)
 					continue;
 
