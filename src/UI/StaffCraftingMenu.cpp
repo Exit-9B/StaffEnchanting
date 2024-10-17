@@ -232,6 +232,7 @@ namespace UI
 					false);
 			}
 			else {
+				// InventoryEntryData does not take ownership, so we need to hold ownership.
 				tempExtraList = std::make_unique<RE::ExtraDataList>();
 				tempExtraList->SetEnchantment(
 					createdEnchantment,
