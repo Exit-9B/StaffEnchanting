@@ -93,7 +93,13 @@ namespace UI
 		const auto idx_dragonrborn = dataHandler
 			? dataHandler->GetModIndex("Dragonborn.esm"sv)
 			: std::nullopt;
+		const auto idx_skyrim = dataHandler
+			? dataHandler->GetModIndex("Skyrim.esm"sv)
+			: std::nullopt;
 		const RE::FormID heartstoneID = idx_dragonrborn ? (*idx_dragonrborn << 24) | 0x17749 : 0x0;
+		const RE::FormID magicDisallowEnchantingID = idx_skyrim
+			? (*idx_skyrim << 24) | 0xC27BD
+			: 0x0;
 
 		const auto module = SKSE::WinAPI::GetModuleHandle(
 			"Data/SKSE/Plugins/po3_EssentialFavorites");
@@ -130,9 +136,13 @@ namespace UI
 			}
 
 			if (baseObj->IsWeapon()) {
-				if (!baseObj->As<RE::TESObjectWEAP>()->IsStaff()) {
+				if (entry->IsEnchanted() || !baseObj->As<RE::TESObjectWEAP>()->IsStaff()) {
 					continue;
 				}
+
+				const auto entryKwdForm = baseObj->As<RE::BGSKeywordForm>();
+				if (!entryKwdForm || entryKwdForm->HasKeyword(magicDisallowEnchantingID))
+					continue;
 
 				listEntries.push_back(RE::BSTSmartPointer(
 					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Staff)));
@@ -141,7 +151,7 @@ namespace UI
 			else if (const auto keywordForm = baseObj->As<RE::BGSKeywordForm>()) {
 				if (baseObj->formID != heartstoneID)
 					continue;
-
+				
 				listEntries.push_back(RE::BSTSmartPointer(
 					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Morpholith)));
 			}
