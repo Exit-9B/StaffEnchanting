@@ -151,7 +151,7 @@ namespace UI
 			else if (const auto keywordForm = baseObj->As<RE::BGSKeywordForm>()) {
 				if (baseObj->formID != heartstoneID)
 					continue;
-				
+
 				listEntries.push_back(RE::BSTSmartPointer(
 					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Morpholith)));
 			}
