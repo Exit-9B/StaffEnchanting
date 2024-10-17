@@ -102,17 +102,17 @@ namespace RE
 		const auto container = a_invChanges->owner ? a_invChanges->owner->GetContainer() : nullptr;
 		std::int32_t count = container ? std::max(0, GetItemCount(container, a_object)) : 0;
 		if (a_invChanges->entryList) {
-			auto& entryList = *a_invChanges->entryList;
-			const auto it = std::ranges::find_if(
-				entryList,
-				[a_object](const RE::InventoryEntryData* a_entry)
-				{
-					return a_entry && a_entry->object == a_object;
-				});
+			const RE::InventoryEntryData* objEntry = nullptr;
+			for (const auto* const entry : *a_invChanges->entryList) {
+				if (entry && entry->object == a_object) {
+					objEntry = entry;
+					break;
+				}
+			}
 
-			if (it != std::ranges::end(entryList)) {
-				if (a_itemFilter(*it)) {
-					count += (*it)->countDelta;
+			if (objEntry) {
+				if (a_itemFilter(objEntry)) {
+					count += objEntry->countDelta;
 				}
 			}
 		}
