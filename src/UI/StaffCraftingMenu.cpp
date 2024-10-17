@@ -95,6 +95,11 @@ namespace UI
 			: std::nullopt;
 		const RE::FormID heartstoneID = idx_dragonrborn ? (*idx_dragonrborn << 24) | 0x17749 : 0x0;
 
+		// Checking with GetModuleHandle requires windows.h - do we want that?
+		std::ifstream file("Data/SKSE/Plugins/po3_EssentialFavorites.ini");
+		bool isPO3Installed = file.good();
+
+		// Put this inside the inventory cha
 		auto inventory = playerRef->GetInventory(
 			[heartstoneID](RE::TESBoundObject& baseObj) -> bool
 			{
@@ -106,11 +111,35 @@ namespace UI
 
 		for (auto& [baseObj, extra] : inventory) {
 			auto& [count, entry] = extra;
+			if (entry->IsQuestObject())  // Sparrow edit this out when you test it
+				continue;
+
+			if (isPO3Installed) {
+				if (entry->extraLists) {
+					bool shouldBreak = false;
+					for (auto it = entry->extraLists->begin();
+						 !shouldBreak && it != entry->extraLists->end();
+						 ++it) {
+						if ((*it)->HasType<RE::ExtraHotkey>()) {
+							shouldBreak = true;
+						}
+					}
+
+					if (shouldBreak)
+						continue;
+				}
+			}
+
 			if (baseObj->IsWeapon()) {
+				if (!baseObj->As<RE::TESObjectWEAP>()->IsStaff()) {
+					continue;
+				}
+
 				listEntries.push_back(RE::BSTSmartPointer(
 					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Staff)));
 			}
-			else if (const auto keywordForm = baseObj->As<RE::BGSKeywordForm>()) {
+			else if (const auto keywordForm = baseObj->As<RE::BGSKeywordForm>()) {  // Does this need to
+																			        // be cast?
 				if (baseObj->formID != heartstoneID)
 					continue;
 
