@@ -41,6 +41,24 @@ namespace RE
 		}
 	}
 
+	template <std::invocable<RE::IMessageBoxCallback::Message> F>
+	[[nodiscard]] RE::BSTSmartPointer<RE::IMessageBoxCallback> MakeMessageBoxCallback(
+		F&& a_callback)
+	{
+		class Callback : public RE::IMessageBoxCallback
+		{
+		public:
+			Callback(F&& a_callback) : callback_{ std::forward<F>(a_callback) } {}
+
+			void Run(Message a_msg) override { callback_(a_msg); }
+
+		private:
+			std::remove_cvref_t<F> callback_;
+		};
+
+		return RE::make_smart<Callback>(std::forward<F>(a_callback));
+	}
+
 	[[nodiscard]] inline const char* GetActorValueName(RE::ActorValue a_actorValue)
 	{
 		using func_t = decltype(&GetActorValueName);

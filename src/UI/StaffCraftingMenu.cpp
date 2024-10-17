@@ -94,9 +94,10 @@ namespace UI
 		return true;
 	}
 
-	void StaffCraftingMenu::PopulateEntryList()
+	void StaffCraftingMenu::PopulateEntryList(bool a_fullRebuild)
 	{
-		ClearEntryList();
+		listEntries.clear();
+		ClearSelection();
 
 		const auto playerRef = RE::PlayerCharacter::GetSingleton();
 		assert(playerRef);
@@ -164,13 +165,12 @@ namespace UI
 			}
 		}
 
-		UpdateEnabledEntries();
+		UpdateEnabledEntries(FilterFlag::All, a_fullRebuild);
 		UpdateIngredients();
 	}
 
-	void StaffCraftingMenu::ClearEntryList()
+	void StaffCraftingMenu::ClearSelection()
 	{
-		listEntries.clear();
 		selected.Clear();
 		UpdateItemPreview(nullptr);
 		UpdateEnabledEntries();
@@ -201,9 +201,9 @@ namespace UI
 		UpdateInterface();
 	}
 
-	void StaffCraftingMenu::UpdateEnabledEntries(std::uint32_t a_flags, bool a_fullRebuild)
+	void StaffCraftingMenu::UpdateEnabledEntries(FilterFlag a_flags, bool a_fullRebuild)
 	{
-		(void)a_flags;
+		SKSE::stl::enumeration flags{a_flags};
 		// TODO: see 51450
 
 		if (menu.IsObject()) {
@@ -397,16 +397,11 @@ namespace UI
 			msgBoxData->buttonText.push_back(*"sYes"_gs);
 			msgBoxData->buttonText.push_back(*"sNo"_gs);
 
-			struct MenuExitCallback : public RE::IMessageBoxCallback
-			{
-				StaffCraftingMenu* menu;
-
-				MenuExitCallback(StaffCraftingMenu* a_menu) : menu{ a_menu } {}
-
-				void Run(Message a_msg) override
+			const auto callback = RE::MakeMessageBoxCallback(
+				[this](auto msg)
 				{
-					if (a_msg != Message::kUnk0) {
-						menu->exiting = false;
+					if (msg != RE::IMessageBoxCallback::Message::kUnk0) {
+						exiting = false;
 					}
 					else {
 						const auto uiMessageQueue = RE::UIMessageQueue::GetSingleton();
@@ -426,10 +421,9 @@ namespace UI
 								->AddMessage(MENU_NAME, RE::UI_MESSAGE_TYPE::kUserEvent, msgData);
 						}
 					}
-				}
-			};
+				});
 
-			msgBoxData->callback = RE::make_smart<MenuExitCallback>(this);
+			msgBoxData->callback = callback;
 			msgBoxData->unk38 = 25;
 			msgBoxData->unk48 = 4;
 
@@ -463,8 +457,40 @@ namespace UI
 		const auto& entry = listEntries[a_index];
 		RE::PlaySound(entry->selected ? "UISelectOff" : "UISelectOn");
 
-		// TODO: see 51344
-		if (entry->filterFlag != FilterFlag::Recipe) {
+		if (entry->filterFlag == FilterFlag::Recipe) {
+			if (entry->enabled) {
+				ClearSelection();
+				entry->selected = true;
+				UpdateItemList(listEntries);
+				const auto msgBoxData = new RE::MessageBoxData();
+				msgBoxData->bodyText = *"sConstructibleMenuConfirm"_gs;
+				msgBoxData->buttonText.push_back(*"sYes"_gs);
+				msgBoxData->buttonText.push_back(*"sNo"_gs);
+
+				const auto callback = RE::MakeMessageBoxCallback(
+					[&](auto message)
+					{
+						entry->selected = false;
+						if (message != RE::IMessageBoxCallback::Message::kUnk0) {
+							UpdateItemList(listEntries);
+						}
+						else {
+							CreateItem(static_cast<RecipeEntry*>(entry.get())->data);
+						}
+					});
+
+				msgBoxData->callback = callback;
+				msgBoxData->unk38 = 25;
+				msgBoxData->unk48 = 4;
+
+				msgBoxData->QueueMessage();
+			}
+			else {
+				RE::DebugNotification(*"sLackRequiredToCreate"_gs);
+				// TODO: no activation sound
+			}
+		}
+		else {
 			if (CanSelectEntry(a_index, true)) {
 				selected.Toggle(entry);
 
@@ -499,6 +525,19 @@ namespace UI
 		(void)a_showNotification;
 		// TODO
 		return true;
+	}
+
+	void StaffCraftingMenu::CreateItem(const RE::BGSConstructibleObject* a_constructible)
+	{
+		(void)a_constructible;
+		// TODO: remove & add items
+		// TODO: inventory notification
+		// TODO: advance skill
+		// TODO: add story event
+		// TODO: item crafted event
+		PopulateEntryList(true);
+		UpdateItemPreview(nullptr);
+		menu.Invoke("UpdateItemDisplay");
 	}
 
 	void StaffCraftingMenu::Selection::Clear()
