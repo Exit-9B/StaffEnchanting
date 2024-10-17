@@ -203,7 +203,7 @@ namespace UI
 
 	void StaffCraftingMenu::UpdateEnabledEntries(FilterFlag a_flags, bool a_fullRebuild)
 	{
-		SKSE::stl::enumeration flags{a_flags};
+		SKSE::stl::enumeration flags{ a_flags };
 		// TODO: see 51450
 
 		if (menu.IsObject()) {

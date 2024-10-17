@@ -72,7 +72,9 @@ namespace UI
 		void CreateItem(const RE::BGSConstructibleObject* a_constructible);
 
 		void UpdateItemPreview(std::unique_ptr<RE::InventoryEntryData>&& a_item);
-		void UpdateEnabledEntries(FilterFlag a_flags = FilterFlag::All, bool a_fullRebuild = false);
+		void UpdateEnabledEntries(
+			FilterFlag a_flags = FilterFlag::All,
+			bool a_fullRebuild = false);
 		void UpdateEnchantment();
 		void UpdateIngredients();
 		void UpdateItemList(
