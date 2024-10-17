@@ -68,6 +68,8 @@ namespace UI
 		void ChooseItem(std::uint32_t a_index);
 		bool CanSelectEntry(std::uint32_t a_index, bool a_showNotification = false);
 
+		bool IsFavorite(RE::InventoryEntryData* a_entry);
+
 		void UpdateItemPreview(std::unique_ptr<RE::InventoryEntryData>&& a_item);
 		void UpdateEnabledEntries(std::uint32_t a_flags = 0x7F, bool a_fullRebuild = false);
 		void UpdateEnchantment();
