@@ -48,6 +48,24 @@ namespace RE
 		return func(a_actorValue);
 	}
 
+	[[nodiscard]] inline bool CanBeCreatedOnWorkbench(
+		const RE::BGSConstructibleObject* a_obj,
+		const RE::TESFurniture* a_workbench,
+		bool a_checkConditions)
+	{
+		if (!a_workbench || !a_workbench->HasKeyword(a_obj->benchKeyword)) {
+			return false;
+		}
+
+		if (a_obj->conditions.head && a_checkConditions) {
+			const auto playerRef = RE::PlayerCharacter::GetSingleton();
+			return a_obj->conditions.IsTrue(playerRef, playerRef);
+		}
+		else {
+			return true;
+		}
+	}
+
 	[[nodiscard]] inline RE::BSFurnitureMarkerNode* GetFurnitureMarkerNode(RE::NiAVObject* a_root)
 	{
 		using func_t = decltype(&GetFurnitureMarkerNode);
@@ -60,5 +78,44 @@ namespace RE
 		using func_t = decltype(&ClearFurniture);
 		static REL::Relocation<func_t> func{ RE::Offset::AIProcess::ClearFurniture };
 		return func(a_process);
+	}
+
+	[[nodiscard]] inline std::int32_t GetItemCount(
+		const RE::TESContainer* a_container,
+		const RE::TESBoundObject* a_object)
+	{
+		std::int32_t count = 0;
+		for (const RE::ContainerObject* const entry :
+			 std::span(a_container->containerObjects, a_container->numContainerObjects)) {
+			if (entry->obj == a_object) {
+				count += entry->count;
+			}
+		}
+		return count;
+	}
+
+	[[nodiscard]] inline std::int32_t GetCountDelta(
+		const RE::TESBoundObject* a_object,
+		const RE::InventoryChanges* a_invChanges,
+		std::predicate<const RE::InventoryEntryData*> auto a_itemFilter)
+	{
+		const auto container = a_invChanges->owner ? a_invChanges->owner->GetContainer() : nullptr;
+		std::int32_t count = container ? std::max(0, GetItemCount(container, a_object)) : 0;
+		if (a_invChanges->entryList) {
+			auto& entryList = *a_invChanges->entryList;
+			const auto it = std::ranges::find_if(
+				entryList,
+				[a_object](const RE::InventoryEntryData* a_entry)
+				{
+					return a_entry && a_entry->object == a_object;
+				});
+
+			if (it != std::ranges::end(entryList)) {
+				if (a_itemFilter(*it)) {
+					count += (*it)->countDelta;
+				}
+			}
+		}
+		return count;
 	}
 }

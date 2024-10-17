@@ -39,6 +39,8 @@ namespace UI
 		class CategoryListEntry;
 		class SpellEntry;
 		class ItemEntry;
+		class RecipeEntry;
+
 		friend SpellEntry;
 		friend ItemEntry;
 

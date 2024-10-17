@@ -71,4 +71,25 @@ namespace UI
 		// members
 		std::unique_ptr<RE::InventoryEntryData> data;
 	};
+
+	class StaffCraftingMenu::RecipeEntry final : public CategoryListEntry
+	{
+	public:
+		explicit RecipeEntry(RE::BGSConstructibleObject* a_obj)
+			: CategoryListEntry(FilterFlag::Recipe),
+			  data{ a_obj }
+		{
+		}
+
+		void ShowInItemCard(StaffCraftingMenu* a_menu) const override;
+
+		void ShowItem3D(bool a_show) const override;
+
+		[[nodiscard]] const char* GetName() const override;
+
+		void SetupEntryObjectByType(RE::GFxValue& a_entryObj) const override;
+
+		// members
+		RE::BGSConstructibleObject* data;
+	};
 }

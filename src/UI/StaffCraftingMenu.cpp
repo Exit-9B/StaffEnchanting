@@ -34,10 +34,10 @@ namespace UI
 		menu.GetMember("CategoryList", &inventoryLists);
 		if (inventoryLists.IsObject()) {
 			const std::array<const char*, Category::TOTAL>
-				labels{ "", "", "Staff", "Spell", "Morpholith" };
+				labels{ "Special", "", "Staff", "Spell", "Morpholith" };
 
-			const std::array<FilterFlag, Category::TOTAL> filters{
-				FilterFlag::None,
+			static constexpr std::array<FilterFlag, Category::TOTAL> filters{
+				FilterFlag::Recipe,
 				FilterFlag::None,
 				FilterFlag::Staff,
 				FilterFlag::Spell,
@@ -80,6 +80,18 @@ namespace UI
 
 		UpdateInterface();
 		UpdateBottomBar(RE::ActorValue::kEnchanting);
+	}
+
+	[[nodiscard]] static bool IsSpecial(const RE::BGSConstructibleObject* a_obj)
+	{
+		for (auto condition = a_obj->conditions.head; condition; condition = condition->next) {
+			if (condition &&
+				condition->data.functionData.function ==
+					RE::FUNCTION_DATA::FunctionID::kHasSpell) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	void StaffCraftingMenu::PopulateEntryList()
@@ -131,6 +143,12 @@ namespace UI
 			AddSpellIfUsable(listEntries, spell);
 		}
 
+		for (const auto obj : dataHandler->GetFormArray<RE::BGSConstructibleObject>()) {
+			if (RE::CanBeCreatedOnWorkbench(obj, furniture, false) && IsSpecial(obj)) {
+				listEntries.push_back(RE::make_smart<RecipeEntry>(obj));
+			}
+		}
+
 		highlightIndex = listEntries.empty()
 			? 0
 			: std::min(highlightIndex, listEntries.size() - 1);
@@ -145,8 +163,6 @@ namespace UI
 				itemEntryList.PushBack(itemEntry);
 			}
 		}
-
-		// TBD: constructible object recipes
 
 		UpdateEnabledEntries();
 		UpdateIngredients();
@@ -250,28 +266,55 @@ namespace UI
 		RE::GFxValue ingredients;
 		uiMovie->CreateArray(&ingredients);
 
-		RE::GFxValue staff;
-		uiMovie->CreateObject(&staff);
-		staff.SetMember("Name", selected.staff ? selected.staff->GetName() : "Staff");
-		staff.SetMember("RequiredCount", 1);
-		staff.SetMember("PlayerCount", selected.staff ? 1 : 0);
-		ingredients.PushBack(staff);
+		if (currentCategory != Category::Recipe || highlightIndex >= listEntries.size() ||
+			listEntries[highlightIndex]->filterFlag != FilterFlag::Recipe) {
 
-		RE::GFxValue spell;
-		uiMovie->CreateObject(&spell);
-		spell.SetMember("Name", selected.spell ? selected.spell->GetName() : "Spell");
-		spell.SetMember("RequiredCount", 1);
-		spell.SetMember("PlayerCount", selected.spell ? 1 : 0);
-		ingredients.PushBack(spell);
+			RE::GFxValue staff;
+			uiMovie->CreateObject(&staff);
+			staff.SetMember("Name", selected.staff ? selected.staff->GetName() : "Staff");
+			staff.SetMember("RequiredCount", 1);
+			staff.SetMember("PlayerCount", selected.staff ? 1 : 0);
+			ingredients.PushBack(staff);
 
-		RE::GFxValue morpholith;
-		uiMovie->CreateObject(&morpholith);
-		morpholith.SetMember(
-			"Name",
-			selected.morpholith ? selected.morpholith->GetName() : "Morpholith");
-		morpholith.SetMember("RequiredCount", 1);
-		morpholith.SetMember("PlayerCount", selected.morpholith ? 1 : 0);
-		ingredients.PushBack(morpholith);
+			RE::GFxValue spell;
+			uiMovie->CreateObject(&spell);
+			spell.SetMember("Name", selected.spell ? selected.spell->GetName() : "Spell");
+			spell.SetMember("RequiredCount", 1);
+			spell.SetMember("PlayerCount", selected.spell ? 1 : 0);
+			ingredients.PushBack(spell);
+
+			RE::GFxValue morpholith;
+			uiMovie->CreateObject(&morpholith);
+			morpholith.SetMember(
+				"Name",
+				selected.morpholith ? selected.morpholith->GetName() : "Morpholith");
+			morpholith.SetMember("RequiredCount", 1);
+			morpholith.SetMember("PlayerCount", selected.morpholith ? 1 : 0);
+			ingredients.PushBack(morpholith);
+		}
+		else {
+			const auto playerRef = RE::PlayerCharacter::GetSingleton();
+			const auto invChanges = playerRef->GetInventoryChanges();
+			const auto questItemFilter = [](const RE::InventoryEntryData* a_entry)
+			{
+				return !a_entry->IsQuestObject();
+			};
+
+			const auto entry = static_cast<const RecipeEntry*>(listEntries[highlightIndex].get());
+			assert(entry->data);
+			const auto& items = entry->data->requiredItems;
+			for (const auto* const item :
+				 std::span(items.containerObjects, items.numContainerObjects)) {
+				RE::GFxValue ingredient;
+				uiMovie->CreateObject(&ingredient);
+				ingredient.SetMember("Name", item->obj->GetName());
+				ingredient.SetMember("RequiredCount", item->count);
+				ingredient.SetMember(
+					"PlayerCount",
+					RE::GetCountDelta(item->obj, invChanges, questItemFilter));
+				ingredients.PushBack(ingredient);
+			}
+		}
 
 		menu.Invoke(
 			"UpdateIngredients",
@@ -330,6 +373,10 @@ namespace UI
 		}
 		else {
 			UpdateItemCard(nullptr);
+		}
+
+		if (currentCategory == Category::Recipe) {
+			UpdateIngredients();
 		}
 	}
 

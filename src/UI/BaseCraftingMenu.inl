@@ -123,7 +123,6 @@ namespace UI
 	template <typename Impl>
 	inline void BaseCraftingMenu<Impl>::Show()
 	{
-#if 0
 		RE::TESObjectREFRPtr furnitureRef;
 		const auto playerRef = RE::PlayerCharacter::GetSingleton();
 		if (playerRef && playerRef->currentProcess) {
@@ -131,7 +130,6 @@ namespace UI
 		}
 		const auto furnitureObj = furnitureRef ? furnitureRef->GetBaseObject() : nullptr;
 		furniture = furnitureObj ? furnitureObj->As<RE::TESFurniture>() : nullptr;
-#endif
 
 		// Common crafting setup
 		assert(uiMovie);
