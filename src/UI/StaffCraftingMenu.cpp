@@ -232,12 +232,12 @@ namespace UI
 					false);
 			}
 			else {
-				const auto extraList = new RE::ExtraDataList();
-				extraList->SetEnchantment(
+				tempExtraList = std::make_unique<RE::ExtraDataList>();
+				tempExtraList->SetEnchantment(
 					createdEnchantment,
 					static_cast<std::uint16_t>(chargeAmount),
 					false);
-				craftItemPreview->AddExtraList(extraList);
+				craftItemPreview->AddExtraList(tempExtraList.get());
 			}
 
 			UpdateItemPreview(std::move(craftItemPreview));
@@ -422,11 +422,14 @@ namespace UI
 
 				std::unique_ptr<RE::InventoryEntryData> itemPreview;
 				if (selected.staff) {
+					// Vanilla EnchantConstructMenu would do a deep copy here, duplicating the
+					// extra lists. To avoid memory leaks, we prefer to use a shallow copy.
 					itemPreview = std::make_unique<RE::InventoryEntryData>(*selected.staff->data);
 					itemPreview->countDelta = 1;
 					if (itemPreview->IsWorn()) {
-						itemPreview->SetWorn(false, true);
-						itemPreview->SetWorn(false, false);
+						// Do not delete removed lists, since we do not have ownership.
+						itemPreview->SetWorn(false, true, false);
+						itemPreview->SetWorn(false, false, false);
 					}
 				}
 				UpdateItemPreview(std::move(itemPreview));
