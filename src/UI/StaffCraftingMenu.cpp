@@ -107,6 +107,13 @@ namespace UI
 			? dataHandler->GetModIndex("Dragonborn.esm"sv)
 			: std::nullopt;
 		const RE::FormID heartstoneID = idx_dragonrborn ? (*idx_dragonrborn << 24) | 0x17749 : 0x0;
+		const auto defaultObjects = RE::BGSDefaultObjectManager::GetSingleton();
+		const auto MagicDisallowEnchanting = defaultObjects->GetObject<RE::BGSKeyword>(
+			RE::DEFAULT_OBJECT::kKeywordDisallowEnchanting);
+
+		static const bool
+			essentialFavorites = SKSE::WinAPI::GetModuleHandle("po3_EssentialFavorites") !=
+			nullptr;
 
 		auto inventory = playerRef->GetInventory(
 			[heartstoneID](RE::TESBoundObject& baseObj) -> bool
@@ -119,11 +126,22 @@ namespace UI
 
 		for (auto& [baseObj, extra] : inventory) {
 			auto& [count, entry] = extra;
+			if (entry->IsQuestObject() || (essentialFavorites && IsFavorite(entry.get())))
+				continue;
+
 			if (baseObj->IsWeapon()) {
+				if (entry->IsEnchanted() || !baseObj->As<RE::TESObjectWEAP>()->IsStaff()) {
+					continue;
+				}
+
+				const auto entryKwdForm = baseObj->As<RE::BGSKeywordForm>();
+				if (!entryKwdForm || entryKwdForm->HasKeyword(MagicDisallowEnchanting))
+					continue;
+
 				listEntries.push_back(RE::BSTSmartPointer(
 					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Staff)));
 			}
-			else if (const auto keywordForm = baseObj->As<RE::BGSKeywordForm>()) {
+			else {
 				if (baseObj->formID != heartstoneID)
 					continue;
 
@@ -566,6 +584,18 @@ namespace UI
 		PopulateEntryList(true);
 		UpdateItemPreview(nullptr);
 		menu.Invoke("UpdateItemDisplay");
+	}
+
+	bool StaffCraftingMenu::IsFavorite(const RE::InventoryEntryData* a_entry)
+	{
+		if (a_entry->extraLists) {
+			for (const auto extraList : *a_entry->extraLists) {
+				if (extraList->HasType<RE::ExtraHotkey>()) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	void StaffCraftingMenu::Selection::Clear()
