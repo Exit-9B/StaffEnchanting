@@ -73,8 +73,6 @@ namespace UI
 			bool a_showNotification = false);
 		void CreateItem(const RE::BGSConstructibleObject* a_constructible);
 
-		[[nodiscard]] static bool IsFavorite(const RE::InventoryEntryData* a_entry);
-
 		void UpdateItemPreview(std::unique_ptr<RE::InventoryEntryData>&& a_item);
 		void UpdateEnabledEntries(
 			FilterFlag a_flags = FilterFlag::All,

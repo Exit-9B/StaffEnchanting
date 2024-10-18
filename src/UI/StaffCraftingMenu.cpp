@@ -82,6 +82,18 @@ namespace UI
 		UpdateBottomBar(RE::ActorValue::kEnchanting);
 	}
 
+	[[nodiscard]] static bool IsFavorite(const RE::InventoryEntryData* a_entry)
+	{
+		if (a_entry->extraLists) {
+			for (const auto extraList : *a_entry->extraLists) {
+				if (extraList->HasType<RE::ExtraHotkey>()) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	[[nodiscard]] static bool IsSpecial(const RE::BGSConstructibleObject* a_obj)
 	{
 		for (auto condition = a_obj->conditions.head; condition; condition = condition->next) {
@@ -584,18 +596,6 @@ namespace UI
 		PopulateEntryList(true);
 		UpdateItemPreview(nullptr);
 		menu.Invoke("UpdateItemDisplay");
-	}
-
-	bool StaffCraftingMenu::IsFavorite(const RE::InventoryEntryData* a_entry)
-	{
-		if (a_entry->extraLists) {
-			for (const auto extraList : *a_entry->extraLists) {
-				if (extraList->HasType<RE::ExtraHotkey>()) {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 
 	void StaffCraftingMenu::Selection::Clear()
