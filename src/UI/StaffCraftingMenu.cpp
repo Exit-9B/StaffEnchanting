@@ -127,8 +127,20 @@ namespace UI
 		static const bool
 			essentialFavorites = SKSE::WinAPI::GetModuleHandle("po3_EssentialFavorites") !=
 			nullptr;
-		static const auto [disallowHeartStones, allowSoulGems] = Hooks::Workbench::
-			GetWorkbenchType();
+
+		const auto disallowHeartStonesKwd = dataHandler->LookupForm<RE::BGSKeyword>(
+			0x800,
+			"StaffEnchanting.esp");
+		const auto allowSoulGemsKwd = dataHandler->LookupForm<RE::BGSKeyword>(
+			0x801,
+			"StaffEnchanting.esp");
+
+		static const bool disallowHeartStones = disallowHeartStonesKwd
+			? workbench->HasKeyword(disallowHeartStonesKwd)
+			: false;
+		static const bool allowSoulGems = allowSoulGemsKwd
+			? workbench->HasKeyword(allowSoulGemsKwd)
+			: false;
 
 		auto inventory = playerRef->GetInventory(
 			[heartstoneID](RE::TESBoundObject& baseObj) -> bool
