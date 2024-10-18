@@ -68,7 +68,9 @@ namespace UI
 
 		void ClearEffects();
 		void ChooseItem(std::uint32_t a_index);
-		bool CanSelectEntry(std::uint32_t a_index, bool a_showNotification = false);
+		bool CanSelectEntry(
+			const RE::BSTSmartPointer<CategoryListEntry>& a_entry,
+			bool a_showNotification = false);
 		void CreateItem(const RE::BGSConstructibleObject* a_constructible);
 
 		void UpdateItemPreview(std::unique_ptr<RE::InventoryEntryData>&& a_item);

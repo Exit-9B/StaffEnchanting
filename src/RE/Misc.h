@@ -48,12 +48,12 @@ namespace RE
 		class Callback : public RE::IMessageBoxCallback
 		{
 		public:
-			Callback(F&& a_callback) : callback_{ std::forward<F>(a_callback) } {}
+			Callback(F&& a_fn) : fn{ std::forward<F>(a_fn) } {}
 
-			void Run(Message a_msg) override { callback_(a_msg); }
+			void Run(Message a_msg) override { fn(a_msg); }
 
 		private:
-			std::remove_cvref_t<F> callback_;
+			std::decay_t<F> fn;
 		};
 
 		return RE::make_smart<Callback>(std::forward<F>(a_callback));

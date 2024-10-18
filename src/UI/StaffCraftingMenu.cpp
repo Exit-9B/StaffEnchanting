@@ -144,9 +144,24 @@ namespace UI
 			AddSpellIfUsable(listEntries, spell);
 		}
 
+		const auto invChanges = playerRef->GetInventoryChanges();
+		const auto questItemFilter = [](const RE::InventoryEntryData* a_entry)
+		{
+			return !a_entry->IsQuestObject();
+		};
+
 		for (const auto obj : dataHandler->GetFormArray<RE::BGSConstructibleObject>()) {
 			if (RE::CanBeCreatedOnWorkbench(obj, furniture, false) && IsSpecial(obj)) {
-				listEntries.push_back(RE::make_smart<RecipeEntry>(obj));
+				const auto& entry = listEntries.emplace_back(RE::make_smart<RecipeEntry>(obj));
+
+				const auto& items = obj->requiredItems;
+				for (const auto* const item :
+					 std::span(items.containerObjects, items.numContainerObjects)) {
+					if (item->count > RE::GetCountDelta(item->obj, invChanges, questItemFilter)) {
+						entry->enabled = false;
+						break;
+					}
+				}
 			}
 		}
 
@@ -204,7 +219,10 @@ namespace UI
 	void StaffCraftingMenu::UpdateEnabledEntries(FilterFlag a_flags, bool a_fullRebuild)
 	{
 		SKSE::stl::enumeration flags{ a_flags };
-		// TODO: see 51450
+
+		for (const auto& entry : listEntries) {
+			entry->enabled = flags.all(entry->filterFlag) && CanSelectEntry(entry, false);
+		}
 
 		if (menu.IsObject()) {
 			menu.Invoke("UpdateItemList", std::to_array<RE::GFxValue>({ a_fullRebuild }));
@@ -491,7 +509,7 @@ namespace UI
 			}
 		}
 		else {
-			if (CanSelectEntry(a_index, true)) {
+			if (CanSelectEntry(entry, true)) {
 				selected.Toggle(entry);
 
 				std::unique_ptr<RE::InventoryEntryData> itemPreview;
@@ -519,11 +537,31 @@ namespace UI
 		}
 	}
 
-	bool StaffCraftingMenu::CanSelectEntry(std::uint32_t a_index, bool a_showNotification)
+	bool StaffCraftingMenu::CanSelectEntry(
+		const RE::BSTSmartPointer<CategoryListEntry>& a_entry,
+		bool a_showNotification)
 	{
-		(void)a_index;
-		(void)a_showNotification;
+		if (a_entry->filterFlag == FilterFlag::Recipe) {
+			const auto playerRef = RE::PlayerCharacter::GetSingleton();
+			const auto invChanges = playerRef->GetInventoryChanges();
+			const auto questItemFilter = [](const RE::InventoryEntryData* a_entry)
+			{
+				return !a_entry->IsQuestObject();
+			};
+
+			const auto recipe = static_cast<const RecipeEntry*>(a_entry.get());
+			assert(recipe->data);
+			const auto& items = recipe->data->requiredItems;
+			for (const auto* const item :
+				 std::span(items.containerObjects, items.numContainerObjects)) {
+				if (item->count > RE::GetCountDelta(item->obj, invChanges, questItemFilter)) {
+					return false;
+				}
+			}
+		}
+
 		// TODO
+		(void)a_showNotification;
 		return true;
 	}
 
