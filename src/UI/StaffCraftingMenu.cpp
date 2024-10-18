@@ -177,7 +177,7 @@ namespace UI
 		const auto invChanges = playerRef->GetInventoryChanges();
 
 		for (const auto obj : dataHandler->GetFormArray<RE::BGSConstructibleObject>()) {
-			if (obj->CanBeCreatedOnWorkbench(workbench, false) && IsSpecial(obj)) {
+			if (obj->CanBeCreatedOnWorkbench(workbench, true) && IsSpecial(obj)) {
 				const auto& entry = listEntries.emplace_back(RE::make_smart<RecipeEntry>(obj));
 
 				const auto& items = obj->requiredItems;
