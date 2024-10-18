@@ -472,7 +472,7 @@ namespace UI
 		return true;
 	}
 
-	bool StaffCraftingMenu::IsFavorite(RE::InventoryEntryData* a_entry)
+	bool StaffCraftingMenu::IsFavorite(const RE::InventoryEntryData* a_entry)
 	{
 		if (a_entry->extraLists) {
 			for (const auto extraList : *a_entry->extraLists) {
