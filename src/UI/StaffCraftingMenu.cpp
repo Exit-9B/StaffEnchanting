@@ -1,6 +1,5 @@
 #include "StaffCraftingMenu.h"
 
-#include "Hooks/Workbench.h"
 #include "RE/Misc.h"
 #include "RE/Offset.h"
 
@@ -135,10 +134,10 @@ namespace UI
 			0x801,
 			"StaffEnchanting.esp");
 
-		static const bool disallowHeartStones = disallowHeartStonesKwd
+		const bool disallowHeartStones = disallowHeartStonesKwd
 			? workbench->HasKeyword(disallowHeartStonesKwd)
 			: false;
-		static const bool allowSoulGems = allowSoulGemsKwd
+		const bool allowSoulGems = allowSoulGemsKwd
 			? workbench->HasKeyword(allowSoulGemsKwd)
 			: false;
 
@@ -168,17 +167,16 @@ namespace UI
 				listEntries.push_back(RE::BSTSmartPointer(
 					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Staff)));
 			}
-			// Two elses aren't necessary, but I find it clearer to read than a massive if.
 			else if (allowSoulGems && baseObj->IsSoulGem()) {
-				if (entry.get()->GetSoulLevel() == RE::SOUL_LEVEL::kNone)
+				if (entry->GetSoulLevel() == RE::SOUL_LEVEL::kNone)
 					continue;
 
-				listEntries.push_back(RE::BSTSmartPointer(
-					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Morpholith)));
+				listEntries.push_back(RE::make_smart<ItemEntry>(
+					std::move(entry), FilterFlag::Morpholith));
 			}
 			else if (!disallowHeartStones && baseObj->formID == heartstoneID) {
-				listEntries.push_back(RE::BSTSmartPointer(
-					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Morpholith)));
+				listEntries.push_back(RE::make_smart<ItemEntry>(
+					std::move(entry), FilterFlag::Morpholith));
 			}
 		}
 
