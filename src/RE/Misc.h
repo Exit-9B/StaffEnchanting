@@ -4,30 +4,11 @@
 
 namespace RE
 {
-	namespace SendHUDMessage
+	namespace InventoryUtils
 	{
-		inline void SetHUDMode(const char* a_mode, bool a_push)
+		inline bool QuestItemFilter(const RE::InventoryEntryData* a_entry)
 		{
-			const auto uiMessageQueue = RE::UIMessageQueue::GetSingleton();
-			const auto interfaceStrings = RE::InterfaceStrings::GetSingleton();
-			if (const auto data = static_cast<RE::HUDData*>(
-					uiMessageQueue->CreateUIMessageData(interfaceStrings->hudData))) {
-				data->unk40 = a_push;
-				data->text = a_mode;
-				data->type = static_cast<RE::HUDData::Type>(23);
-				uiMessageQueue
-					->AddMessage(RE::HUDMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kUpdate, data);
-			}
-		}
-
-		inline void PushHudMode(const char* a_mode)
-		{
-			SetHUDMode(a_mode, true);
-		}
-
-		inline void PopHudMode(const char* a_mode)
-		{
-			SetHUDMode(a_mode, false);
+			return !a_entry->IsQuestObject();
 		}
 	}
 
@@ -39,6 +20,34 @@ namespace RE
 			static REL::Relocation<func_t> func{ RE::Offset::UIMessageDataFactory::Create };
 			return func(a_name);
 		}
+	}
+
+	namespace UIUtils
+	{
+		inline void PlayMenuSound(const RE::BGSSoundDescriptorForm* a_descriptor)
+		{
+			using func_t = decltype(&PlayMenuSound);
+			static REL::Relocation<func_t> func{ RE::Offset::UIUtils::PlayMenuSound };
+			return func(a_descriptor);
+		}
+	}
+
+	template <std::invocable<RE::IMessageBoxCallback::Message> F>
+	[[nodiscard]] RE::BSTSmartPointer<RE::IMessageBoxCallback> MakeMessageBoxCallback(
+		F&& a_callback)
+	{
+		class Callback : public RE::IMessageBoxCallback
+		{
+		public:
+			Callback(F&& a_fn) : fn{ std::forward<F>(a_fn) } {}
+
+			void Run(Message a_msg) override { fn(a_msg); }
+
+		private:
+			std::decay_t<F> fn;
+		};
+
+		return RE::make_smart<Callback>(std::forward<F>(a_callback));
 	}
 
 	[[nodiscard]] inline const char* GetActorValueName(RE::ActorValue a_actorValue)
@@ -60,5 +69,19 @@ namespace RE
 		using func_t = decltype(&ClearFurniture);
 		static REL::Relocation<func_t> func{ RE::Offset::AIProcess::ClearFurniture };
 		return func(a_process);
+	}
+
+	[[nodiscard]] inline RE::BGSSoundDescriptorForm* GetNoActivationSound()
+	{
+		const auto defaultObjects = RE::BGSDefaultObjectManager::GetSingleton();
+		const auto sound = defaultObjects->GetObject<RE::BGSSoundDescriptorForm>(
+			RE::DEFAULT_OBJECT::kNoActivationSound);
+
+		if (sound) {
+			const auto audioManager = RE::BSAudioManager::GetSingleton();
+			audioManager->PrecacheDescriptor(sound, 16);
+		}
+
+		return sound;
 	}
 }

@@ -39,6 +39,8 @@ namespace UI
 		class CategoryListEntry;
 		class SpellEntry;
 		class ItemEntry;
+		class RecipeEntry;
+
 		friend SpellEntry;
 		friend ItemEntry;
 
@@ -66,12 +68,15 @@ namespace UI
 
 		void ClearEffects();
 		void ChooseItem(std::uint32_t a_index);
-		bool CanSelectEntry(std::uint32_t a_index, bool a_showNotification = false);
-
-		[[nodiscard]] static bool IsFavorite(const RE::InventoryEntryData* a_entry);
+		bool CanSelectEntry(
+			const RE::BSTSmartPointer<CategoryListEntry>& a_entry,
+			bool a_showNotification = false);
+		void CreateItem(const RE::BGSConstructibleObject* a_constructible);
 
 		void UpdateItemPreview(std::unique_ptr<RE::InventoryEntryData>&& a_item);
-		void UpdateEnabledEntries(std::uint32_t a_flags = 0x7F, bool a_fullRebuild = false);
+		void UpdateEnabledEntries(
+			FilterFlag a_flags = FilterFlag::All,
+			bool a_fullRebuild = false);
 		void UpdateEnchantment();
 		void UpdateIngredients();
 		void UpdateItemList(
@@ -82,8 +87,8 @@ namespace UI
 			RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>>& a_entries,
 			const RE::SpellItem* a_spell);
 
-		void ClearEntryList();
-		void PopulateEntryList();
+		void ClearSelection();
+		void PopulateEntryList(bool a_fullRebuild = false);
 
 		void UpdateInterface();
 

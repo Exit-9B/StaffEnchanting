@@ -19,6 +19,11 @@ namespace RE
 			constexpr auto Create = REL::ID(35855);
 		}
 
+		namespace UIUtils
+		{
+			constexpr auto PlayMenuSound = REL::ID(52940);
+		}
+
 		constexpr auto GetActorValueName = REL::ID(27192);
 		constexpr auto GetFurnitureMarkerNode = REL::ID(17407);
 	}
