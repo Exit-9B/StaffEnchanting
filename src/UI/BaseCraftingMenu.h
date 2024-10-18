@@ -63,6 +63,7 @@ namespace UI
 
 	protected:
 		const char* movieFrame;
+		RE::TESFurniture* workbench;
 
 		// stage elements
 		std::unique_ptr<RE::ItemCard> itemCard;

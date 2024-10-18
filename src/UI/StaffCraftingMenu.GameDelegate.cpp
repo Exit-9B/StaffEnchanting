@@ -74,6 +74,10 @@ namespace UI
 			menu->menu.Invoke("FadeInfoCard", std::to_array<RE::GFxValue>({ true }));
 			inventory3D->Clear3D();
 		}
+
+		if (category == Category::Recipe || previousCategory == Category::Recipe) {
+			menu->UpdateIngredients();
+		}
 	}
 
 	void StaffCraftingMenu::ChooseItem(const RE::FxDelegateArgs& a_params)

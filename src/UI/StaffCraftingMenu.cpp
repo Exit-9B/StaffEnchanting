@@ -34,10 +34,10 @@ namespace UI
 		menu.GetMember("CategoryList", &inventoryLists);
 		if (inventoryLists.IsObject()) {
 			const std::array<const char*, Category::TOTAL>
-				labels{ "", "", "Staff", "Spell", "Morpholith" };
+				labels{ "Special", "", "Staff", "Spell", "Morpholith" };
 
-			const std::array<FilterFlag, Category::TOTAL> filters{
-				FilterFlag::None,
+			static constexpr std::array<FilterFlag, Category::TOTAL> filters{
+				FilterFlag::Recipe,
 				FilterFlag::None,
 				FilterFlag::Staff,
 				FilterFlag::Spell,
@@ -82,9 +82,34 @@ namespace UI
 		UpdateBottomBar(RE::ActorValue::kEnchanting);
 	}
 
-	void StaffCraftingMenu::PopulateEntryList()
+	[[nodiscard]] static bool IsFavorite(const RE::InventoryEntryData* a_entry)
 	{
-		ClearEntryList();
+		if (a_entry->extraLists) {
+			for (const auto extraList : *a_entry->extraLists) {
+				if (extraList->HasType<RE::ExtraHotkey>()) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	[[nodiscard]] static bool IsSpecial(const RE::BGSConstructibleObject* a_obj)
+	{
+		for (auto condition = a_obj->conditions.head; condition; condition = condition->next) {
+			if (condition &&
+				condition->data.functionData.function ==
+					RE::FUNCTION_DATA::FunctionID::kHasSpell) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	void StaffCraftingMenu::PopulateEntryList(bool a_fullRebuild)
+	{
+		listEntries.clear();
+		ClearSelection();
 
 		const auto playerRef = RE::PlayerCharacter::GetSingleton();
 		assert(playerRef);
@@ -149,6 +174,24 @@ namespace UI
 			AddSpellIfUsable(listEntries, spell);
 		}
 
+		const auto invChanges = playerRef->GetInventoryChanges();
+
+		for (const auto obj : dataHandler->GetFormArray<RE::BGSConstructibleObject>()) {
+			if (obj->CanBeCreatedOnWorkbench(workbench, true) && IsSpecial(obj)) {
+				const auto& entry = listEntries.emplace_back(RE::make_smart<RecipeEntry>(obj));
+
+				const auto& items = obj->requiredItems;
+				for (const auto* const item :
+					 std::span(items.containerObjects, items.numContainerObjects)) {
+					if (item->count >
+						invChanges->GetCount(item->obj, RE::InventoryUtils::QuestItemFilter)) {
+						entry->enabled = false;
+						break;
+					}
+				}
+			}
+		}
+
 		highlightIndex = listEntries.empty()
 			? 0
 			: std::min(highlightIndex, listEntries.size() - 1);
@@ -164,15 +207,12 @@ namespace UI
 			}
 		}
 
-		// TBD: constructible object recipes
-
-		UpdateEnabledEntries();
+		UpdateEnabledEntries(FilterFlag::All, a_fullRebuild);
 		UpdateIngredients();
 	}
 
-	void StaffCraftingMenu::ClearEntryList()
+	void StaffCraftingMenu::ClearSelection()
 	{
-		listEntries.clear();
 		selected.Clear();
 		UpdateItemPreview(nullptr);
 		UpdateEnabledEntries();
@@ -203,10 +243,13 @@ namespace UI
 		UpdateInterface();
 	}
 
-	void StaffCraftingMenu::UpdateEnabledEntries(std::uint32_t a_flags, bool a_fullRebuild)
+	void StaffCraftingMenu::UpdateEnabledEntries(FilterFlag a_flags, bool a_fullRebuild)
 	{
-		(void)a_flags;
-		// TODO: see 51450
+		const SKSE::stl::enumeration flags{ a_flags };
+
+		for (const auto& entry : listEntries) {
+			entry->enabled = flags.all(entry->filterFlag) && CanSelectEntry(entry, false);
+		}
 
 		if (menu.IsObject()) {
 			menu.Invoke("UpdateItemList", std::to_array<RE::GFxValue>({ a_fullRebuild }));
@@ -268,28 +311,51 @@ namespace UI
 		RE::GFxValue ingredients;
 		uiMovie->CreateArray(&ingredients);
 
-		RE::GFxValue staff;
-		uiMovie->CreateObject(&staff);
-		staff.SetMember("Name", selected.staff ? selected.staff->GetName() : "Staff");
-		staff.SetMember("RequiredCount", 1);
-		staff.SetMember("PlayerCount", selected.staff ? 1 : 0);
-		ingredients.PushBack(staff);
+		if (currentCategory != Category::Recipe || highlightIndex >= listEntries.size() ||
+			listEntries[highlightIndex]->filterFlag != FilterFlag::Recipe) {
 
-		RE::GFxValue spell;
-		uiMovie->CreateObject(&spell);
-		spell.SetMember("Name", selected.spell ? selected.spell->GetName() : "Spell");
-		spell.SetMember("RequiredCount", 1);
-		spell.SetMember("PlayerCount", selected.spell ? 1 : 0);
-		ingredients.PushBack(spell);
+			RE::GFxValue staff;
+			uiMovie->CreateObject(&staff);
+			staff.SetMember("Name", selected.staff ? selected.staff->GetName() : "Staff");
+			staff.SetMember("RequiredCount", 1);
+			staff.SetMember("PlayerCount", selected.staff ? 1 : 0);
+			ingredients.PushBack(staff);
 
-		RE::GFxValue morpholith;
-		uiMovie->CreateObject(&morpholith);
-		morpholith.SetMember(
-			"Name",
-			selected.morpholith ? selected.morpholith->GetName() : "Morpholith");
-		morpholith.SetMember("RequiredCount", 1);
-		morpholith.SetMember("PlayerCount", selected.morpholith ? 1 : 0);
-		ingredients.PushBack(morpholith);
+			RE::GFxValue spell;
+			uiMovie->CreateObject(&spell);
+			spell.SetMember("Name", selected.spell ? selected.spell->GetName() : "Spell");
+			spell.SetMember("RequiredCount", 1);
+			spell.SetMember("PlayerCount", selected.spell ? 1 : 0);
+			ingredients.PushBack(spell);
+
+			RE::GFxValue morpholith;
+			uiMovie->CreateObject(&morpholith);
+			morpholith.SetMember(
+				"Name",
+				selected.morpholith ? selected.morpholith->GetName() : "Morpholith");
+			morpholith.SetMember("RequiredCount", 1);
+			morpholith.SetMember("PlayerCount", selected.morpholith ? 1 : 0);
+			ingredients.PushBack(morpholith);
+		}
+		else {
+			const auto playerRef = RE::PlayerCharacter::GetSingleton();
+			const auto invChanges = playerRef->GetInventoryChanges();
+
+			const auto entry = static_cast<const RecipeEntry*>(listEntries[highlightIndex].get());
+			assert(entry->data);
+			const auto& items = entry->data->requiredItems;
+			for (const auto* const item :
+				 std::span(items.containerObjects, items.numContainerObjects)) {
+				RE::GFxValue ingredient;
+				uiMovie->CreateObject(&ingredient);
+				ingredient.SetMember("Name", item->obj->GetName());
+				ingredient.SetMember("RequiredCount", item->count);
+				ingredient.SetMember(
+					"PlayerCount",
+					invChanges->GetCount(item->obj, RE::InventoryUtils::QuestItemFilter));
+				ingredients.PushBack(ingredient);
+			}
+		}
 
 		menu.Invoke(
 			"UpdateIngredients",
@@ -349,6 +415,10 @@ namespace UI
 		else {
 			UpdateItemCard(nullptr);
 		}
+
+		if (currentCategory == Category::Recipe) {
+			UpdateIngredients();
+		}
 	}
 
 	bool StaffCraftingMenu::ProcessUserEvent(const RE::BSFixedString& a_userEvent)
@@ -368,16 +438,11 @@ namespace UI
 			msgBoxData->buttonText.push_back(*"sYes"_gs);
 			msgBoxData->buttonText.push_back(*"sNo"_gs);
 
-			struct MenuExitCallback : public RE::IMessageBoxCallback
-			{
-				StaffCraftingMenu* menu;
-
-				MenuExitCallback(StaffCraftingMenu* a_menu) : menu{ a_menu } {}
-
-				void Run(Message a_msg) override
+			const auto callback = RE::MakeMessageBoxCallback(
+				[this](auto msg)
 				{
-					if (a_msg != Message::kUnk0) {
-						menu->exiting = false;
+					if (msg != RE::IMessageBoxCallback::Message::kUnk0) {
+						exiting = false;
 					}
 					else {
 						const auto uiMessageQueue = RE::UIMessageQueue::GetSingleton();
@@ -397,10 +462,9 @@ namespace UI
 								->AddMessage(MENU_NAME, RE::UI_MESSAGE_TYPE::kUserEvent, msgData);
 						}
 					}
-				}
-			};
+				});
 
-			msgBoxData->callback = RE::make_smart<MenuExitCallback>(this);
+			msgBoxData->callback = callback;
 			msgBoxData->unk38 = 25;
 			msgBoxData->unk48 = 4;
 
@@ -434,9 +498,41 @@ namespace UI
 		const auto& entry = listEntries[a_index];
 		RE::PlaySound(entry->selected ? "UISelectOff" : "UISelectOn");
 
-		// TODO: see 51344
-		if (entry->filterFlag != FilterFlag::Recipe) {
-			if (CanSelectEntry(a_index, true)) {
+		if (entry->filterFlag == FilterFlag::Recipe) {
+			if (entry->enabled) {
+				ClearSelection();
+				entry->selected = true;
+				UpdateItemList(listEntries);
+				const auto msgBoxData = new RE::MessageBoxData();
+				msgBoxData->bodyText = *"sConstructibleMenuConfirm"_gs;
+				msgBoxData->buttonText.push_back(*"sYes"_gs);
+				msgBoxData->buttonText.push_back(*"sNo"_gs);
+
+				const auto callback = RE::MakeMessageBoxCallback(
+					[&](auto message)
+					{
+						entry->selected = false;
+						if (message != RE::IMessageBoxCallback::Message::kUnk0) {
+							UpdateItemList(listEntries);
+						}
+						else {
+							CreateItem(static_cast<RecipeEntry*>(entry.get())->data);
+						}
+					});
+
+				msgBoxData->callback = callback;
+				msgBoxData->unk38 = 25;
+				msgBoxData->unk48 = 4;
+
+				msgBoxData->QueueMessage();
+			}
+			else {
+				RE::SendHUDMessage::ShowHUDMessage(*"sLackRequiredToCreate"_gs);
+				RE::UIUtils::PlayMenuSound(RE::GetNoActivationSound());
+			}
+		}
+		else {
+			if (CanSelectEntry(entry, true)) {
 				selected.Toggle(entry);
 
 				std::unique_ptr<RE::InventoryEntryData> itemPreview;
@@ -464,24 +560,75 @@ namespace UI
 		}
 	}
 
-	bool StaffCraftingMenu::CanSelectEntry(std::uint32_t a_index, bool a_showNotification)
+	bool StaffCraftingMenu::CanSelectEntry(
+		const RE::BSTSmartPointer<CategoryListEntry>& a_entry,
+		bool a_showNotification)
 	{
-		(void)a_index;
-		(void)a_showNotification;
-		// TODO
-		return true;
-	}
+		if (a_entry->filterFlag == FilterFlag::Recipe) {
+			const auto playerRef = RE::PlayerCharacter::GetSingleton();
+			const auto invChanges = playerRef->GetInventoryChanges();
 
-	bool StaffCraftingMenu::IsFavorite(const RE::InventoryEntryData* a_entry)
-	{
-		if (a_entry->extraLists) {
-			for (const auto extraList : *a_entry->extraLists) {
-				if (extraList->HasType<RE::ExtraHotkey>()) {
-					return true;
+			const auto recipe = static_cast<const RecipeEntry*>(a_entry.get());
+			assert(recipe->data);
+			const auto& items = recipe->data->requiredItems;
+			for (const auto* const item :
+				 std::span(items.containerObjects, items.numContainerObjects)) {
+				if (item->count >
+					invChanges->GetCount(item->obj, RE::InventoryUtils::QuestItemFilter)) {
+					return false;
 				}
 			}
 		}
-		return false;
+
+		// TODO
+		(void)a_showNotification;
+		return true;
+	}
+
+	void StaffCraftingMenu::CreateItem(const RE::BGSConstructibleObject* a_constructible)
+	{
+		const auto createdItem = a_constructible->createdItem;
+		const auto createdCount = a_constructible->data.numConstructed;
+
+		const auto playerRef = RE::PlayerCharacter::GetSingleton();
+
+		if (!a_constructible->CreateItem()) {
+			return;
+		}
+
+		RE::SendHUDMessage::ShowInventoryChangeMessage(
+			static_cast<RE::TESBoundObject*>(createdItem),
+			createdCount,
+			true,
+			true);
+
+		const auto skill = workbench->workBenchData.usesSkill;
+		if (skill.underlying() - 6u <= 17u) {
+			playerRef->UseSkill(skill.get(), a_constructible->CalcSkillUse());
+		}
+
+		const auto workbenchRef = playerRef->currentProcess->GetOccupiedFurniture().get();
+		const auto storyEvent = RE::BGSCraftItemEvent(
+			workbenchRef.get(),
+			workbenchRef->GetCurrentLocation(),
+			createdItem);
+		const auto storyEventManager = RE::BGSStoryEventManager::GetSingleton();
+		storyEventManager->AddEvent(storyEvent);
+
+		const auto itemCraftedEvent = RE::ItemCrafted::Event{
+			.item = createdItem,
+			.unk08 = true,
+			.unk09 = false,
+			.unk0A = false,
+		};
+		const auto itemCraftedSource = RE::ItemCrafted::GetEventSource();
+		itemCraftedSource->SendEvent(std::addressof(itemCraftedEvent));
+
+		PopulateEntryList(true);
+		UpdateItemPreview(nullptr);
+		menu.Invoke("UpdateItemDisplay");
+
+		RE::PlaySound("UISmithingCreateGeneric");
 	}
 
 	void StaffCraftingMenu::Selection::Clear()
