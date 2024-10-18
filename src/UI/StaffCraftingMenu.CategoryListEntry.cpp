@@ -48,7 +48,7 @@ namespace UI
 		const auto inventory3D = RE::Inventory3DManager::GetSingleton();
 		assert(inventory3D);
 		if (a_show && data) {
-			inventory3D->UpdateMagic3D(const_cast<RE::SpellItem*>(data), 0);
+			inventory3D->UpdateItem3D(const_cast<RE::SpellItem*>(data), 0);
 		}
 		else {
 			inventory3D->Clear3D();
@@ -71,9 +71,9 @@ namespace UI
 			? data->createdItem->As<RE::TESBoundObject>()
 			: nullptr;
 
-		const auto item = std::make_unique<RE::InventoryEntryData>(
-			createdItem,
-			data->data.numConstructed);
+		const auto item = createdItem
+			? std::make_unique<RE::InventoryEntryData>(createdItem, data->data.numConstructed)
+			: nullptr;
 
 		a_menu->UpdateItemCard(item.get());
 	}
@@ -83,7 +83,7 @@ namespace UI
 		const auto inventory3D = RE::Inventory3DManager::GetSingleton();
 		assert(inventory3D);
 		if (a_show) {
-			inventory3D->UpdateMagic3D(data->createdItem, 0);
+			inventory3D->UpdateItem3D(data->createdItem);
 		}
 		else {
 			inventory3D->Clear3D();
