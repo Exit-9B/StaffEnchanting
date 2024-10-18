@@ -57,7 +57,7 @@ namespace Hooks
 	{
 		if (IsStaffCraftingWorkbench(a_refr)) {
 			const auto dataHandler = RE::TESDataHandler::GetSingleton();
-			assert(dataHandler); // Is there ever a chance of this breaking?
+			assert(dataHandler);  // Is there ever a chance of this breaking?
 			const auto idx_StaffEnchanting = dataHandler
 				? dataHandler->GetModIndex("StaffEnchanting.esp"sv)
 				: std::nullopt;

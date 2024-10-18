@@ -7,9 +7,9 @@ namespace Hooks
 	public:
 		static void Install();
 		/*
-		* Returns the workbench parameters as a pair of bools.
-		* @return Pair of bools, representing [disallowHeartStones, allowSoulGems].
-		*/
+		 * Returns the workbench parameters as a pair of bools.
+		 * @return Pair of bools, representing [disallowHeartStones, allowSoulGems].
+		 */
 		static std::pair<bool, bool> GetWorkbenchType();
 
 	private:
