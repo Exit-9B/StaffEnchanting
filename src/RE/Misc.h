@@ -12,33 +12,6 @@ namespace RE
 		}
 	}
 
-	namespace SendHUDMessage
-	{
-		inline void SetHUDMode(const char* a_mode, bool a_push)
-		{
-			const auto uiMessageQueue = RE::UIMessageQueue::GetSingleton();
-			const auto interfaceStrings = RE::InterfaceStrings::GetSingleton();
-			if (const auto data = static_cast<RE::HUDData*>(
-					uiMessageQueue->CreateUIMessageData(interfaceStrings->hudData))) {
-				data->unk40 = a_push;
-				data->text = a_mode;
-				data->type = static_cast<RE::HUDData::Type>(23);
-				uiMessageQueue
-					->AddMessage(RE::HUDMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kUpdate, data);
-			}
-		}
-
-		inline void PushHudMode(const char* a_mode)
-		{
-			SetHUDMode(a_mode, true);
-		}
-
-		inline void PopHudMode(const char* a_mode)
-		{
-			SetHUDMode(a_mode, false);
-		}
-	}
-
 	namespace UIMessageDataFactory
 	{
 		[[nodiscard]] inline RE::IUIMessageData* Create(const RE::BSFixedString& a_name)
@@ -46,6 +19,16 @@ namespace RE
 			using func_t = decltype(&Create);
 			static REL::Relocation<func_t> func{ RE::Offset::UIMessageDataFactory::Create };
 			return func(a_name);
+		}
+	}
+
+	namespace UIUtils
+	{
+		inline void PlayMenuSound(const RE::BGSSoundDescriptorForm* a_descriptor)
+		{
+			using func_t = decltype(&PlayMenuSound);
+			static REL::Relocation<func_t> func{ RE::Offset::UIUtils::PlayMenuSound };
+			return func(a_descriptor);
 		}
 	}
 
@@ -74,24 +57,6 @@ namespace RE
 		return func(a_actorValue);
 	}
 
-	[[nodiscard]] inline bool CanBeCreatedOnWorkbench(
-		const RE::BGSConstructibleObject* a_obj,
-		const RE::TESFurniture* a_workbench,
-		bool a_checkConditions)
-	{
-		if (!a_workbench || !a_workbench->HasKeyword(a_obj->benchKeyword)) {
-			return false;
-		}
-
-		if (a_obj->conditions.head && a_checkConditions) {
-			const auto playerRef = RE::PlayerCharacter::GetSingleton();
-			return a_obj->conditions.IsTrue(playerRef, playerRef);
-		}
-		else {
-			return true;
-		}
-	}
-
 	[[nodiscard]] inline RE::BSFurnitureMarkerNode* GetFurnitureMarkerNode(RE::NiAVObject* a_root)
 	{
 		using func_t = decltype(&GetFurnitureMarkerNode);
@@ -106,42 +71,17 @@ namespace RE
 		return func(a_process);
 	}
 
-	[[nodiscard]] inline std::int32_t GetObjectCount(
-		const RE::TESContainer* a_container,
-		const RE::TESBoundObject* a_object)
+	[[nodiscard]] inline RE::BGSSoundDescriptorForm* GetNoActivationSound()
 	{
-		std::int32_t count = 0;
-		for (const RE::ContainerObject* const entry :
-			 std::span(a_container->containerObjects, a_container->numContainerObjects)) {
-			if (entry->obj == a_object) {
-				count += entry->count;
-			}
-		}
-		return count;
-	}
+		const auto defaultObjects = RE::BGSDefaultObjectManager::GetSingleton();
+		const auto sound = defaultObjects->GetObject<RE::BGSSoundDescriptorForm>(
+			RE::DEFAULT_OBJECT::kNoActivationSound);
 
-	[[nodiscard]] inline std::int32_t GetCount(
-		const RE::InventoryChanges* a_invChanges,
-		const RE::TESBoundObject* a_object,
-		std::predicate<const RE::InventoryEntryData*> auto a_itemFilter)
-	{
-		const auto container = a_invChanges->owner ? a_invChanges->owner->GetContainer() : nullptr;
-		std::int32_t count = container ? std::max(0, GetObjectCount(container, a_object)) : 0;
-		if (a_invChanges->entryList) {
-			const RE::InventoryEntryData* objEntry = nullptr;
-			for (const auto* const entry : *a_invChanges->entryList) {
-				if (entry && entry->object == a_object) {
-					objEntry = entry;
-					break;
-				}
-			}
-
-			if (objEntry) {
-				if (a_itemFilter(objEntry)) {
-					count += objEntry->countDelta;
-				}
-			}
+		if (sound) {
+			const auto audioManager = RE::BSAudioManager::GetSingleton();
+			audioManager->PrecacheDescriptor(sound, 16);
 		}
-		return count;
+
+		return sound;
 	}
 }

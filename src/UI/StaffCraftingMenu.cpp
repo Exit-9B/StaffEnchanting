@@ -177,14 +177,14 @@ namespace UI
 		const auto invChanges = playerRef->GetInventoryChanges();
 
 		for (const auto obj : dataHandler->GetFormArray<RE::BGSConstructibleObject>()) {
-			if (RE::CanBeCreatedOnWorkbench(obj, furniture, false) && IsSpecial(obj)) {
+			if (obj->CanBeCreatedOnWorkbench(workbench, false) && IsSpecial(obj)) {
 				const auto& entry = listEntries.emplace_back(RE::make_smart<RecipeEntry>(obj));
 
 				const auto& items = obj->requiredItems;
 				for (const auto* const item :
 					 std::span(items.containerObjects, items.numContainerObjects)) {
 					if (item->count >
-						RE::GetCount(invChanges, item->obj, RE::InventoryUtils::QuestItemFilter)) {
+						invChanges->GetCount(item->obj, RE::InventoryUtils::QuestItemFilter)) {
 						entry->enabled = false;
 						break;
 					}
@@ -245,7 +245,7 @@ namespace UI
 
 	void StaffCraftingMenu::UpdateEnabledEntries(FilterFlag a_flags, bool a_fullRebuild)
 	{
-		SKSE::stl::enumeration flags{ a_flags };
+		const SKSE::stl::enumeration flags{ a_flags };
 
 		for (const auto& entry : listEntries) {
 			entry->enabled = flags.all(entry->filterFlag) && CanSelectEntry(entry, false);
@@ -352,7 +352,7 @@ namespace UI
 				ingredient.SetMember("RequiredCount", item->count);
 				ingredient.SetMember(
 					"PlayerCount",
-					RE::GetCount(invChanges, item->obj, RE::InventoryUtils::QuestItemFilter));
+					invChanges->GetCount(item->obj, RE::InventoryUtils::QuestItemFilter));
 				ingredients.PushBack(ingredient);
 			}
 		}
@@ -527,8 +527,8 @@ namespace UI
 				msgBoxData->QueueMessage();
 			}
 			else {
-				RE::DebugNotification(*"sLackRequiredToCreate"_gs);
-				// TODO: no activation sound
+				RE::SendHUDMessage::ShowHUDMessage(*"sLackRequiredToCreate"_gs);
+				RE::UIUtils::PlayMenuSound(RE::GetNoActivationSound());
 			}
 		}
 		else {
@@ -574,7 +574,7 @@ namespace UI
 			for (const auto* const item :
 				 std::span(items.containerObjects, items.numContainerObjects)) {
 				if (item->count >
-					RE::GetCount(invChanges, item->obj, RE::InventoryUtils::QuestItemFilter)) {
+					invChanges->GetCount(item->obj, RE::InventoryUtils::QuestItemFilter)) {
 					return false;
 				}
 			}
@@ -587,15 +587,48 @@ namespace UI
 
 	void StaffCraftingMenu::CreateItem(const RE::BGSConstructibleObject* a_constructible)
 	{
-		(void)a_constructible;
-		// TODO: remove & add items
-		// TODO: inventory notification
-		// TODO: advance skill
-		// TODO: add story event
-		// TODO: item crafted event
+		const auto createdItem = a_constructible->createdItem;
+		const auto createdCount = a_constructible->data.numConstructed;
+
+		const auto playerRef = RE::PlayerCharacter::GetSingleton();
+
+		if (!a_constructible->CreateItem()) {
+			return;
+		}
+
+		RE::SendHUDMessage::ShowInventoryChangeMessage(
+			static_cast<RE::TESBoundObject*>(createdItem),
+			createdCount,
+			true,
+			true);
+
+		const auto skill = workbench->workBenchData.usesSkill;
+		if (skill.underlying() - 6u <= 17u) {
+			playerRef->UseSkill(skill.get(), a_constructible->CalcSkillUse());
+		}
+
+		const auto workbenchRef = playerRef->currentProcess->GetOccupiedFurniture().get();
+		const auto storyEvent = RE::BGSCraftItemEvent(
+			workbenchRef.get(),
+			workbenchRef->GetCurrentLocation(),
+			createdItem);
+		const auto storyEventManager = RE::BGSStoryEventManager::GetSingleton();
+		storyEventManager->AddEvent(storyEvent);
+
+		const auto itemCraftedEvent = RE::ItemCrafted::Event{
+			.item = createdItem,
+			.unk08 = true,
+			.unk09 = false,
+			.unk0A = false,
+		};
+		const auto itemCraftedSource = RE::ItemCrafted::GetEventSource();
+		itemCraftedSource->SendEvent(std::addressof(itemCraftedEvent));
+
 		PopulateEntryList(true);
 		UpdateItemPreview(nullptr);
 		menu.Invoke("UpdateItemDisplay");
+
+		RE::PlaySound("UISmithingCreateGeneric");
 	}
 
 	void StaffCraftingMenu::Selection::Clear()

@@ -129,7 +129,7 @@ namespace UI
 			furnitureRef = playerRef->currentProcess->GetOccupiedFurniture().get();
 		}
 		const auto furnitureObj = furnitureRef ? furnitureRef->GetBaseObject() : nullptr;
-		furniture = furnitureObj ? furnitureObj->As<RE::TESFurniture>() : nullptr;
+		workbench = furnitureObj ? furnitureObj->As<RE::TESFurniture>() : nullptr;
 
 		// Common crafting setup
 		assert(uiMovie);
