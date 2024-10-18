@@ -48,9 +48,41 @@ namespace Hooks
 			->AddMessage(UI::StaffCraftingMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kShow, nullptr);
 	}
 
+	std::pair<bool, bool> Workbench::GetWorkbenchType()
+	{
+		return std::pair<bool, bool>(_disallowHeartStones, _allowSoulGems);
+	}
+
 	bool Workbench::CheckFurniture(RE::TESObjectREFR* a_refr)
 	{
 		if (IsStaffCraftingWorkbench(a_refr)) {
+			const auto dataHandler = RE::TESDataHandler::GetSingleton();
+			assert(dataHandler); // Is there ever a chance of this breaking?
+			const auto idx_StaffEnchanting = dataHandler
+				? dataHandler->GetModIndex("StaffEnchanting.esp"sv)
+				: std::nullopt;
+			const RE::FormID disallowHeartStonesID = idx_StaffEnchanting
+				? (*idx_StaffEnchanting << 24) | 0x800
+				: 0x0;
+			const RE::FormID allowSoulGemsID = idx_StaffEnchanting
+				? (*idx_StaffEnchanting << 24) | 0x801
+				: 0x0;
+
+			const auto baseObject = a_refr->GetBaseObject();
+			const auto baseFurniture = baseObject ? baseObject->As<RE::TESFurniture>() : nullptr;
+			auto baseKeywordForm = baseFurniture
+				? baseFurniture->As<RE::BGSKeywordForm>()
+				: nullptr;
+
+			static bool disallowHeartStones = baseKeywordForm
+				? baseKeywordForm->HasKeyword(disallowHeartStonesID)
+				: false;
+			static bool allowSoulGems = baseKeywordForm
+				? baseKeywordForm->HasKeyword(allowSoulGemsID)
+				: false;
+
+			_disallowHeartStones = disallowHeartStones;
+			_allowSoulGems = allowSoulGems;
 			ShowStaffCraftingMenu();
 			return false;
 		}

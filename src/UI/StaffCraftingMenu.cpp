@@ -1,5 +1,6 @@
 #include "StaffCraftingMenu.h"
 
+#include "Hooks/Workbench.h"
 #include "RE/Misc.h"
 #include "RE/Offset.h"
 
@@ -101,6 +102,8 @@ namespace UI
 		static const bool
 			essentialFavorites = SKSE::WinAPI::GetModuleHandle("po3_EssentialFavorites") !=
 			nullptr;
+		static const auto [disallowHeartStones, allowSoulGems] = Hooks::Workbench::
+			GetWorkbenchType();
 
 		auto inventory = playerRef->GetInventory(
 			[heartstoneID](RE::TESBoundObject& baseObj) -> bool
@@ -108,7 +111,7 @@ namespace UI
 				if (const auto weap = baseObj.As<RE::TESObjectWEAP>()) {
 					return weap->IsStaff();
 				}
-				return baseObj.formID == heartstoneID;
+				return baseObj.formID == heartstoneID || baseObj.IsSoulGem();
 			});
 
 		for (auto& [baseObj, extra] : inventory) {
@@ -128,10 +131,15 @@ namespace UI
 				listEntries.push_back(RE::BSTSmartPointer(
 					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Staff)));
 			}
-			else {
-				if (baseObj->formID != heartstoneID)
+			// Two elses aren't necessary, but I find it clearer to read than a massive if.
+			else if (allowSoulGems && baseObj->IsSoulGem()) {
+				if (entry.get()->GetSoulLevel() == RE::SOUL_LEVEL::kNone)
 					continue;
 
+				listEntries.push_back(RE::BSTSmartPointer(
+					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Morpholith)));
+			}
+			else if (!disallowHeartStones && baseObj->formID == heartstoneID) {
 				listEntries.push_back(RE::BSTSmartPointer(
 					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Morpholith)));
 			}
