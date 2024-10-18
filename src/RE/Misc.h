@@ -4,6 +4,14 @@
 
 namespace RE
 {
+	namespace InventoryUtils
+	{
+		inline bool QuestItemFilter(const RE::InventoryEntryData* a_entry)
+		{
+			return !a_entry->IsQuestObject();
+		}
+	}
+
 	namespace SendHUDMessage
 	{
 		inline void SetHUDMode(const char* a_mode, bool a_push)
@@ -98,7 +106,7 @@ namespace RE
 		return func(a_process);
 	}
 
-	[[nodiscard]] inline std::int32_t GetItemCount(
+	[[nodiscard]] inline std::int32_t GetObjectCount(
 		const RE::TESContainer* a_container,
 		const RE::TESBoundObject* a_object)
 	{
@@ -112,13 +120,13 @@ namespace RE
 		return count;
 	}
 
-	[[nodiscard]] inline std::int32_t GetCountDelta(
-		const RE::TESBoundObject* a_object,
+	[[nodiscard]] inline std::int32_t GetCount(
 		const RE::InventoryChanges* a_invChanges,
+		const RE::TESBoundObject* a_object,
 		std::predicate<const RE::InventoryEntryData*> auto a_itemFilter)
 	{
 		const auto container = a_invChanges->owner ? a_invChanges->owner->GetContainer() : nullptr;
-		std::int32_t count = container ? std::max(0, GetItemCount(container, a_object)) : 0;
+		std::int32_t count = container ? std::max(0, GetObjectCount(container, a_object)) : 0;
 		if (a_invChanges->entryList) {
 			const RE::InventoryEntryData* objEntry = nullptr;
 			for (const auto* const entry : *a_invChanges->entryList) {

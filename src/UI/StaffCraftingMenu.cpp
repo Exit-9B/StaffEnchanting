@@ -145,10 +145,6 @@ namespace UI
 		}
 
 		const auto invChanges = playerRef->GetInventoryChanges();
-		const auto questItemFilter = [](const RE::InventoryEntryData* a_entry)
-		{
-			return !a_entry->IsQuestObject();
-		};
 
 		for (const auto obj : dataHandler->GetFormArray<RE::BGSConstructibleObject>()) {
 			if (RE::CanBeCreatedOnWorkbench(obj, furniture, false) && IsSpecial(obj)) {
@@ -157,7 +153,8 @@ namespace UI
 				const auto& items = obj->requiredItems;
 				for (const auto* const item :
 					 std::span(items.containerObjects, items.numContainerObjects)) {
-					if (item->count > RE::GetCountDelta(item->obj, invChanges, questItemFilter)) {
+					if (item->count >
+						RE::GetCount(invChanges, item->obj, RE::InventoryUtils::QuestItemFilter)) {
 						entry->enabled = false;
 						break;
 					}
@@ -313,10 +310,6 @@ namespace UI
 		else {
 			const auto playerRef = RE::PlayerCharacter::GetSingleton();
 			const auto invChanges = playerRef->GetInventoryChanges();
-			const auto questItemFilter = [](const RE::InventoryEntryData* a_entry)
-			{
-				return !a_entry->IsQuestObject();
-			};
 
 			const auto entry = static_cast<const RecipeEntry*>(listEntries[highlightIndex].get());
 			assert(entry->data);
@@ -329,7 +322,7 @@ namespace UI
 				ingredient.SetMember("RequiredCount", item->count);
 				ingredient.SetMember(
 					"PlayerCount",
-					RE::GetCountDelta(item->obj, invChanges, questItemFilter));
+					RE::GetCount(invChanges, item->obj, RE::InventoryUtils::QuestItemFilter));
 				ingredients.PushBack(ingredient);
 			}
 		}
@@ -544,17 +537,14 @@ namespace UI
 		if (a_entry->filterFlag == FilterFlag::Recipe) {
 			const auto playerRef = RE::PlayerCharacter::GetSingleton();
 			const auto invChanges = playerRef->GetInventoryChanges();
-			const auto questItemFilter = [](const RE::InventoryEntryData* a_entry)
-			{
-				return !a_entry->IsQuestObject();
-			};
 
 			const auto recipe = static_cast<const RecipeEntry*>(a_entry.get());
 			assert(recipe->data);
 			const auto& items = recipe->data->requiredItems;
 			for (const auto* const item :
 				 std::span(items.containerObjects, items.numContainerObjects)) {
-				if (item->count > RE::GetCountDelta(item->obj, invChanges, questItemFilter)) {
+				if (item->count >
+					RE::GetCount(invChanges, item->obj, RE::InventoryUtils::QuestItemFilter)) {
 					return false;
 				}
 			}
