@@ -171,12 +171,12 @@ namespace UI
 				if (entry->GetSoulLevel() == RE::SOUL_LEVEL::kNone)
 					continue;
 
-				listEntries.push_back(RE::make_smart<ItemEntry>(
-					std::move(entry), FilterFlag::Morpholith));
+				listEntries.push_back(
+					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Morpholith));
 			}
 			else if (!disallowHeartStones && baseObj->formID == heartstoneID) {
-				listEntries.push_back(RE::make_smart<ItemEntry>(
-					std::move(entry), FilterFlag::Morpholith));
+				listEntries.push_back(
+					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Morpholith));
 			}
 		}
 
