@@ -51,7 +51,18 @@ namespace UI
 
 		~StaffCraftingMenu() override;
 
-		[[nodiscard]] constexpr static const char* GetMoviePath() { return "StaffCraftingMenu"; }
+		[[nodiscard]] static const char* GetMoviePath()
+		{
+			static const bool useCustomMenu =
+				RE::BSResourceNiBinaryStream("Interface/StaffCraftingMenu.swf").good();
+
+			if (useCustomMenu) {
+				return "StaffCraftingMenu";
+			}
+			else {
+				return "CraftingMenu";
+			}
+		}
 
 		static void RegisterFuncs(CallbackProcessor* a_processor);
 

@@ -14,6 +14,8 @@ list(APPEND CMAKE_MODULE_PATH
 )
 include(SKSEPlugin)
 
+set(INSTALL_SKYUI_MENU ON CACHE BOOL "Install custom menu for SkyUI.")
+
 SKSEPlugin_Add(
 	${PROJECT_NAME}
 	SOURCE_DIR src
@@ -30,12 +32,14 @@ set_target_properties(CommonLibSSE PROPERTIES
 	FOLDER External
 )
 
-install(
-	FILES
-		"${PROJECT_SOURCE_DIR}/data/Interface/StaffCraftingMenu.swf"
-	DESTINATION
-		"Interface"
-)
+if(INSTALL_SKYUI_MENU)
+	install(
+		FILES
+			"${PROJECT_SOURCE_DIR}/data/Interface/StaffCraftingMenu.swf"
+		DESTINATION
+			"Interface"
+	)
+endif()
 
 set(CPACK_GENERATOR "7Z")
 set(CPACK_PACKAGE_FILE_NAME ${PROJECT_NAME}-${PROJECT_VERSION})
