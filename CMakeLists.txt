@@ -27,7 +27,14 @@ SKSEPlugin_Add(
 )
 
 set_target_properties(CommonLibSSE PROPERTIES
-    FOLDER External
+	FOLDER External
+)
+
+install(
+	FILES
+		"${PROJECT_SOURCE_DIR}/data/Interface/StaffCraftingMenu.swf"
+	DESTINATION
+		"Interface"
 )
 
 set(CPACK_GENERATOR "7Z")
