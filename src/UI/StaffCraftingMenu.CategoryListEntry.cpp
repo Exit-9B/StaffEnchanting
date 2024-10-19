@@ -1,4 +1,5 @@
 #include "StaffCraftingMenu.CategoryListEntry.h"
+#include "SKSE/ScaleformExtendedData.h"
 
 namespace UI
 {
@@ -36,6 +37,10 @@ namespace UI
 	{
 		a_entryObj.SetMember("text", GetName());
 		a_entryObj.SetMember("count", data->countDelta);
+
+		SKSE::scaleformExtend::CommonItemData(a_entryObj, data->GetObject());
+		SKSE::scaleformExtend::StandardItemData(a_entryObj, data->GetObject(), data.get());
+		SKSE::scaleformExtend::ItemInfoData(a_entryObj, data.get());
 	}
 
 	void StaffCraftingMenu::SpellEntry::ShowInItemCard(StaffCraftingMenu* a_menu) const
@@ -63,6 +68,9 @@ namespace UI
 	void StaffCraftingMenu::SpellEntry::SetupEntryObjectByType(RE::GFxValue& a_entryObj) const
 	{
 		a_entryObj.SetMember("text", GetName());
+
+		SKSE::scaleformExtend::CommonItemData(a_entryObj, data);
+		SKSE::scaleformExtend::MagicItemData(a_entryObj, data);
 	}
 
 	void StaffCraftingMenu::RecipeEntry::ShowInItemCard(StaffCraftingMenu* a_menu) const
@@ -99,6 +107,9 @@ namespace UI
 	{
 		a_entryObj.SetMember("text", GetName());
 		a_entryObj.SetMember("count", data->data.numConstructed);
+
+		SKSE::scaleformExtend::CommonItemData(a_entryObj, data->createdItem);
+		SKSE::scaleformExtend::StandardItemData(a_entryObj, data->createdItem);
 	}
 
 }
