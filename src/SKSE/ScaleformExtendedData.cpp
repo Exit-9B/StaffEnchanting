@@ -114,11 +114,7 @@ namespace SKSE
 				a_fxVal.SetMember("duration", effect->effectItem.duration);
 				a_fxVal.SetMember("area", effect->effectItem.area);
 
-				MagicItemData(
-					a_fxVal,
-					effect->baseEffect,
-					a_recursive && a_extra,
-					a_recursive);
+				MagicItemData(a_fxVal, effect->baseEffect, a_recursive && a_extra, a_recursive);
 			}
 
 			if (const auto spell = a_form->As<RE::SpellItem>()) {
