@@ -36,7 +36,6 @@ namespace SKSE
 		case RE::FormType::Weapon:
 		{
 			const auto weapon = static_cast<const RE::TESObjectWEAP*>(a_form);
-			a_fxVal.SetMember("subType", weapon->GetWeaponType());
 			a_fxVal.SetMember("weaponType", weapon->GetWeaponType());
 			a_fxVal.SetMember("speed", weapon->GetSpeed());
 			a_fxVal.SetMember("reach", weapon->GetReach());
@@ -133,7 +132,6 @@ namespace SKSE
 			if (!magicEffect->fullName.empty())
 				a_fxVal.SetMember("effectName", magicEffect->fullName.data());
 
-			a_fxVal.SetMember("subType", magicEffect->GetMagickSkill());
 			a_fxVal.SetMember("effectFlags", magicEffect->data.flags.underlying());
 			a_fxVal.SetMember("school", magicEffect->GetMagickSkill());
 			a_fxVal.SetMember("skillLevel", magicEffect->GetMinimumSkillLevel());
@@ -141,9 +139,9 @@ namespace SKSE
 			a_fxVal.SetMember("deliveryType", magicEffect->data.delivery);
 			a_fxVal.SetMember("castTime", magicEffect->data.spellmakingChargeTime);
 			a_fxVal.SetMember("delayTime", magicEffect->data.aiDelayTimer);
-			a_fxVal.SetMember("actorValue", magicEffect->data.primaryAV);
+			a_fxVal.SetMember("primaryValue", magicEffect->data.primaryAV);
 			a_fxVal.SetMember("castType", magicEffect->data.castingType);
-			a_fxVal.SetMember("magicType", magicEffect->data.resistVariable);
+			a_fxVal.SetMember("resistance", magicEffect->data.resistVariable);
 		} break;
 
 		case RE::FormType::Shout:
