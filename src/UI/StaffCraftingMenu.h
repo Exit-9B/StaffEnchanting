@@ -51,7 +51,6 @@ namespace UI
 
 		~StaffCraftingMenu() override;
 
-		// TODO: change to bespoke staff crafting menu
 		[[nodiscard]] constexpr static const char* GetMoviePath() { return "StaffCraftingMenu"; }
 
 		static void RegisterFuncs(CallbackProcessor* a_processor);
