@@ -10,13 +10,15 @@ namespace UI
 		static constexpr std::string_view MENU_NAME = "StaffCraftingMenu"sv;
 
 	private:
+		// HACK: Values have been chosen to correspond to EnchantConstructMenu so that SkyUI
+		// displays appropriate columns.
 		enum class FilterFlag
 		{
 			None = 0x0,
+			Recipe = 0x4,
 			Staff = 0x1,
-			Spell = 0x2,
-			Morpholith = 0x4,
-			Recipe = 0x8,
+			Spell = 0x30,
+			Morpholith = 0x40,
 
 			All = 0x7F,
 		};
@@ -49,8 +51,18 @@ namespace UI
 
 		~StaffCraftingMenu() override;
 
-		// TODO: change to bespoke staff crafting menu
-		[[nodiscard]] constexpr static const char* GetMoviePath() { return "CraftingMenu"; }
+		[[nodiscard]] static const char* GetMoviePath()
+		{
+			static const bool useCustomMenu =
+				RE::BSResourceNiBinaryStream("Interface/StaffCraftingMenu.swf").good();
+
+			if (useCustomMenu) {
+				return "StaffCraftingMenu";
+			}
+			else {
+				return "CraftingMenu";
+			}
+		}
 
 		static void RegisterFuncs(CallbackProcessor* a_processor);
 
