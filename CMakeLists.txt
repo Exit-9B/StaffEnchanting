@@ -32,6 +32,13 @@ set_target_properties(CommonLibSSE PROPERTIES
 	FOLDER External
 )
 
+install(
+	FILES
+		"${PROJECT_SOURCE_DIR}/data/StaffEnchanting.esp"
+	DESTINATION
+		"."
+)
+
 if(INSTALL_SKYUI_MENU)
 	install(
 		FILES
