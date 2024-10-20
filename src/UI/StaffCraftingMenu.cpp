@@ -127,13 +127,27 @@ namespace UI
 			essentialFavorites = SKSE::WinAPI::GetModuleHandle("po3_EssentialFavorites") !=
 			nullptr;
 
+		const auto disallowHeartStonesKwd = dataHandler->LookupForm<RE::BGSKeyword>(
+			0x800,
+			"StaffEnchanting.esp");
+		const auto allowSoulGemsKwd = dataHandler->LookupForm<RE::BGSKeyword>(
+			0x801,
+			"StaffEnchanting.esp");
+
+		const bool disallowHeartStones = disallowHeartStonesKwd
+			? workbench->HasKeyword(disallowHeartStonesKwd)
+			: false;
+		const bool allowSoulGems = allowSoulGemsKwd
+			? workbench->HasKeyword(allowSoulGemsKwd)
+			: false;
+
 		auto inventory = playerRef->GetInventory(
 			[heartstoneID](RE::TESBoundObject& baseObj) -> bool
 			{
 				if (const auto weap = baseObj.As<RE::TESObjectWEAP>()) {
 					return weap->IsStaff();
 				}
-				return baseObj.formID == heartstoneID;
+				return baseObj.formID == heartstoneID || baseObj.IsSoulGem();
 			});
 
 		for (auto& [baseObj, extra] : inventory) {
@@ -153,12 +167,16 @@ namespace UI
 				listEntries.push_back(RE::BSTSmartPointer(
 					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Staff)));
 			}
-			else {
-				if (baseObj->formID != heartstoneID)
+			else if (allowSoulGems && baseObj->IsSoulGem()) {
+				if (entry->GetSoulLevel() == RE::SOUL_LEVEL::kNone)
 					continue;
 
-				listEntries.push_back(RE::BSTSmartPointer(
-					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Morpholith)));
+				listEntries.push_back(
+					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Morpholith));
+			}
+			else if (!disallowHeartStones && baseObj->formID == heartstoneID) {
+				listEntries.push_back(
+					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Morpholith));
 			}
 		}
 

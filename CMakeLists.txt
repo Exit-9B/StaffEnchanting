@@ -30,6 +30,13 @@ set_target_properties(CommonLibSSE PROPERTIES
     FOLDER External
 )
 
+install(
+	FILES
+		"${PROJECT_SOURCE_DIR}/data/StaffEnchanting.esp"
+	DESTINATION
+		"."
+)
+
 set(CPACK_GENERATOR "7Z")
 set(CPACK_PACKAGE_FILE_NAME ${PROJECT_NAME}-${PROJECT_VERSION})
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY FALSE)
