@@ -110,6 +110,7 @@ namespace UI
 		class Selection
 		{
 		public:
+			[[nodiscard]] constexpr bool Empty() const { return !staff && !morpholith && !spell; }
 			void Clear();
 			void Toggle(const RE::BSTSmartPointer<CategoryListEntry>& a_entry);
 
