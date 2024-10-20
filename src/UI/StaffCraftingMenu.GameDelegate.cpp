@@ -44,12 +44,8 @@ namespace UI
 
 	bool StaffCraftingMenu::IsCategoryDisabled(Category a_category) const
 	{
-		if (!categoryEntryList.IsArray()) {
-			return false;
-		}
-
 		RE::GFxValue entry;
-		if (!categoryEntryList.GetElement(a_category, &entry)) {
+		if (!categoryEntryList.IsArray() || !categoryEntryList.GetElement(a_category, &entry)) {
 			return false;
 		}
 
