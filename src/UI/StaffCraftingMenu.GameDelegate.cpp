@@ -74,7 +74,8 @@ namespace UI
 			RE::GFxValue categoriesList;
 			menu->inventoryLists.GetMember("CategoriesList", &categoriesList);
 			if (categoriesList.IsObject()) {
-				categoriesList.SetMember("selectedIndex", Category::Staff);
+				categoriesList
+					.Invoke("onItemPress", std::to_array<RE::GFxValue>({ Category::Staff, 0 }));
 				return;
 			}
 		}
