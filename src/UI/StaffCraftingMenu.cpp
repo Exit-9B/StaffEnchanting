@@ -446,8 +446,7 @@ namespace UI
 		const auto userEvents = RE::UserEvents::GetSingleton();
 		assert(userEvents);
 		if (a_userEvent == userEvents->cancel) {
-			// TODO: skip confirmation if nothing selected
-			if (exiting) {
+			if (exiting || selected.Empty()) {
 				return false;
 			}
 
