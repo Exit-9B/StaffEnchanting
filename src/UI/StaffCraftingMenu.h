@@ -78,6 +78,8 @@ namespace UI
 		static void ChooseItem(const RE::FxDelegateArgs& a_params);
 		static void ShowItem3D(const RE::FxDelegateArgs& a_params);
 
+		[[nodiscard]] bool IsCategoryDisabled(Category a_category) const;
+
 		void ClearEffects();
 		void ChooseItem(std::uint32_t a_index);
 		bool CanSelectEntry(

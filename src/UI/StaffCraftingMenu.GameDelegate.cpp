@@ -42,6 +42,25 @@ namespace UI
 		menu->UpdateInterface();
 	}
 
+	bool StaffCraftingMenu::IsCategoryDisabled(Category a_category) const
+	{
+		if (!categoryEntryList.IsArray()) {
+			return false;
+		}
+
+		RE::GFxValue entry;
+		if (!categoryEntryList.GetElement(a_category, &entry)) {
+			return false;
+		}
+
+		RE::GFxValue enabled;
+		if (!entry.IsObject() || !entry.GetMember("enabled", &enabled)) {
+			return false;
+		}
+
+		return enabled.IsBool() && !enabled.GetBool();
+	}
+
 	void StaffCraftingMenu::SetSelectedCategory(const RE::FxDelegateArgs& a_params)
 	{
 		if (a_params.GetArgCount() < 1) {
@@ -53,6 +72,15 @@ namespace UI
 
 		if (category >= Category::TOTAL) {
 			return;
+		}
+
+		if (category == Category::Recipe && menu->IsCategoryDisabled(Category::Recipe)) {
+			RE::GFxValue categoriesList;
+			menu->inventoryLists.GetMember("CategoriesList", &categoriesList);
+			if (categoriesList.IsObject()) {
+				categoriesList.SetMember("selectedIndex", Category::Staff);
+				return;
+			}
 		}
 
 		const auto previousCategory = menu->currentCategory;
