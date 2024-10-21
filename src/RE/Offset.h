@@ -9,6 +9,11 @@ namespace RE
 			constexpr auto ClearFurniture = REL::ID(39798);
 		}
 
+		namespace MagicItemCreationHelpers
+		{
+			constexpr auto CreateNewEnchantment = REL::ID(36178);
+		}
+
 		namespace TESObjectREFR
 		{
 			constexpr auto ActivateCraftingWorkbench = REL::ID(52941);
