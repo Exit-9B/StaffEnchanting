@@ -469,9 +469,8 @@ namespace UI
 							assert(interfaceStrings);
 							assert(userEvents);
 
-							const auto msgData = static_cast<RE::BSUIMessageData*>(
-								RE::UIMessageDataFactory::Create(
-									interfaceStrings->bsUIMessageData));
+							const auto
+								msgData = RE::UIMessageDataFactory::Create<RE::BSUIMessageData>();
 							assert(msgData);
 							msgData->fixedStr = userEvents->cancel;
 
