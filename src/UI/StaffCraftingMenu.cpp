@@ -464,14 +464,11 @@ namespace UI
 					else {
 						const auto uiMessageQueue = RE::UIMessageQueue::GetSingleton();
 						if (uiMessageQueue) {
-							const auto interfaceStrings = RE::InterfaceStrings::GetSingleton();
 							const auto userEvents = RE::UserEvents::GetSingleton();
-							assert(interfaceStrings);
 							assert(userEvents);
 
-							const auto msgData = static_cast<RE::BSUIMessageData*>(
-								RE::UIMessageDataFactory::Create(
-									interfaceStrings->bsUIMessageData));
+							const auto
+								msgData = RE::UIMessageDataFactory::Create<RE::BSUIMessageData>();
 							assert(msgData);
 							msgData->fixedStr = userEvents->cancel;
 

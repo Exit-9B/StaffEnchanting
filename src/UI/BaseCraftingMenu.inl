@@ -176,13 +176,14 @@ namespace UI
 		assert(playerRef);
 		assert(playerRef->currentProcess);
 		const auto furnitureRef = playerRef->currentProcess->GetOccupiedFurniture().get();
-		if (!furnitureRef || RE::GetFurnitureMarkerNode(furnitureRef->Get3D())) {
+		if (!furnitureRef ||
+			RE::BSFurnitureMarkerNode::GetNumFurnitureMarkers(furnitureRef->Get3D())) {
 			if (playerRef->actorState1.sitSleepState == RE::SIT_SLEEP_STATE::kIsSitting) {
 				playerRef->InitiateGetUpPackage();
 			}
 		}
 		else {
-			RE::ClearFurniture(playerRef->currentProcess);
+			playerRef->currentProcess->ClearFurniture();
 		}
 	}
 
@@ -321,7 +322,7 @@ namespace UI
 			bottomBarInfo.Invoke(
 				"UpdateCraftingInfo",
 				std::to_array<RE::GFxValue>(
-					{ RE::GetActorValueName(a_skill),
+					{ RE::ActorValueInfo::GetActorValueName(a_skill),
 					  playerRef->GetActorValue(a_skill),
 					  (xp / levelThreshold) * 100.0 }));
 		}
