@@ -464,9 +464,7 @@ namespace UI
 					else {
 						const auto uiMessageQueue = RE::UIMessageQueue::GetSingleton();
 						if (uiMessageQueue) {
-							const auto interfaceStrings = RE::InterfaceStrings::GetSingleton();
 							const auto userEvents = RE::UserEvents::GetSingleton();
-							assert(interfaceStrings);
 							assert(userEvents);
 
 							const auto
