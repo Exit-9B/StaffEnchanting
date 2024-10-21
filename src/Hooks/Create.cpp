@@ -22,7 +22,6 @@ namespace Hooks
 			Patch() : Xbyak::CodeGenerator(size)
 			{
 				Xbyak::Label funcLbl;
-				Xbyak::Label retnLbl;
 
 				movzx(r8d, bl);
 				mov(rdx, rsi);
