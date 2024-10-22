@@ -43,4 +43,17 @@ namespace RE
 
 		return sound;
 	}
+
+	inline void SetOverrideName(RE::ExtraDataList* a_extraList, const char* a_name)
+	{
+		auto textData = a_extraList->GetByType<RE::ExtraTextDisplayData>();
+		if (!textData) {
+			textData = new RE::ExtraTextDisplayData();
+			a_extraList->Add(textData);
+		}
+
+		if (!textData->displayNameText && !textData->ownerQuest) {
+			textData->SetName(a_name);
+		}
+	}
 }

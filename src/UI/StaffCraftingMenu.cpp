@@ -303,12 +303,18 @@ namespace UI
 		}
 
 		if (craftItemPreview && createdEnchantment) {
+			const auto spellName = selected.spell->GetName();
+			// TODO: Localization
+			const std::string suggestedName = fmt::format("Staff of {}"sv, spellName);
+
 			if (craftItemPreview->extraLists && !craftItemPreview->extraLists->empty()) {
 				const auto& extraList = craftItemPreview->extraLists->front();
 				extraList->SetEnchantment(
 					createdEnchantment,
 					static_cast<std::uint16_t>(chargeAmount),
 					false);
+
+				RE::SetOverrideName(extraList, suggestedName.c_str());
 			}
 			else {
 				// InventoryEntryData does not take ownership, so we need to hold ownership.
@@ -318,8 +324,9 @@ namespace UI
 					static_cast<std::uint16_t>(chargeAmount),
 					false);
 				craftItemPreview->AddExtraList(tempExtraList.get());
-			}
 
+				RE::SetOverrideName(tempExtraList.get(), suggestedName.c_str());
+			}
 			UpdateItemPreview(std::move(craftItemPreview));
 		}
 	}
