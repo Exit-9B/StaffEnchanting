@@ -320,6 +320,13 @@ namespace UI
 				craftItemPreview->AddExtraList(tempExtraList.get());
 			}
 
+			if (currentCategory != UI::StaffCraftingMenu::Category::Recipe) {
+				const char* spellName = selected.spell->GetName();
+				// TODO: Localization
+				const std::string& suggestedName = fmt::format("Staff of {}", spellName);
+				RE::SetOverrideName(tempExtraList.get(), suggestedName.c_str());
+			}
+
 			UpdateItemPreview(std::move(craftItemPreview));
 		}
 	}
