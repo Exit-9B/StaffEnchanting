@@ -22,16 +22,18 @@ namespace Hooks
 			Patch() : Xbyak::CodeGenerator(size)
 			{
 				Xbyak::Label funcLbl;
+				Xbyak::Label retnLbl;
 
 				movzx(r8d, bl);
 				mov(rdx, rsi);
 				mov(rcx, rdi);
 				call(ptr[rip + funcLbl]);
-				db(0xE9);
-				dd(size - 0x15);
+				jmp(retnLbl);
 
 				L(funcLbl);
 				dq(std::bit_cast<std::uintptr_t>(&Create::InitEnchantment));
+				nop(size - 0x1D);
+				L(retnLbl);
 			}
 		} patch{};
 
