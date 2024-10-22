@@ -303,9 +303,9 @@ namespace UI
 		}
 
 		if (craftItemPreview && createdEnchantment) {
-			const char* spellName = selected.spell->GetName();
+			const auto spellName = selected.spell->GetName();
 			// TODO: Localization
-			const std::string& suggestedName = fmt::format("Staff of {}", spellName);
+			const std::string suggestedName = fmt::format("Staff of {}"sv, spellName);
 
 			if (craftItemPreview->extraLists && !craftItemPreview->extraLists->empty()) {
 				const auto& extraList = craftItemPreview->extraLists->front();
@@ -314,9 +314,7 @@ namespace UI
 					static_cast<std::uint16_t>(chargeAmount),
 					false);
 
-				if (currentCategory != UI::StaffCraftingMenu::Category::Recipe) {
-					RE::SetOverrideName(extraList, suggestedName.c_str());
-				}
+				RE::SetOverrideName(extraList, suggestedName.c_str());
 			}
 			else {
 				// InventoryEntryData does not take ownership, so we need to hold ownership.
@@ -327,9 +325,7 @@ namespace UI
 					false);
 				craftItemPreview->AddExtraList(tempExtraList.get());
 
-				if (currentCategory != UI::StaffCraftingMenu::Category::Recipe) {
-					RE::SetOverrideName(tempExtraList.get(), suggestedName.c_str());
-				}
+				RE::SetOverrideName(tempExtraList.get(), suggestedName.c_str());
 			}
 			UpdateItemPreview(std::move(craftItemPreview));
 		}

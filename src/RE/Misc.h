@@ -89,7 +89,7 @@ namespace RE
 	{
 		auto textData = a_extraList->GetByType<RE::ExtraTextDisplayData>();
 		if (!textData) {
-			textData = new RE::ExtraTextDisplayData(a_name);
+			textData = new RE::ExtraTextDisplayData();
 			a_extraList->Add(textData);
 		}
 
