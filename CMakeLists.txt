@@ -16,6 +16,8 @@ include(SKSEPlugin)
 
 set(INSTALL_SKYUI_MENU ON CACHE BOOL "Install custom menu for SkyUI.")
 
+set(SKSE_USE_XBYAK ON)
+
 SKSEPlugin_Add(
 	${PROJECT_NAME}
 	SOURCE_DIR src
