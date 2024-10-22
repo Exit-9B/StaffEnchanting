@@ -49,8 +49,8 @@ namespace Hooks
 					   : RE::DEFAULT_OBJECT::kBaseArmorEnchantment);
 
 		if (a_isWeapon && !a_effects.empty()) {
-			if (const auto baseEffect = a_effects.front().baseEffect;
-				baseEffect && baseEffect->data.delivery != RE::MagicSystem::Delivery::kTouch) {
+			const auto baseEffect = a_effects.front().baseEffect;
+			if (baseEffect && baseEffect->data.delivery != RE::MagicSystem::Delivery::kTouch) {
 				a_enchantment.SetCastingType(baseEffect->data.castingType);
 				a_enchantment.SetDelivery(baseEffect->data.delivery);
 				return;
