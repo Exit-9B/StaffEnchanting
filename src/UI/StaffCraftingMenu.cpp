@@ -455,12 +455,8 @@ namespace UI
 		if (!(player && staff && enchantment))
 			return;
 
-		auto* createdExtraList = RE::CreateExtraList(
-			player->GetInventoryChanges(),
-			staff,
-			nullptr,
-			enchantment,
-			3000);
+		auto* createdExtraList = RE::
+			CreateExtraList(player->GetInventoryChanges(), staff, nullptr, enchantment, 3000);
 		if (!createdExtraList)
 			return;
 
@@ -472,8 +468,8 @@ namespace UI
 			RE::ITEM_REMOVE_REASON::kRemove,
 			nullptr,
 			nullptr);
-		//player->AddObjectToContainer(staff, createdExtraList, 1, nullptr);
-		//player->RemoveItem(staff, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+		// player->AddObjectToContainer(staff, createdExtraList, 1, nullptr);
+		// player->RemoveItem(staff, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
 		RE::PlaySound("UIEnchantingItemCreate");
 	}
 
