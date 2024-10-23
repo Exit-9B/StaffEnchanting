@@ -105,6 +105,7 @@ namespace UI
 		void PopulateEntryList(bool a_fullRebuild = false);
 
 		void UpdateInterface();
+		void AttemptStaffEnchanting();
 
 	private:
 		class Selection
@@ -131,6 +132,7 @@ namespace UI
 		std::unique_ptr<RE::ExtraDataList> tempExtraList;
 		RE::BSTArray<RE::Effect> createdEffects;
 		RE::EnchantmentItem* createdEnchantment{ nullptr };
+
 		std::uint32_t highlightIndex;
 		Category currentCategory;
 		float chargeAmount{ 0.0f };

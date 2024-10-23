@@ -56,4 +56,16 @@ namespace RE
 			textData->SetName(a_name);
 		}
 	}
+
+	inline RE::ExtraDataList* CreateExtraList(
+		RE::InventoryChanges* a_inventoryChanges,
+		RE::TESBoundObject* a_obj,
+		RE::ExtraDataList* a_extraList,
+		RE::EnchantmentItem* a_enchantment,
+		uint16_t a_charge)
+	{
+		using func_t = decltype(&CreateExtraList);
+		static REL::Relocation<func_t> func{ RE::Offset::BGSCreatedObjectManager::CreateExtraList };
+		return func(a_inventoryChanges, a_obj, a_extraList, a_enchantment, a_charge);
+	}
 }

@@ -446,6 +446,37 @@ namespace UI
 		}
 	}
 
+	void StaffCraftingMenu::AttemptStaffEnchanting()
+	{
+		const auto player = RE::PlayerCharacter::GetSingleton();
+		const auto staff = selected.staff->data->GetObject();
+		const auto enchantment = RE::BGSCreatedObjectManager::GetSingleton()->AddWeaponEnchantment(
+			createdEffects);
+		if (!(player && staff && enchantment))
+			return;
+
+		auto* createdExtraList = RE::CreateExtraList(
+			player->GetInventoryChanges(),
+			staff,
+			nullptr,
+			enchantment,
+			3000);
+		if (!createdExtraList)
+			return;
+
+		const auto newName = std::format("Staff Of {}", selected.spell->GetName());
+		RE::SetOverrideName(createdExtraList, newName.c_str());
+		player->RemoveItem(
+			selected.morpholith->data->GetObject(),
+			1,
+			RE::ITEM_REMOVE_REASON::kRemove,
+			nullptr,
+			nullptr);
+		//player->AddObjectToContainer(staff, createdExtraList, 1, nullptr);
+		//player->RemoveItem(staff, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+		RE::PlaySound("UIEnchantingItemCreate");
+	}
+
 	bool StaffCraftingMenu::ProcessUserEvent(const RE::BSFixedString& a_userEvent)
 	{
 		// TBD: magnitude slider
@@ -494,7 +525,14 @@ namespace UI
 			return true;
 		}
 		else if (a_userEvent == userEvents->xButton) {
-			// TODO: craft
+			if (!(selected.staff && selected.spell && selected.morpholith)) {
+				// TODO: Multi-morpholith check here for higher level spells.
+				return true;
+			}
+
+			// TODO: Proper message, see above
+
+			AttemptStaffEnchanting();
 			return true;
 		}
 		else if (a_userEvent == userEvents->yButton) {
