@@ -36,7 +36,8 @@ namespace UI
 		}
 		else {
 			sStaffEnchanting = "Staff Enchanting";
-			sStaffEnchantMenuDescription = "Combine a Staff, Spell, and Morpholith to create magic staves";
+			sStaffEnchantMenuDescription =
+				"Combine a Staff, Spell, and Morpholith to create magic staves";
 		}
 
 		SetMenuDescription(
