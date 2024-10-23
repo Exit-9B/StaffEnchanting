@@ -2,6 +2,7 @@
 
 #include "RE/Misc.h"
 #include "RE/Offset.h"
+#include "common/Forms.h"
 
 namespace UI
 {
@@ -27,14 +28,33 @@ namespace UI
 
 	void StaffCraftingMenu::Init()
 	{
-		// TODO: localization
+		const char* sStaffEnchanting;
+		RE::BSString sStaffEnchantMenuDescription;
+		if (const auto MenuDescription = Forms::StaffEnchanting::MenuDescription()) {
+			sStaffEnchanting = MenuDescription->GetName();
+			MenuDescription->GetDescription(sStaffEnchantMenuDescription, nullptr);
+		}
+		else {
+			sStaffEnchanting = "Staff Enchanting";
+			sStaffEnchantMenuDescription = "Combine a Staff, Spell, and Morpholith to create magic staves";
+		}
+
 		SetMenuDescription(
-			"Staff Enchanting: Combine a Staff, Spell, and Morpholith to create magic staves");
+			fmt::format("{}: {}"sv, sStaffEnchanting, sStaffEnchantMenuDescription.c_str())
+				.c_str());
+
 		menu.SetMember("bCanCraft", true);
 		menu.GetMember("CategoryList", &inventoryLists);
 		if (inventoryLists.IsObject()) {
-			const std::array<const char*, Category::TOTAL>
-				labels{ "Special", "", "Staff", "Spell", "Morpholith" };
+			std::array<std::string, Category::TOTAL> labels;
+			if (!SKSE::Translation::Translate("$Special"s, labels[Category::Recipe]))
+				labels[Category::Recipe] = "Special"s;
+			if (!SKSE::Translation::Translate("$Staff"s, labels[Category::Staff]))
+				labels[Category::Staff] = "Staff"s;
+			if (!SKSE::Translation::Translate("$Spell"s, labels[Category::Spell]))
+				labels[Category::Spell] = "Spell"s;
+			if (!SKSE::Translation::Translate("$Morpholith"s, labels[Category::Morpholith]))
+				labels[Category::Morpholith] = "Morpholith"s;
 
 			static constexpr std::array<FilterFlag, Category::TOTAL> filters{
 				FilterFlag::Recipe,
@@ -54,7 +74,7 @@ namespace UI
 
 			std::array<RE::GFxValue, Category::TOTAL * util::to_underlying(NumObjKeys)> categories;
 			for (const auto i : std::views::iota(0ull, Category::TOTAL)) {
-				categories[i * NumObjKeys + Text] = labels[i];
+				categories[i * NumObjKeys + Text] = labels[i].c_str();
 				categories[i * NumObjKeys + Flag] = filters[i];
 				categories[i * NumObjKeys + DontHide] = true;
 			}
@@ -127,12 +147,8 @@ namespace UI
 			essentialFavorites = SKSE::WinAPI::GetModuleHandle("po3_EssentialFavorites") !=
 			nullptr;
 
-		const auto disallowHeartStonesKwd = dataHandler->LookupForm<RE::BGSKeyword>(
-			0x800,
-			"StaffEnchanting.esp");
-		const auto allowSoulGemsKwd = dataHandler->LookupForm<RE::BGSKeyword>(
-			0x801,
-			"StaffEnchanting.esp");
+		const auto disallowHeartStonesKwd = Forms::StaffEnchanting::DisallowHeartStones();
+		const auto allowSoulGemsKwd = Forms::StaffEnchanting::AllowSoulGems();
 
 		const bool disallowHeartStones = disallowHeartStonesKwd
 			? workbench->HasKeyword(disallowHeartStonesKwd)
@@ -274,6 +290,18 @@ namespace UI
 		}
 	}
 
+	[[nodiscard]] static std::string MakeSuggestedName(const RE::SpellItem* a_spell)
+	{
+		const auto spellName = a_spell->GetName();
+		const auto CreatedStaffName = Forms::StaffEnchanting::CreatedStaffName();
+		const auto format = CreatedStaffName ? CreatedStaffName->GetName() : "Staff of %s";
+		const int size = std::snprintf(nullptr, 0, format, spellName);
+
+		std::string suggestedName = std::string(size, '\0');
+		std::snprintf(suggestedName.data(), suggestedName.size() + 1, format, spellName);
+		return suggestedName;
+	}
+
 	void StaffCraftingMenu::UpdateEnchantment()
 	{
 		if (craftItemPreview) {
@@ -303,9 +331,7 @@ namespace UI
 		}
 
 		if (craftItemPreview && createdEnchantment) {
-			const auto spellName = selected.spell->GetName();
-			// TODO: Localization
-			const std::string suggestedName = fmt::format("Staff of {}"sv, spellName);
+			const std::string suggestedName = MakeSuggestedName(selected.spell->data);
 
 			if (craftItemPreview->extraLists && !craftItemPreview->extraLists->empty()) {
 				const auto& extraList = craftItemPreview->extraLists->front();

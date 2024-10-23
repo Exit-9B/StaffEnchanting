@@ -41,6 +41,13 @@ install(
 		"."
 )
 
+install(
+	FILES
+		"${PROJECT_SOURCE_DIR}/data/Interface/Translations/StaffEnchanting_ENGLISH.txt"
+	DESTINATION
+		"Interface/Translations"
+)
+
 if(INSTALL_SKYUI_MENU)
 	install(
 		FILES
