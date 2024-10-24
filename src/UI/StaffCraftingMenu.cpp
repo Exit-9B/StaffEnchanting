@@ -746,12 +746,14 @@ namespace UI
 		if (!createdExtraList)
 			return;
 
+		const char* newName = "";
 		if (customName.empty()) {
-			RE::SetOverrideName(createdExtraList, suggestedName.c_str());
+			newName = suggestedName.c_str();
 		}
 		else {
-			RE::SetOverrideName(createdExtraList, customName.c_str());
+			newName = customName.c_str();
 		}
+		RE::SetOverrideName(createdExtraList, newName);
 
 		player->RemoveItem(
 			selected.morpholith->data->GetObject(),
@@ -764,25 +766,27 @@ namespace UI
 			staff,
 			1,
 			true,
-			true);
+			true,
+			newName);
 
 		const auto skill = workbench->workBenchData.usesSkill;
 		if (skill.underlying() - 6u <= 17u) {
 			player->UseSkill(skill.get(), 20.0f);
+			UpdateBottomBar(skill.get());
 		}
 
 		const auto workbenchRef = player->currentProcess->GetOccupiedFurniture().get();
 		const auto storyEvent = RE::BGSCraftItemEvent(
 			workbenchRef.get(),
 			workbenchRef->GetCurrentLocation(),
-			staff);
+			enchantment);
 		const auto storyEventManager = RE::BGSStoryEventManager::GetSingleton();
 		storyEventManager->AddEvent(storyEvent);
 
 		const auto itemCraftedEvent = RE::ItemCrafted::Event{
 			.item = staff,
-			.unk08 = true,
-			.unk09 = false,
+			.unk08 = false,
+			.unk09 = true,
 			.unk0A = false,
 		};
 		const auto itemCraftedSource = RE::ItemCrafted::GetEventSource();
