@@ -88,4 +88,15 @@ namespace RE
 		static REL::Relocation<func_t> func{ RE::Offset::InventoryChanges::EnchantObject };
 		return func(a_inventoryChanges, a_obj, a_extraList, a_enchantment, a_charge);
 	}
+
+	inline void RefreshEquippedActorValueCharge(
+		RE::Actor* a_actor,
+		RE::TESBoundObject* a_object,
+		RE::ExtraDataList* a_extraList,
+		bool a_isLeft)
+	{
+		using func_t = decltype(&RefreshEquippedActorValueCharge);
+		static REL::Relocation<func_t> func{ RE::Offset::Actor::RefreshEquippedActorValueCharge };
+		return func(a_actor, a_object, a_extraList, a_isLeft);
+	}
 }
