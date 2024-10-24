@@ -151,6 +151,11 @@ namespace UI
 				continue;
 			}
 
+			if (item->IsQuestObject() || item->IsEnchanted() ||
+				(essentialFavorites && IsFavorite(item.get()))) {
+				continue;
+			}
+
 			auto filterFlag = FilterFlag::None;
 			if (!disallowHeartStones && object == DLC2HeartStone) {
 				filterFlag = FilterFlag::Morpholith;
@@ -166,16 +171,9 @@ namespace UI
 				}
 			}
 
-			if (filterFlag == FilterFlag::None) {
-				continue;
+			if (filterFlag != FilterFlag::None) {
+				listEntries.emplace_back(RE::make_smart<ItemEntry>(std::move(item), filterFlag));
 			}
-
-			if (item->IsQuestObject() || item->IsEnchanted() ||
-				(essentialFavorites && IsFavorite(item.get()))) {
-				continue;
-			}
-
-			listEntries.emplace_back(RE::make_smart<ItemEntry>(std::move(item), filterFlag));
 		}
 
 		const auto playerBase = playerRef->GetActorBase();
