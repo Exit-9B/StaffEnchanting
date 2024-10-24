@@ -352,7 +352,7 @@ namespace UI
 		std::string suggestedName = std::string(size, '\0');
 		std::snprintf(suggestedName.data(), suggestedName.size() + 1, format, spellName);
 		return suggestedName;
-  }
+	}
 
 	void StaffCraftingMenu::UpdateEnchantment()
 	{
