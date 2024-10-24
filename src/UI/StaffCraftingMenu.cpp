@@ -291,6 +291,57 @@ namespace UI
 		}
 	}
 
+	float StaffCraftingMenu::GetEntryDataSoulCharge(RE::InventoryEntryData* a_entry)
+	{
+		switch (a_entry->GetSoulLevel()) {
+		case RE::SOUL_LEVEL::kPetty:
+			return static_cast<float>(*"iSoulLevelValuePetty"_gs);
+		case RE::SOUL_LEVEL::kLesser:
+			return static_cast<float>(*"iSoulLevelValuelesser"_gs);
+		case RE::SOUL_LEVEL::kCommon:
+			return static_cast<float>(*"iSoulLevelValueCommon"_gs);
+		case RE::SOUL_LEVEL::kGreater:
+			return static_cast<float>(*"iSoulLevelValueGreater"_gs);
+		case RE::SOUL_LEVEL::kGrand:
+			return static_cast<float>(*"iSoulLevelValueGrand"_gs);
+		}
+		return -1.0f;
+	}
+
+	void StaffCraftingMenu::UpdateEnchantmentCharge()
+	{
+		if (selected.morpholith) {
+			float response = GetEntryDataSoulCharge(selected.morpholith->data.get());
+			if (response < 0.0f) {
+				chargeAmount = static_cast<float>(*"iSoulLevelValueGrand"_gs);
+			}
+			else {
+				chargeAmount = response;
+			}
+		}
+		else {
+			for (const auto& entry : listEntries) {
+				if (entry->filterFlag != FilterFlag::Morpholith)
+					continue;
+				const auto itemEntry = static_cast<const ItemEntry*>(entry.get());
+				if (!itemEntry)
+					continue;
+				const auto entryData = itemEntry->data.get();
+				if (!entryData)
+					continue;
+
+				float response = GetEntryDataSoulCharge(entryData);
+
+				if (response < 0.0f) {
+					chargeAmount = static_cast<float>(*"iSoulLevelValueGrand"_gs);
+				}
+				if (response > chargeAmount) {
+					chargeAmount = response;
+				}
+			}
+		}
+	}
+
 	[[nodiscard]] static std::string MakeSuggestedName(const RE::SpellItem* a_spell)
 	{
 		const auto spellName = a_spell->GetName();
@@ -301,7 +352,7 @@ namespace UI
 		std::string suggestedName = std::string(size, '\0');
 		std::snprintf(suggestedName.data(), suggestedName.size() + 1, format, spellName);
 		return suggestedName;
-	}
+  }
 
 	void StaffCraftingMenu::UpdateEnchantment()
 	{
@@ -316,7 +367,7 @@ namespace UI
 
 		if (selected.spell) {
 			// TODO: calculate correct charge amount
-			chargeAmount = static_cast<float>(*"iSoulLevelValueGrand"_gs);
+			UpdateEnchantmentCharge();
 
 			for (const auto& effect : selected.spell->data->effects) {
 				auto& createdEffect = createdEffects.emplace_back();
@@ -332,7 +383,7 @@ namespace UI
 		}
 
 		if (craftItemPreview && createdEnchantment) {
-			const std::string suggestedName = MakeSuggestedName(selected.spell->data);
+			suggestedName = MakeSuggestedName(selected.spell->data);
 
 			if (craftItemPreview->extraLists && !craftItemPreview->extraLists->empty()) {
 				const auto& extraList = craftItemPreview->extraLists->front();
@@ -521,7 +572,29 @@ namespace UI
 			return true;
 		}
 		else if (a_userEvent == userEvents->xButton) {
-			// TODO: craft
+			if (!selected.staff || !selected.spell || !selected.morpholith) {
+				// TODO: Multi-morpholith check here for higher level spells.
+				return true;
+			}
+
+			const auto msgBoxData = new RE::MessageBoxData();
+			msgBoxData->bodyText = *"sEnchantItem"_gs;
+			msgBoxData->buttonText.push_back(*"sYes"_gs);
+			msgBoxData->buttonText.push_back(*"sNo"_gs);
+
+			const auto callback = RE::MakeMessageBoxCallback(
+				[&](auto message)
+				{
+					if (message == RE::IMessageBoxCallback::Message::kUnk0) {
+						CreateStaff();
+					}
+				});
+
+			msgBoxData->callback = callback;
+			msgBoxData->unk38 = 25;
+			msgBoxData->unk48 = 4;
+
+			msgBoxData->QueueMessage();
 			return true;
 		}
 		else if (a_userEvent == userEvents->yButton) {
@@ -677,6 +750,74 @@ namespace UI
 		menu.Invoke("UpdateItemDisplay");
 
 		RE::PlaySound("UISmithingCreateGeneric");
+	}
+
+	void StaffCraftingMenu::CreateStaff()
+	{
+		if (!selected.staff || !selected.spell || !selected.morpholith || !craftItemPreview) {
+			return;
+		}
+		const auto player = RE::PlayerCharacter::GetSingleton();
+		const auto staff = selected.staff->data->GetObject();
+		const auto enchantment = RE::BGSCreatedObjectManager::GetSingleton()->AddWeaponEnchantment(
+			createdEffects);
+		if (!player || !staff || !enchantment)
+			return;
+
+		RE::ExtraDataList* const createdExtraList = RE::EnchantObject(
+			player->GetInventoryChanges(),
+			staff,
+			nullptr,
+			enchantment,
+			static_cast<uint16_t>(chargeAmount));
+		if (!createdExtraList)
+			return;
+
+		const char* newName = "";
+		if (customName.empty()) {
+			newName = suggestedName.c_str();
+		}
+		else {
+			newName = customName.c_str();
+		}
+		RE::SetOverrideName(createdExtraList, newName);
+
+		player->RemoveItem(
+			selected.morpholith->data->GetObject(),
+			1,
+			RE::ITEM_REMOVE_REASON::kRemove,
+			nullptr,
+			nullptr);
+
+		RE::SendHUDMessage::ShowInventoryChangeMessage(staff, 1, true, true, newName);
+
+		const auto skill = workbench->workBenchData.usesSkill;
+		if (skill.underlying() - 6u <= 17u) {
+			player->UseSkill(skill.get(), 20.0f);
+			UpdateBottomBar(skill.get());
+		}
+
+		const auto workbenchRef = player->currentProcess->GetOccupiedFurniture().get();
+		const auto storyEvent = RE::BGSCraftItemEvent(
+			workbenchRef.get(),
+			workbenchRef->GetCurrentLocation(),
+			enchantment);
+		const auto storyEventManager = RE::BGSStoryEventManager::GetSingleton();
+		storyEventManager->AddEvent(storyEvent);
+
+		const auto itemCraftedEvent = RE::ItemCrafted::Event{
+			.item = staff,
+			.unk08 = false,
+			.unk09 = true,
+			.unk0A = false,
+		};
+		const auto itemCraftedSource = RE::ItemCrafted::GetEventSource();
+		itemCraftedSource->SendEvent(std::addressof(itemCraftedEvent));
+
+		PopulateEntryList(true);
+		UpdateItemPreview(nullptr);
+		menu.Invoke("UpdateItemDisplay");
+		RE::PlaySound("UIEnchantingItemCreate");
 	}
 
 	void StaffCraftingMenu::Selection::Clear()
