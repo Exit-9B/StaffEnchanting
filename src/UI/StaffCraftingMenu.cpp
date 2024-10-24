@@ -82,18 +82,6 @@ namespace UI
 		UpdateBottomBar(RE::ActorValue::kEnchanting);
 	}
 
-	[[nodiscard]] static bool IsFavorite(const RE::InventoryEntryData* a_entry)
-	{
-		if (a_entry->extraLists) {
-			for (const auto extraList : *a_entry->extraLists) {
-				if (extraList->HasType<RE::ExtraHotkey>()) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
 	[[nodiscard]] static bool IsSpecial(const RE::BGSConstructibleObject* a_obj)
 	{
 		for (auto condition = a_obj->conditions.head; condition; condition = condition->next) {
@@ -118,7 +106,8 @@ namespace UI
 		const auto idx_dragonrborn = dataHandler
 			? dataHandler->GetModIndex("Dragonborn.esm"sv)
 			: std::nullopt;
-		const RE::FormID heartstoneID = idx_dragonrborn ? (*idx_dragonrborn << 24) | 0x17749 : 0x0;
+		const auto DLC2HeartStone = dataHandler->LookupForm(0x17749, "Dragonborn.esm"sv);
+
 		const auto defaultObjects = RE::BGSDefaultObjectManager::GetSingleton();
 		const auto MagicDisallowEnchanting = defaultObjects->GetObject<RE::BGSKeyword>(
 			RE::DEFAULT_OBJECT::kKeywordDisallowEnchanting);
@@ -141,42 +130,55 @@ namespace UI
 			? workbench->HasKeyword(allowSoulGemsKwd)
 			: false;
 
-		auto inventory = playerRef->GetInventory(
-			[heartstoneID](RE::TESBoundObject& baseObj) -> bool
-			{
-				if (const auto weap = baseObj.As<RE::TESObjectWEAP>()) {
-					return weap->IsStaff();
-				}
-				return baseObj.formID == heartstoneID || baseObj.IsSoulGem();
-			});
+		const auto getFilter = [&](const RE::TESBoundObject* obj) -> FilterFlag
+		{
+			if (!disallowHeartStones && obj == DLC2HeartStone) {
+				return FilterFlag::Morpholith;
+			}
+			else if (allowSoulGems && obj->Is(RE::FormType::SoulGem)) {
+				return FilterFlag::Morpholith;
+			}
+			else if (const auto weap = obj->As<RE::TESObjectWEAP>()) {
+				if (weap->IsStaff() && !weap->formEnchanting &&
+					!weap->HasKeyword(MagicDisallowEnchanting)) {
 
-		for (auto& [baseObj, extra] : inventory) {
-			auto& [count, entry] = extra;
-			if (entry->IsQuestObject() || (essentialFavorites && IsFavorite(entry.get())))
+					return FilterFlag::Staff;
+				}
+			}
+
+			return FilterFlag::None;
+		};
+
+		auto inventory = playerRef->GetInventory();
+
+		for (auto& [object, objectData] : inventory) {
+			const auto filterFlag = object ? getFilter(object) : FilterFlag::None;
+			if (filterFlag == FilterFlag::None)
 				continue;
 
-			if (baseObj->IsWeapon()) {
-				if (entry->IsEnchanted() || !baseObj->As<RE::TESObjectWEAP>()->IsStaff()) {
-					continue;
+			auto& [count, entry] = objectData;
+			std::int32_t countRemaining = count;
+			if (entry->extraLists) {
+				for (const auto extraList : *entry->extraLists) {
+					if (!extraList)
+						continue;
+
+					countRemaining -= extraList->GetCount();
+
+					if (RE::IsQuestItem(extraList) ||
+						extraList->HasType(RE::ExtraDataType::kEnchantment) ||
+						(essentialFavorites && extraList->HasType(RE::ExtraDataType::kHotkey))) {
+						continue;
+					}
+
+					listEntries.push_back(RE::make_smart<ItemEntry>(std::move(entry), filterFlag));
 				}
-
-				const auto entryKwdForm = baseObj->As<RE::BGSKeywordForm>();
-				if (!entryKwdForm || entryKwdForm->HasKeyword(MagicDisallowEnchanting))
-					continue;
-
-				listEntries.push_back(RE::BSTSmartPointer(
-					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Staff)));
 			}
-			else if (allowSoulGems && baseObj->IsSoulGem()) {
-				if (entry->GetSoulLevel() == RE::SOUL_LEVEL::kNone)
-					continue;
 
-				listEntries.push_back(
-					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Morpholith));
-			}
-			else if (!disallowHeartStones && baseObj->formID == heartstoneID) {
-				listEntries.push_back(
-					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Morpholith));
+			if (countRemaining > 0) {
+				listEntries.push_back(RE::make_smart<ItemEntry>(
+					std::make_unique<RE::InventoryEntryData>(object, countRemaining),
+					filterFlag));
 			}
 		}
 

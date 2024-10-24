@@ -12,6 +12,30 @@ namespace RE
 		}
 	}
 
+	[[nodiscard]] inline bool IsQuestItem(const RE::ExtraAliasInstanceArray* a_extraAliases)
+	{
+		for (const auto alias : a_extraAliases->aliases) {
+			if (!alias || !alias->alias) continue;
+
+			if (alias->alias->flags.all(RE::BGSBaseAlias::FLAGS::kQuestObject)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	[[nodiscard]] inline bool IsQuestItem(const RE::ExtraDataList* a_extraList)
+	{
+		const auto extraRef = a_extraList->GetByType<RE::ExtraReferenceHandle>();
+		const auto refHandle = extraRef ? extraRef->containerRef : ObjectRefHandle();
+		const auto ref = refHandle.get();
+
+		const auto extraList = ref ? std::addressof(ref->extraList) : a_extraList;
+		const auto extraAliases = extraList->GetByType<RE::ExtraAliasInstanceArray>();
+		return extraAliases && RE::IsQuestItem(extraAliases);
+	}
+
 	template <std::invocable<RE::IMessageBoxCallback::Message> F>
 	[[nodiscard]] RE::BSTSmartPointer<RE::IMessageBoxCallback> MakeMessageBoxCallback(
 		F&& a_callback)
