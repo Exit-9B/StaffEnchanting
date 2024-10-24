@@ -15,7 +15,8 @@ namespace RE
 	[[nodiscard]] inline bool IsQuestItem(const RE::ExtraAliasInstanceArray* a_extraAliases)
 	{
 		for (const auto alias : a_extraAliases->aliases) {
-			if (!alias || !alias->alias) continue;
+			if (!alias || !alias->alias)
+				continue;
 
 			if (alias->alias->flags.all(RE::BGSBaseAlias::FLAGS::kQuestObject)) {
 				return true;
