@@ -86,11 +86,15 @@ namespace UI
 			const RE::BSTSmartPointer<CategoryListEntry>& a_entry,
 			bool a_showNotification = false);
 		void CreateItem(const RE::BGSConstructibleObject* a_constructible);
+		void CreateStaff();
 
 		void UpdateItemPreview(std::unique_ptr<RE::InventoryEntryData>&& a_item);
 		void UpdateEnabledEntries(
 			FilterFlag a_flags = FilterFlag::All,
 			bool a_fullRebuild = false);
+
+		[[nodiscard]] static float GetEntryDataSoulCharge(RE::InventoryEntryData* a_entry);
+		void UpdateEnchantmentCharge();
 		void UpdateEnchantment();
 		void UpdateIngredients();
 		void UpdateItemList(
@@ -122,6 +126,7 @@ namespace UI
 
 		RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>> listEntries;
 		RE::BSString customName;
+		RE::BSString suggestedName;
 		RE::GFxValue inventoryLists;
 		RE::GFxValue categoryEntryList;
 
@@ -131,6 +136,7 @@ namespace UI
 		std::unique_ptr<RE::ExtraDataList> tempExtraList;
 		RE::BSTArray<RE::Effect> createdEffects;
 		RE::EnchantmentItem* createdEnchantment{ nullptr };
+
 		std::uint32_t highlightIndex;
 		Category currentCategory;
 		float chargeAmount{ 0.0f };
