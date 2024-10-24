@@ -94,6 +94,7 @@ namespace UI
 			bool a_fullRebuild = false);
 
 		[[nodiscard]] static float GetEntryDataSoulCharge(RE::InventoryEntryData* a_entry);
+		[[nodiscard]] static bool MagicEffectHasDescription(RE::EffectSetting* a_effect);
 		void UpdateEnchantmentCharge();
 		void UpdateEnchantment();
 		void UpdateIngredients();
@@ -101,7 +102,7 @@ namespace UI
 			RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>>& a_entries,
 			bool a_fullRebuild = false);
 
-		static bool IsSpellValid(const RE::SpellItem* a_spell);
+		[[nodiscard]] static bool IsSpellValid(const RE::SpellItem* a_spell);
 		static void AddSpellIfUsable(
 			RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>>& a_entries,
 			const RE::SpellItem* a_spell);

@@ -291,6 +291,16 @@ namespace UI
 		return -1.0f;
 	}
 
+	bool StaffCraftingMenu::MagicEffectHasDescription(RE::EffectSetting* a_effect)
+	{
+		assert(a_effect);
+		if (a_effect->data.flags.any(RE::EffectSetting::EffectSettingData::Flag::kHideInUI)) {
+			return false;
+		}
+
+		return !a_effect->magicItemDescription.empty();
+	}
+
 	void StaffCraftingMenu::UpdateEnchantmentCharge()
 	{
 		if (selected.morpholith) {
@@ -469,16 +479,18 @@ namespace UI
 			return false;
 		}
 
-		const auto dataHandler = RE::TESDataHandler::GetSingleton();
-		const auto idx_skyrim = dataHandler
-			? dataHandler->GetModIndex("Skyrim.esm"sv)
-			: std::nullopt;
+		const std::optional<uint8_t> idx_skyrim = 0; 
 		const RE::FormID ritualEffectID = idx_skyrim ? (*idx_skyrim << 24) | 0x806E1 : 0x0;
 		const RE::FormID ritualEffectIllusionID = idx_skyrim ? (*idx_skyrim << 24) | 0x8BB92 : 0x0;
-		const RE::FormID eitherHandID = idx_skyrim ? (*idx_skyrim << 24) | 0x13F44 : 0x0;
-		const auto eitherHandForm = RE::TESForm::LookupByID<RE::BGSEquipSlot>(eitherHandID);
 
-		if (const auto spellEquipSlot = a_spell->GetEquipSlot(); eitherHandForm) {
+		const auto defaultObjects = RE::BGSDefaultObjectManager::GetSingleton();
+		const auto eitherHandForm = defaultObjects->GetObject<RE::BGSEquipSlot>(
+			RE::DEFAULT_OBJECT::kEitherHandEquip);
+		if (!eitherHandForm) {
+			return false;
+		}
+
+		if (const auto spellEquipSlot = a_spell->GetEquipSlot()) {
 			if (spellEquipSlot != eitherHandForm) {
 				return false;
 			}
@@ -489,21 +501,20 @@ namespace UI
 
 		bool hasDescription = false;
 		for (const auto& effect : a_spell->effects) {
-			if (!effect->baseEffect)
+			if (!effect->baseEffect) {
 				return false;
+			}
 
 			const auto effectKwdForm = effect->baseEffect->As<RE::BGSKeywordForm>();
 			if (!effectKwdForm || effectKwdForm->HasKeyword(ritualEffectID) ||
-				effectKwdForm->HasKeyword(ritualEffectIllusionID))
+				effectKwdForm->HasKeyword(ritualEffectIllusionID)) {
 				return false;
+			}
 
-			if (!hasDescription &&
-				!effect->baseEffect->data.flags.any(
-					RE::EffectSetting::EffectSettingData::Flag::kHideInUI)) {
-				hasDescription = !effect->baseEffect->magicItemDescription.empty();
+			if (!hasDescription && MagicEffectHasDescription(effect->baseEffect)) {
+				hasDescription = true;
 			}
 		}
-
 		return hasDescription;
 	}
 
