@@ -1,3 +1,4 @@
 $Morpholith	Morpholith
+$Special	Special
 $Spell	Spell
 $Staff	Staff
