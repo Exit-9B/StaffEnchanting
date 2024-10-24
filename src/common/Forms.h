@@ -27,12 +27,12 @@ namespace Forms
 			return LookupForm<RE::BGSKeyword>(0x801);
 		}
 
-		[[nodiscard]] inline auto MenuDescription()
+		[[nodiscard]] inline auto CreatedStaffName()
 		{
 			return LookupForm<RE::BGSMessage>(0x802);
 		}
 
-		[[nodiscard]] inline auto CreatedStaffName()
+		[[nodiscard]] inline auto MenuDescription()
 		{
 			return LookupForm<RE::BGSMessage>(0x803);
 		}
