@@ -287,6 +287,16 @@ namespace UI
 		return -1.0f;
 	}
 
+	bool StaffCraftingMenu::MagicEffectHasDescription(RE::EffectSetting* a_effect)
+	{
+		assert(a_effect);
+		if (a_effect->data.flags.any(RE::EffectSetting::EffectSettingData::Flag::kHideInUI)) {
+			return false;
+		}
+
+		return !a_effect->magicItemDescription.empty();
+	}
+
 	void StaffCraftingMenu::UpdateEnchantmentCharge()
 	{
 		if (selected.morpholith) {
@@ -453,6 +463,56 @@ namespace UI
 		menu.Invoke("UpdateItemList", std::to_array<RE::GFxValue>({ a_fullRebuild }));
 	}
 
+	bool StaffCraftingMenu::IsSpellValid(const RE::SpellItem* a_spell)
+	{
+		if (a_spell->CalculateMagickaCost(nullptr) < 1.0f) {
+			return false;
+		}
+		if (a_spell->effects.empty()) {
+			return false;
+		}
+		if (a_spell->GetDelivery() == RE::MagicSystem::Delivery::kSelf) {
+			return false;
+		}
+
+		static constexpr RE::FormID ritualEffectID = 0x806E1;
+		static constexpr RE::FormID ritualEffectIllusionID = 0x8BB92;
+
+		const auto defaultObjects = RE::BGSDefaultObjectManager::GetSingleton();
+		const auto eitherHandForm = defaultObjects->GetObject<RE::BGSEquipSlot>(
+			RE::DEFAULT_OBJECT::kEitherHandEquip);
+		if (!eitherHandForm) {
+			return false;
+		}
+
+		if (const auto spellEquipSlot = a_spell->GetEquipSlot()) {
+			if (spellEquipSlot != eitherHandForm) {
+				return false;
+			}
+		}
+		else {
+			return false;
+		}
+
+		bool hasDescription = false;
+		for (const auto& effect : a_spell->effects) {
+			if (!effect->baseEffect) {
+				return false;
+			}
+
+			const auto effectKwdForm = effect->baseEffect->As<RE::BGSKeywordForm>();
+			if (!effectKwdForm || effectKwdForm->HasKeyword(ritualEffectID) ||
+				effectKwdForm->HasKeyword(ritualEffectIllusionID)) {
+				return false;
+			}
+
+			if (!hasDescription && MagicEffectHasDescription(effect->baseEffect)) {
+				hasDescription = true;
+			}
+		}
+		return hasDescription;
+	}
+
 	void StaffCraftingMenu::AddSpellIfUsable(
 		RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>>& a_entries,
 		const RE::SpellItem* a_spell)
@@ -472,6 +532,8 @@ namespace UI
 			return;
 		}
 
+		if (!IsSpellValid(a_spell))
+			return;
 		a_entries.push_back(RE::make_smart<SpellEntry>(a_spell));
 	}
 
