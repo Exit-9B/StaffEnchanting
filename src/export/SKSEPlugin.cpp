@@ -1,3 +1,4 @@
+#include "Hooks/BaseCharge.h"
 #include "Hooks/Create.h"
 #include "Hooks/Workbench.h"
 #include "UI/StaffCraftingMenu.h"
@@ -71,10 +72,11 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 	logger::info("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
 
 	SKSE::Init(a_skse);
-	SKSE::AllocTrampoline(14);
+	SKSE::AllocTrampoline(35);
 
 	Hooks::Workbench::Install();
 	Hooks::Create::Install();
+	Hooks::BaseCharge::Install();
 
 	const auto messaging = SKSE::GetMessagingInterface();
 	messaging->RegisterListener(
