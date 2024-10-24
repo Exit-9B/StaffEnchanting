@@ -82,6 +82,18 @@ namespace UI
 		UpdateBottomBar(RE::ActorValue::kEnchanting);
 	}
 
+	[[nodiscard]] static bool IsFavorite(const RE::InventoryEntryData* a_entry)
+	{
+		if (a_entry->extraLists) {
+			for (const auto extraList : *a_entry->extraLists) {
+				if (extraList->HasType<RE::ExtraHotkey>()) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	[[nodiscard]] static bool IsSpecial(const RE::BGSConstructibleObject* a_obj)
 	{
 		for (auto condition = a_obj->conditions.head; condition; condition = condition->next) {
@@ -127,58 +139,43 @@ namespace UI
 			? workbench->HasKeyword(allowSoulGemsKwd)
 			: false;
 
-		const auto getFilter = [&](const RE::TESBoundObject* obj) -> FilterFlag
-		{
-			if (!disallowHeartStones && obj == DLC2HeartStone) {
-				return FilterFlag::Morpholith;
+		const auto itemCount = RE::GetInventoryItemCount(playerRef);
+		for (const auto i : std::views::iota(0, itemCount)) {
+			std::unique_ptr<RE::InventoryEntryData> item{ RE::GetInventoryItemAt(playerRef, i) };
+			if (!item) {
+				continue;
 			}
-			else if (allowSoulGems && obj->Is(RE::FormType::SoulGem)) {
-				return FilterFlag::Morpholith;
+
+			const auto object = item->GetObject();
+			if (!object->GetName() || !object->GetPlayable()) {
+				continue;
 			}
-			else if (const auto weap = obj->As<RE::TESObjectWEAP>()) {
+
+			auto filterFlag = FilterFlag::None;
+			if (!disallowHeartStones && object == DLC2HeartStone) {
+				filterFlag = FilterFlag::Morpholith;
+			}
+			else if (allowSoulGems && object->Is(RE::FormType::SoulGem)) {
+				filterFlag = FilterFlag::Morpholith;
+			}
+			else if (const auto weap = object->As<RE::TESObjectWEAP>()) {
 				if (weap->IsStaff() && !weap->formEnchanting &&
 					!weap->HasKeyword(MagicDisallowEnchanting)) {
 
-					return FilterFlag::Staff;
+					filterFlag = FilterFlag::Staff;
 				}
 			}
 
-			return FilterFlag::None;
-		};
-
-		const auto inventory = playerRef->GetInventory();
-
-		for (const auto& [object, objectData] : inventory) {
-			const auto filterFlag = object ? getFilter(object) : FilterFlag::None;
-			if (filterFlag == FilterFlag::None)
+			if (filterFlag == FilterFlag::None) {
 				continue;
-
-			const auto& [count, entry] = objectData;
-			std::int32_t countRemaining = count;
-			if (entry->extraLists) {
-				for (const auto extraList : *entry->extraLists) {
-					if (!extraList)
-						continue;
-
-					countRemaining -= extraList->GetCount();
-
-					if (RE::IsQuestItem(extraList) ||
-						extraList->HasType(RE::ExtraDataType::kEnchantment) ||
-						(essentialFavorites && extraList->HasType(RE::ExtraDataType::kHotkey))) {
-						continue;
-					}
-
-					listEntries.push_back(RE::make_smart<ItemEntry>(
-						std::make_unique<RE::InventoryEntryData>(*entry),
-						filterFlag));
-				}
 			}
 
-			if (countRemaining > 0) {
-				listEntries.push_back(RE::make_smart<ItemEntry>(
-					std::make_unique<RE::InventoryEntryData>(object, countRemaining),
-					filterFlag));
+			if (item->IsQuestObject() || item->IsEnchanted() ||
+				(essentialFavorites && IsFavorite(item.get()))) {
+				continue;
 			}
+
+			listEntries.emplace_back(RE::make_smart<ItemEntry>(std::move(item), filterFlag));
 		}
 
 		const auto playerBase = playerRef->GetActorBase();

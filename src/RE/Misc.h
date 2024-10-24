@@ -12,29 +12,24 @@ namespace RE
 		}
 	}
 
-	[[nodiscard]] inline bool IsQuestItem(const RE::ExtraAliasInstanceArray* a_extraAliases)
+	[[nodiscard]] inline std::int32_t GetInventoryItemCount(
+		const RE::TESObjectREFR* a_refr,
+		bool a_isViewingContainer = false,
+		bool a_playable = true)
 	{
-		for (const auto alias : a_extraAliases->aliases) {
-			if (!alias || !alias->alias)
-				continue;
-
-			if (alias->alias->flags.all(RE::BGSBaseAlias::FLAGS::kQuestObject)) {
-				return true;
-			}
-		}
-
-		return false;
+		using func_t = decltype(&GetInventoryItemCount);
+		REL::Relocation<func_t> func{ RE::Offset::TESObjectREFR::GetInventoryItemCount };
+		return func(a_refr, a_isViewingContainer, a_playable);
 	}
 
-	[[nodiscard]] inline bool IsQuestItem(const RE::ExtraDataList* a_extraList)
+	[[nodiscard]] inline RE::InventoryEntryData* GetInventoryItemAt(
+		const RE::TESObjectREFR* a_refr,
+		std::int32_t a_index,
+		bool a_isViewingContainer = false)
 	{
-		const auto extraRef = a_extraList->GetByType<RE::ExtraReferenceHandle>();
-		const auto refHandle = extraRef ? extraRef->containerRef : ObjectRefHandle();
-		const auto ref = refHandle.get();
-
-		const auto extraList = ref ? std::addressof(ref->extraList) : a_extraList;
-		const auto extraAliases = extraList->GetByType<RE::ExtraAliasInstanceArray>();
-		return extraAliases && RE::IsQuestItem(extraAliases);
+		using func_t = decltype(&GetInventoryItemAt);
+		REL::Relocation<func_t> func{ RE::Offset::TESObjectREFR::GetInventoryItemAt };
+		return func(a_refr, a_index, a_isViewingContainer);
 	}
 
 	template <std::invocable<RE::IMessageBoxCallback::Message> F>
