@@ -760,11 +760,7 @@ namespace UI
 			nullptr,
 			nullptr);
 
-		RE::SendHUDMessage::ShowInventoryChangeMessage(
-			staff,
-			1,
-			true,
-			true);
+		RE::SendHUDMessage::ShowInventoryChangeMessage(staff, 1, true, true);
 
 		const auto skill = workbench->workBenchData.usesSkill;
 		if (skill.underlying() - 6u <= 17u) {

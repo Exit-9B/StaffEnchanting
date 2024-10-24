@@ -65,9 +65,7 @@ namespace RE
 		uint16_t a_charge)
 	{
 		using func_t = decltype(&EnchantObject);
-		static REL::Relocation<func_t> func{
-			RE::Offset::InventoryChanges::EnchantObject
-		};
+		static REL::Relocation<func_t> func{ RE::Offset::InventoryChanges::EnchantObject };
 		return func(a_inventoryChanges, a_obj, a_extraList, a_enchantment, a_charge);
 	}
 }
