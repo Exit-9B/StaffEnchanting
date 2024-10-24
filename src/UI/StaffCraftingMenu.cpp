@@ -734,7 +734,8 @@ namespace UI
 			return;
 
 		RE::ExtraDataList* staffExtraList = nullptr;
-		if (const auto extraLists = selected.staff->data->extraLists; extraLists && !extraLists->empty()) {
+		if (const auto extraLists = selected.staff->data->extraLists;
+			extraLists && !extraLists->empty()) {
 			staffExtraList = extraLists->front();
 		}
 
