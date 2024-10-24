@@ -103,9 +103,6 @@ namespace UI
 		assert(playerRef);
 
 		const auto dataHandler = RE::TESDataHandler::GetSingleton();
-		const auto idx_dragonrborn = dataHandler
-			? dataHandler->GetModIndex("Dragonborn.esm"sv)
-			: std::nullopt;
 		const auto DLC2HeartStone = dataHandler->LookupForm(0x17749, "Dragonborn.esm"sv);
 
 		const auto defaultObjects = RE::BGSDefaultObjectManager::GetSingleton();
