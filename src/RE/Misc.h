@@ -91,8 +91,8 @@ namespace RE
 
 	inline void RefreshEquippedActorValueCharge(
 		RE::Actor* a_actor,
-		RE::TESBoundObject* a_object,
-		RE::ExtraDataList* a_extraList,
+		const RE::TESForm* a_object,
+		const RE::ExtraDataList* a_extraList,
 		bool a_isLeft)
 	{
 		using func_t = decltype(&RefreshEquippedActorValueCharge);

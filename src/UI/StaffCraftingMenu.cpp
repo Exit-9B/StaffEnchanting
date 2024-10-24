@@ -807,6 +807,7 @@ namespace UI
 			staffExtraList,
 			enchantment,
 			static_cast<uint16_t>(chargeAmount));
+
 		if (!enchantedExtraList)
 			return;
 
