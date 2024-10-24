@@ -146,14 +146,14 @@ namespace UI
 			return FilterFlag::None;
 		};
 
-		auto inventory = playerRef->GetInventory();
+		const auto inventory = playerRef->GetInventory();
 
-		for (auto& [object, objectData] : inventory) {
+		for (const auto& [object, objectData] : inventory) {
 			const auto filterFlag = object ? getFilter(object) : FilterFlag::None;
 			if (filterFlag == FilterFlag::None)
 				continue;
 
-			auto& [count, entry] = objectData;
+			const auto& [count, entry] = objectData;
 			std::int32_t countRemaining = count;
 			if (entry->extraLists) {
 				for (const auto extraList : *entry->extraLists) {
@@ -168,7 +168,9 @@ namespace UI
 						continue;
 					}
 
-					listEntries.push_back(RE::make_smart<ItemEntry>(std::move(entry), filterFlag));
+					listEntries.push_back(RE::make_smart<ItemEntry>(
+						std::make_unique<RE::InventoryEntryData>(*entry),
+						filterFlag));
 				}
 			}
 
