@@ -147,7 +147,7 @@ namespace UI
 			}
 
 			const auto object = item->GetObject();
-			if (!object->GetName() || !object->GetPlayable()) {
+			if (!object || !object->GetName() || !object->GetPlayable()) {
 				continue;
 			}
 
