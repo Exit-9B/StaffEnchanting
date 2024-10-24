@@ -23,7 +23,7 @@ namespace Hooks
 
 				mov(rbx, ptr[rax + offsetof(RE::TESEnchantableForm, formEnchanting)]);
 				test(rbx, rbx);
-				jz(retn, Xbyak::CodeGenerator::T_SHORT);
+				jz(retn, T_SHORT);
 				movzx(ebx, word[rax + offsetof(RE::TESEnchantableForm, amountofEnchantment)]);
 				test(bx, bx);
 				L(retn);
