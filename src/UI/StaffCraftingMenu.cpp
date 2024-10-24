@@ -274,6 +274,57 @@ namespace UI
 		}
 	}
 
+	float StaffCraftingMenu::GetEntryDataSoulCharge(RE::InventoryEntryData* a_entry)
+	{
+		switch (a_entry->GetSoulLevel()) {
+		case RE::SOUL_LEVEL::kPetty:
+			return static_cast<float>(*"iSoulLevelValuePetty"_gs);
+		case RE::SOUL_LEVEL::kLesser:
+			return static_cast<float>(*"iSoulLevelValuelesser"_gs);
+		case RE::SOUL_LEVEL::kCommon:
+			return static_cast<float>(*"iSoulLevelValueCommon"_gs);
+		case RE::SOUL_LEVEL::kGreater:
+			return static_cast<float>(*"iSoulLevelValueGreater"_gs);
+		case RE::SOUL_LEVEL::kGrand:
+			return static_cast<float>(*"iSoulLevelValueGrand"_gs);
+		}
+		return -1.0f;
+	}
+
+	void StaffCraftingMenu::UpdateEnchantmentCharge()
+	{
+		if (selected.morpholith) {
+			float response = GetEntryDataSoulCharge(selected.morpholith->data.get());
+			if (response < 0.0f) {
+				chargeAmount = static_cast<float>(*"iSoulLevelValueGrand"_gs);
+			}
+			else {
+				chargeAmount = response;
+			}
+		}
+		else {
+			for (const auto& entry : listEntries) {
+				if (entry->filterFlag != FilterFlag::Morpholith)
+					continue;
+				const auto itemEntry = static_cast<const ItemEntry*>(entry.get());
+				if (!itemEntry)
+					continue;
+				const auto entryData = itemEntry->data.get();
+				if (!entryData)
+					continue;
+
+				float response = GetEntryDataSoulCharge(entryData);
+
+				if (response < 0.0f) {
+					chargeAmount = static_cast<float>(*"iSoulLevelValueGrand"_gs);
+				}
+				if (response > chargeAmount) {
+					chargeAmount = response;
+				}
+			}
+		}
+	}
+
 	void StaffCraftingMenu::UpdateEnchantment()
 	{
 		if (craftItemPreview) {
@@ -287,7 +338,7 @@ namespace UI
 
 		if (selected.spell) {
 			// TODO: calculate correct charge amount
-			chargeAmount = static_cast<float>(*"iSoulLevelValueGrand"_gs);
+			UpdateEnchantmentCharge();
 
 			for (const auto& effect : selected.spell->data->effects) {
 				auto& createdEffect = createdEffects.emplace_back();
@@ -455,8 +506,12 @@ namespace UI
 		if (!(player && staff && enchantment))
 			return;
 
-		auto* createdExtraList = RE::
-			CreateExtraList(player->GetInventoryChanges(), staff, nullptr, enchantment, 3000);
+		auto* createdExtraList = RE::CreateExtraList(
+			player->GetInventoryChanges(),
+			staff,
+			nullptr,
+			enchantment,
+			static_cast<uint16_t>(chargeAmount));
 		if (!createdExtraList)
 			return;
 
@@ -468,8 +523,9 @@ namespace UI
 			RE::ITEM_REMOVE_REASON::kRemove,
 			nullptr,
 			nullptr);
-		// player->AddObjectToContainer(staff, createdExtraList, 1, nullptr);
-		// player->RemoveItem(staff, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+		PopulateEntryList(true);
+		UpdateItemPreview(nullptr);
+		menu.Invoke("UpdateItemDisplay");
 		RE::PlaySound("UIEnchantingItemCreate");
 	}
 
@@ -526,9 +582,24 @@ namespace UI
 				return true;
 			}
 
-			// TODO: Proper message, see above
+			const auto msgBoxData = new RE::MessageBoxData();
+			msgBoxData->bodyText = *"sConstructibleMenuConfirm"_gs;
+			msgBoxData->buttonText.push_back(*"sYes"_gs);
+			msgBoxData->buttonText.push_back(*"sNo"_gs);
 
-			AttemptStaffEnchanting();
+			const auto callback = RE::MakeMessageBoxCallback(
+				[&](auto message)
+				{
+					if (message == RE::IMessageBoxCallback::Message::kUnk0) {
+						AttemptStaffEnchanting();
+					}
+				});
+
+			msgBoxData->callback = callback;
+			msgBoxData->unk38 = 25;
+			msgBoxData->unk48 = 4;
+
+			msgBoxData->QueueMessage();
 			return true;
 		}
 		else if (a_userEvent == userEvents->yButton) {

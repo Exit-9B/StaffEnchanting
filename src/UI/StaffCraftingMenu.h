@@ -91,6 +91,9 @@ namespace UI
 		void UpdateEnabledEntries(
 			FilterFlag a_flags = FilterFlag::All,
 			bool a_fullRebuild = false);
+
+		float GetEntryDataSoulCharge(RE::InventoryEntryData* a_entry);
+		void UpdateEnchantmentCharge();
 		void UpdateEnchantment();
 		void UpdateIngredients();
 		void UpdateItemList(
