@@ -482,7 +482,7 @@ namespace UI
 		static constexpr RE::FormID ritualEffectID = 0x806E1;
 		static constexpr RE::FormID ritualEffectIllusionID = 0x8BB92;
 
-		const auto defaultObjects = RE::BGSDefaultObjectManager::GetSingleton();
+		const auto defaultObjects = RE::BGSDefaultObjectManager::GetSingleton(); 
 		const auto eitherHandForm = defaultObjects->GetObject<RE::BGSEquipSlot>(
 			RE::DEFAULT_OBJECT::kEitherHandEquip);
 		if (!eitherHandForm) {
