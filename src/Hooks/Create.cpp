@@ -55,6 +55,7 @@ namespace Hooks
 			if (baseEffect && baseEffect->data.delivery != RE::MagicSystem::Delivery::kTouch) {
 				a_enchantment.SetCastingType(baseEffect->data.castingType);
 				a_enchantment.SetDelivery(baseEffect->data.delivery);
+				a_enchantment.data.spellType = RE::MagicSystem::SpellType::kStaffEnchantment;
 				return;
 			}
 		}
