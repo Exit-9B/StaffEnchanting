@@ -474,6 +474,7 @@ namespace UI
 			? dataHandler->GetModIndex("Skyrim.esm"sv)
 			: std::nullopt;
 		const RE::FormID ritualEffectID = idx_skyrim ? (*idx_skyrim << 24) | 0x806E1 : 0x0;
+		const RE::FormID ritualEffectIllusionID = idx_skyrim ? (*idx_skyrim << 24) | 0x8BB92 : 0x0;
 		const RE::FormID eitherHandID = idx_skyrim ? (*idx_skyrim << 24) | 0x13F44 : 0x0;
 		const auto eitherHandForm = RE::TESForm::LookupByID<RE::BGSEquipSlot>(eitherHandID);
 
@@ -492,7 +493,8 @@ namespace UI
 				return false;
 
 			const auto effectKwdForm = effect->baseEffect->As<RE::BGSKeywordForm>();
-			if (!effectKwdForm || effectKwdForm->HasKeyword(ritualEffectID))
+			if (!effectKwdForm || effectKwdForm->HasKeyword(ritualEffectID) ||
+				effectKwdForm->HasKeyword(ritualEffectIllusionID))
 				return false;
 
 			if (!hasDescription &&
