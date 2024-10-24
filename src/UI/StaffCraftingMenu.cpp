@@ -136,10 +136,8 @@ namespace UI
 		assert(playerRef);
 
 		const auto dataHandler = RE::TESDataHandler::GetSingleton();
-		const auto idx_dragonrborn = dataHandler
-			? dataHandler->GetModIndex("Dragonborn.esm"sv)
-			: std::nullopt;
-		const RE::FormID heartstoneID = idx_dragonrborn ? (*idx_dragonrborn << 24) | 0x17749 : 0x0;
+		const auto DLC2HeartStone = dataHandler->LookupForm(0x17749, "Dragonborn.esm"sv);
+
 		const auto defaultObjects = RE::BGSDefaultObjectManager::GetSingleton();
 		const auto MagicDisallowEnchanting = defaultObjects->GetObject<RE::BGSKeyword>(
 			RE::DEFAULT_OBJECT::kKeywordDisallowEnchanting);
@@ -158,42 +156,40 @@ namespace UI
 			? workbench->HasKeyword(allowSoulGemsKwd)
 			: false;
 
-		auto inventory = playerRef->GetInventory(
-			[heartstoneID](RE::TESBoundObject& baseObj) -> bool
-			{
-				if (const auto weap = baseObj.As<RE::TESObjectWEAP>()) {
-					return weap->IsStaff();
-				}
-				return baseObj.formID == heartstoneID || baseObj.IsSoulGem();
-			});
-
-		for (auto& [baseObj, extra] : inventory) {
-			auto& [count, entry] = extra;
-			if (entry->IsQuestObject() || (essentialFavorites && IsFavorite(entry.get())))
+		const auto itemCount = RE::GetInventoryItemCount(playerRef);
+		for (const auto i : std::views::iota(0, itemCount)) {
+			std::unique_ptr<RE::InventoryEntryData> item{ RE::GetInventoryItemAt(playerRef, i) };
+			if (!item) {
 				continue;
+			}
 
-			if (baseObj->IsWeapon()) {
-				if (entry->IsEnchanted() || !baseObj->As<RE::TESObjectWEAP>()->IsStaff()) {
-					continue;
+			const auto object = item->GetObject();
+			if (!object || !object->GetName() || !object->GetPlayable()) {
+				continue;
+			}
+
+			if (item->IsQuestObject() || item->IsEnchanted() ||
+				(essentialFavorites && IsFavorite(item.get()))) {
+				continue;
+			}
+
+			auto filterFlag = FilterFlag::None;
+			if (!disallowHeartStones && object == DLC2HeartStone) {
+				filterFlag = FilterFlag::Morpholith;
+			}
+			else if (allowSoulGems && object->Is(RE::FormType::SoulGem)) {
+				filterFlag = FilterFlag::Morpholith;
+			}
+			else if (const auto weap = object->As<RE::TESObjectWEAP>()) {
+				if (weap->IsStaff() && !weap->formEnchanting &&
+					!weap->HasKeyword(MagicDisallowEnchanting)) {
+
+					filterFlag = FilterFlag::Staff;
 				}
-
-				const auto entryKwdForm = baseObj->As<RE::BGSKeywordForm>();
-				if (!entryKwdForm || entryKwdForm->HasKeyword(MagicDisallowEnchanting))
-					continue;
-
-				listEntries.push_back(RE::BSTSmartPointer(
-					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Staff)));
 			}
-			else if (allowSoulGems && baseObj->IsSoulGem()) {
-				if (entry->GetSoulLevel() == RE::SOUL_LEVEL::kNone)
-					continue;
 
-				listEntries.push_back(
-					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Morpholith));
-			}
-			else if (!disallowHeartStones && baseObj->formID == heartstoneID) {
-				listEntries.push_back(
-					RE::make_smart<ItemEntry>(std::move(entry), FilterFlag::Morpholith));
+			if (filterFlag != FilterFlag::None) {
+				listEntries.emplace_back(RE::make_smart<ItemEntry>(std::move(item), filterFlag));
 			}
 		}
 
@@ -306,6 +302,16 @@ namespace UI
 			return static_cast<float>(*"iSoulLevelValueGrand"_gs);
 		}
 		return -1.0f;
+	}
+
+	bool StaffCraftingMenu::MagicEffectHasDescription(RE::EffectSetting* a_effect)
+	{
+		assert(a_effect);
+		if (a_effect->data.flags.any(RE::EffectSetting::EffectSettingData::Flag::kHideInUI)) {
+			return false;
+		}
+
+		return !a_effect->magicItemDescription.empty();
 	}
 
 	void StaffCraftingMenu::UpdateEnchantmentCharge()
@@ -484,6 +490,56 @@ namespace UI
 		menu.Invoke("UpdateItemList", std::to_array<RE::GFxValue>({ a_fullRebuild }));
 	}
 
+	bool StaffCraftingMenu::IsSpellValid(const RE::SpellItem* a_spell)
+	{
+		if (a_spell->CalculateMagickaCost(nullptr) < 1.0f) {
+			return false;
+		}
+		if (a_spell->effects.empty()) {
+			return false;
+		}
+		if (a_spell->GetDelivery() == RE::MagicSystem::Delivery::kSelf) {
+			return false;
+		}
+
+		static constexpr RE::FormID ritualEffectID = 0x806E1;
+		static constexpr RE::FormID ritualEffectIllusionID = 0x8BB92;
+
+		const auto defaultObjects = RE::BGSDefaultObjectManager::GetSingleton();
+		const auto eitherHandForm = defaultObjects->GetObject<RE::BGSEquipSlot>(
+			RE::DEFAULT_OBJECT::kEitherHandEquip);
+		if (!eitherHandForm) {
+			return false;
+		}
+
+		if (const auto spellEquipSlot = a_spell->GetEquipSlot()) {
+			if (spellEquipSlot != eitherHandForm) {
+				return false;
+			}
+		}
+		else {
+			return false;
+		}
+
+		bool hasDescription = false;
+		for (const auto& effect : a_spell->effects) {
+			if (!effect->baseEffect) {
+				return false;
+			}
+
+			const auto effectKwdForm = effect->baseEffect->As<RE::BGSKeywordForm>();
+			if (!effectKwdForm || effectKwdForm->HasKeyword(ritualEffectID) ||
+				effectKwdForm->HasKeyword(ritualEffectIllusionID)) {
+				return false;
+			}
+
+			if (!hasDescription && MagicEffectHasDescription(effect->baseEffect)) {
+				hasDescription = true;
+			}
+		}
+		return hasDescription;
+	}
+
 	void StaffCraftingMenu::AddSpellIfUsable(
 		RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>>& a_entries,
 		const RE::SpellItem* a_spell)
@@ -503,6 +559,8 @@ namespace UI
 			return;
 		}
 
+		if (!IsSpellValid(a_spell))
+			return;
 		a_entries.push_back(RE::make_smart<SpellEntry>(a_spell));
 	}
 
