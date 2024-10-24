@@ -22,6 +22,8 @@ namespace RE
 		namespace TESObjectREFR
 		{
 			constexpr auto ActivateCraftingWorkbench = REL::ID(52941);
+			constexpr auto GetInventoryItemAt = REL::ID(19699);
+			constexpr auto GetInventoryItemCount = REL::ID(19700);
 		}
 	}
 }

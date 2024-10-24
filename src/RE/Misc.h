@@ -12,6 +12,26 @@ namespace RE
 		}
 	}
 
+	[[nodiscard]] inline std::int32_t GetInventoryItemCount(
+		const RE::TESObjectREFR* a_refr,
+		bool a_isViewingContainer = false,
+		bool a_playable = true)
+	{
+		using func_t = decltype(&GetInventoryItemCount);
+		REL::Relocation<func_t> func{ RE::Offset::TESObjectREFR::GetInventoryItemCount };
+		return func(a_refr, a_isViewingContainer, a_playable);
+	}
+
+	[[nodiscard]] inline RE::InventoryEntryData* GetInventoryItemAt(
+		const RE::TESObjectREFR* a_refr,
+		std::int32_t a_index,
+		bool a_isViewingContainer = false)
+	{
+		using func_t = decltype(&GetInventoryItemAt);
+		REL::Relocation<func_t> func{ RE::Offset::TESObjectREFR::GetInventoryItemAt };
+		return func(a_refr, a_index, a_isViewingContainer);
+	}
+
 	template <std::invocable<RE::IMessageBoxCallback::Message> F>
 	[[nodiscard]] RE::BSTSmartPointer<RE::IMessageBoxCallback> MakeMessageBoxCallback(
 		F&& a_callback)
