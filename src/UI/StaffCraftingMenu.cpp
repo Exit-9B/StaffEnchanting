@@ -457,6 +457,54 @@ namespace UI
 		menu.Invoke("UpdateItemList", std::to_array<RE::GFxValue>({ a_fullRebuild }));
 	}
 
+	bool StaffCraftingMenu::IsSpellValid(const RE::SpellItem* a_spell)
+	{
+		if (a_spell->CalculateMagickaCost(nullptr) < 1.0f) {
+			return false;
+		}
+		if (a_spell->effects.empty()) {
+			return false;
+		}
+		if (a_spell->GetDelivery() == RE::MagicSystem::Delivery::kSelf) {
+			return false;
+		}
+
+		const auto dataHandler = RE::TESDataHandler::GetSingleton();
+		const auto idx_skyrim = dataHandler
+			? dataHandler->GetModIndex("Skyrim.esm"sv)
+			: std::nullopt;
+		const RE::FormID ritualEffectID = idx_skyrim ? (*idx_skyrim << 24) | 0x806E1 : 0x0;
+		const RE::FormID eitherHandID = idx_skyrim ? (*idx_skyrim << 24) | 0x13F44 : 0x0;
+		const auto eitherHandForm = RE::TESForm::LookupByID<RE::BGSEquipSlot>(eitherHandID);
+
+		if (const auto spellEquipSlot = a_spell->GetEquipSlot(); eitherHandForm) {
+			if (spellEquipSlot != eitherHandForm) {
+				return false;
+			}
+		}
+		else {
+			return false;
+		}
+
+		bool hasDescription = false;
+		for (const auto& effect : a_spell->effects) {
+			if (!effect->baseEffect)
+				return false;
+
+			const auto effectKwdForm = effect->baseEffect->As<RE::BGSKeywordForm>();
+			if (!effectKwdForm || effectKwdForm->HasKeyword(ritualEffectID))
+				return false;
+
+			if (!hasDescription &&
+				!effect->baseEffect->data.flags.any(
+					RE::EffectSetting::EffectSettingData::Flag::kHideInUI)) {
+				hasDescription = !effect->baseEffect->magicItemDescription.empty();
+			}
+		}
+
+		return hasDescription;
+	}
+
 	void StaffCraftingMenu::AddSpellIfUsable(
 		RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>>& a_entries,
 		const RE::SpellItem* a_spell)
@@ -476,6 +524,8 @@ namespace UI
 			return;
 		}
 
+		if (!IsSpellValid(a_spell))
+			return;
 		a_entries.push_back(RE::make_smart<SpellEntry>(a_spell));
 	}
 

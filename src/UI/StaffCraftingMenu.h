@@ -101,6 +101,7 @@ namespace UI
 			RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>>& a_entries,
 			bool a_fullRebuild = false);
 
+		static bool IsSpellValid(const RE::SpellItem* a_spell);
 		static void AddSpellIfUsable(
 			RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>>& a_entries,
 			const RE::SpellItem* a_spell);
