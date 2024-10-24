@@ -356,7 +356,7 @@ namespace UI
 		if (craftItemPreview && createdEnchantment) {
 			const auto spellName = selected.spell->GetName();
 			// TODO: Localization
-			const std::string suggestedName = fmt::format("Staff of {}"sv, spellName);
+			suggestedName = fmt::format("Staff of {}"sv, spellName);
 
 			if (craftItemPreview->extraLists && !craftItemPreview->extraLists->empty()) {
 				const auto& extraList = craftItemPreview->extraLists->front();
@@ -497,38 +497,6 @@ namespace UI
 		}
 	}
 
-	void StaffCraftingMenu::AttemptStaffEnchanting()
-	{
-		const auto player = RE::PlayerCharacter::GetSingleton();
-		const auto staff = selected.staff->data->GetObject();
-		const auto enchantment = RE::BGSCreatedObjectManager::GetSingleton()->AddWeaponEnchantment(
-			createdEffects);
-		if (!(player && staff && enchantment))
-			return;
-
-		auto* createdExtraList = RE::CreateExtraList(
-			player->GetInventoryChanges(),
-			staff,
-			nullptr,
-			enchantment,
-			static_cast<uint16_t>(chargeAmount));
-		if (!createdExtraList)
-			return;
-
-		const auto newName = std::format("Staff Of {}", selected.spell->GetName());
-		RE::SetOverrideName(createdExtraList, newName.c_str());
-		player->RemoveItem(
-			selected.morpholith->data->GetObject(),
-			1,
-			RE::ITEM_REMOVE_REASON::kRemove,
-			nullptr,
-			nullptr);
-		PopulateEntryList(true);
-		UpdateItemPreview(nullptr);
-		menu.Invoke("UpdateItemDisplay");
-		RE::PlaySound("UIEnchantingItemCreate");
-	}
-
 	bool StaffCraftingMenu::ProcessUserEvent(const RE::BSFixedString& a_userEvent)
 	{
 		// TBD: magnitude slider
@@ -577,13 +545,13 @@ namespace UI
 			return true;
 		}
 		else if (a_userEvent == userEvents->xButton) {
-			if (!(selected.staff && selected.spell && selected.morpholith)) {
+			if (!selected.staff || !selected.spell || !selected.morpholith) {
 				// TODO: Multi-morpholith check here for higher level spells.
 				return true;
 			}
 
 			const auto msgBoxData = new RE::MessageBoxData();
-			msgBoxData->bodyText = *"sConstructibleMenuConfirm"_gs;
+			msgBoxData->bodyText = *"sEnchantItem"_gs;
 			msgBoxData->buttonText.push_back(*"sYes"_gs);
 			msgBoxData->buttonText.push_back(*"sNo"_gs);
 
@@ -591,7 +559,7 @@ namespace UI
 				[&](auto message)
 				{
 					if (message == RE::IMessageBoxCallback::Message::kUnk0) {
-						AttemptStaffEnchanting();
+						CreateStaff();
 					}
 				});
 
@@ -755,6 +723,75 @@ namespace UI
 		menu.Invoke("UpdateItemDisplay");
 
 		RE::PlaySound("UISmithingCreateGeneric");
+	}
+
+	void StaffCraftingMenu::CreateStaff()
+	{
+		if (!selected.staff || !selected.spell || !selected.morpholith || !craftItemPreview) {
+			return;
+		}
+		const auto player = RE::PlayerCharacter::GetSingleton();
+		const auto staff = selected.staff->data->GetObject();
+		const auto enchantment = RE::BGSCreatedObjectManager::GetSingleton()->AddWeaponEnchantment(
+			createdEffects);
+		if (!player || !staff || !enchantment)
+			return;
+
+		RE::ExtraDataList* const createdExtraList = RE::EnchantObject(
+			player->GetInventoryChanges(),
+			staff,
+			nullptr,
+			enchantment,
+			static_cast<uint16_t>(chargeAmount));
+		if (!createdExtraList)
+			return;
+
+		if (customName.empty()) {
+			RE::SetOverrideName(createdExtraList, suggestedName.c_str());
+		}
+		else {
+			RE::SetOverrideName(createdExtraList, customName.c_str());
+		}
+
+		player->RemoveItem(
+			selected.morpholith->data->GetObject(),
+			1,
+			RE::ITEM_REMOVE_REASON::kRemove,
+			nullptr,
+			nullptr);
+
+		RE::SendHUDMessage::ShowInventoryChangeMessage(
+			staff,
+			1,
+			true,
+			true);
+
+		const auto skill = workbench->workBenchData.usesSkill;
+		if (skill.underlying() - 6u <= 17u) {
+			player->UseSkill(skill.get(), 20.0f);
+		}
+
+		const auto workbenchRef = player->currentProcess->GetOccupiedFurniture().get();
+		const auto storyEvent = RE::BGSCraftItemEvent(
+			workbenchRef.get(),
+			workbenchRef->GetCurrentLocation(),
+			staff);
+		const auto storyEventManager = RE::BGSStoryEventManager::GetSingleton();
+		storyEventManager->AddEvent(storyEvent);
+
+		const auto itemCraftedEvent = RE::ItemCrafted::Event{
+			.item = staff,
+			.unk08 = true,
+			.unk09 = false,
+			.unk0A = false,
+		};
+		const auto itemCraftedSource = RE::ItemCrafted::GetEventSource();
+		itemCraftedSource->SendEvent(std::addressof(itemCraftedEvent));
+
+		PopulateEntryList(true);
+		UpdateItemPreview(nullptr);
+		menu.Invoke("UpdateItemDisplay");
+		RE::PlaySound("UIEnchantingItemCreate");
 	}
 
 	void StaffCraftingMenu::Selection::Clear()

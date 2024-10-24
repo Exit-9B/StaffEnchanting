@@ -4,9 +4,9 @@ namespace RE
 {
 	namespace Offset
 	{
-		namespace BGSCreatedObjectManager
+		namespace InventoryChanges
 		{
-			constexpr auto CreateExtraList = REL::ID(16146);
+			constexpr auto EnchantObject = REL::ID(16146);
 		}
 
 		namespace MagicItemCreationHelpers

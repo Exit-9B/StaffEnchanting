@@ -57,16 +57,16 @@ namespace RE
 		}
 	}
 
-	inline RE::ExtraDataList* CreateExtraList(
+	inline RE::ExtraDataList* EnchantObject(
 		RE::InventoryChanges* a_inventoryChanges,
 		RE::TESBoundObject* a_obj,
 		RE::ExtraDataList* a_extraList,
 		RE::EnchantmentItem* a_enchantment,
 		uint16_t a_charge)
 	{
-		using func_t = decltype(&CreateExtraList);
+		using func_t = decltype(&EnchantObject);
 		static REL::Relocation<func_t> func{
-			RE::Offset::BGSCreatedObjectManager::CreateExtraList
+			RE::Offset::InventoryChanges::EnchantObject
 		};
 		return func(a_inventoryChanges, a_obj, a_extraList, a_enchantment, a_charge);
 	}
