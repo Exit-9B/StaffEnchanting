@@ -795,13 +795,20 @@ namespace UI
 		if (!player || !staff || !enchantment)
 			return;
 
-		RE::ExtraDataList* const createdExtraList = RE::EnchantObject(
+		RE::ExtraDataList* staffExtraList = nullptr;
+		if (const auto extraLists = selected.staff->data->extraLists;
+			extraLists && !extraLists->empty()) {
+			staffExtraList = extraLists->front();
+		}
+
+		RE::ExtraDataList* const enchantedExtraList = RE::EnchantObject(
 			player->GetInventoryChanges(),
 			staff,
-			nullptr,
+			staffExtraList,
 			enchantment,
 			static_cast<uint16_t>(chargeAmount));
-		if (!createdExtraList)
+
+		if (!enchantedExtraList)
 			return;
 
 		const char* newName = "";
@@ -811,7 +818,15 @@ namespace UI
 		else {
 			newName = customName.c_str();
 		}
-		RE::SetOverrideName(createdExtraList, newName);
+		RE::SetOverrideName(enchantedExtraList, newName);
+
+		if (staffExtraList) {
+			const auto wornRight = staffExtraList->HasType(RE::ExtraDataType::kWorn);
+			const auto wornLeft = staffExtraList->HasType(RE::ExtraDataType::kWornLeft);
+			if (wornRight || wornLeft) {
+				RE::RefreshEquippedActorValueCharge(player, staff, staffExtraList, wornLeft);
+			}
+		}
 
 		player->RemoveItem(
 			selected.morpholith->data->GetObject(),
