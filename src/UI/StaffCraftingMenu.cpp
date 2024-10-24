@@ -479,9 +479,8 @@ namespace UI
 			return false;
 		}
 
-		const std::optional<uint8_t> idx_skyrim = 0; 
-		const RE::FormID ritualEffectID = idx_skyrim ? (*idx_skyrim << 24) | 0x806E1 : 0x0;
-		const RE::FormID ritualEffectIllusionID = idx_skyrim ? (*idx_skyrim << 24) | 0x8BB92 : 0x0;
+		static constexpr RE::FormID ritualEffectID = 0x806E1;
+		static constexpr RE::FormID ritualEffectIllusionID = 0x8BB92;
 
 		const auto defaultObjects = RE::BGSDefaultObjectManager::GetSingleton();
 		const auto eitherHandForm = defaultObjects->GetObject<RE::BGSEquipSlot>(
