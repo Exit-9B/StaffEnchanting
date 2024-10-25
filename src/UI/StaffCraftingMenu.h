@@ -154,8 +154,8 @@ namespace UI
 		};
 
 		RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>> listEntries;
-		RE::BSString customName;
-		RE::BSString suggestedName;
+		std::string customName;
+		std::string suggestedName;
 		RE::GFxValue inventoryLists;
 		RE::GFxValue categoryEntryList;
 
