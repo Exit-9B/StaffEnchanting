@@ -821,9 +821,9 @@ namespace UI
 		RE::SetOverrideName(enchantedExtraList, newName);
 
 		if (staffExtraList) {
-			const auto wornRight = staffExtraList->HasType(RE::ExtraDataType::kWorn);
 			const auto wornLeft = staffExtraList->HasType(RE::ExtraDataType::kWornLeft);
-			if (wornRight || wornLeft) {
+			const auto worn = wornLeft || staffExtraList->HasType(RE::ExtraDataType::kWorn);
+			if (worn) {
 				RE::RefreshEquippedActorValueCharge(player, staff, staffExtraList, wornLeft);
 			}
 		}
