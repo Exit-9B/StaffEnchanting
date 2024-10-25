@@ -336,6 +336,9 @@ namespace UI
 		const auto CreatedStaffName = Forms::StaffEnchanting::CreatedStaffName();
 		const auto format = CreatedStaffName ? CreatedStaffName->GetName() : "Staff of %s";
 		const int size = std::snprintf(nullptr, 0, format, spellName);
+		if (size < 0) {
+			return std::string(format);
+		}
 
 		std::string suggestedName = std::string(size, '\0');
 		std::snprintf(suggestedName.data(), suggestedName.size() + 1, format, spellName);
