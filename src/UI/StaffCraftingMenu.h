@@ -94,9 +94,7 @@ namespace UI
 			bool a_fullRebuild = false);
 
 		[[nodiscard]] static float GetEntryDataSoulCharge(RE::InventoryEntryData* a_entry);
-		[[nodiscard]] static int32_t GetSpellLevel(const RE::SpellItem* a_spell);
 		[[nodiscard]] static bool MagicEffectHasDescription(RE::EffectSetting* a_effect);
-		[[nodiscard]] static bool CanCraftWithSpell(const RE::SpellItem* a_spell);
 		void UpdateEnchantmentCharge();
 		void UpdateEnchantment();
 		void UpdateIngredients();
@@ -114,17 +112,6 @@ namespace UI
 
 		void UpdateInterface();
 
-		[[nodiscard]] static std::string TranslateFallback(
-			const std::string& a_key,
-			const std::string& a_fallback)
-		{
-			std::string result;
-			if (!SKSE::Translation::Translate(a_key, result)) {
-				result = a_fallback;
-			}
-			return result;
-		}
-
 	private:
 		class Selection
 		{
@@ -139,25 +126,9 @@ namespace UI
 			RE::BSTSmartPointer<SpellEntry> spell;
 		};
 
-		static constexpr std::array<FilterFlag, Category::TOTAL> filters{
-			FilterFlag::Recipe,
-			FilterFlag::None,
-			FilterFlag::Staff,
-			FilterFlag::Spell,
-			FilterFlag::Morpholith
-		};
-
-		std::array<std::string, Category::TOTAL> labels{
-			TranslateFallback("$Special"s, "Special"s),
-			""s,
-			TranslateFallback("$Staff"s, "Staff"s),
-			TranslateFallback("$Spell"s, "Spell"s),
-			TranslateFallback("$Morpholith"s, "Morpholith"s)
-		};
-
 		RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>> listEntries;
-		std::string customName;
-		std::string suggestedName;
+		RE::BSString customName;
+		RE::BSString suggestedName;
 		RE::GFxValue inventoryLists;
 		RE::GFxValue categoryEntryList;
 
@@ -171,7 +142,6 @@ namespace UI
 		std::uint32_t highlightIndex;
 		Category currentCategory;
 		float chargeAmount{ 0.0f };
-		inline static std::uint32_t heartStoneCount{ 0 };
 
 		bool exiting{ false };
 		bool hasHighlight{ false };

@@ -2,7 +2,6 @@
 
 #include "RE/Misc.h"
 #include "RE/Offset.h"
-#include "common/Forms.h"
 
 namespace UI
 {
@@ -28,25 +27,23 @@ namespace UI
 
 	void StaffCraftingMenu::Init()
 	{
-		const char* sStaffEnchanting;
-		RE::BSString sStaffEnchantMenuDescription;
-		if (const auto MenuDescription = Forms::StaffEnchanting::MenuDescription()) {
-			sStaffEnchanting = MenuDescription->GetName();
-			MenuDescription->GetDescription(sStaffEnchantMenuDescription, nullptr);
-		}
-		else {
-			sStaffEnchanting = "Staff Enchanting";
-			sStaffEnchantMenuDescription =
-				"Combine a Staff, Spell, and Morpholith to create magic staves"sv;
-		}
-
+		// TODO: localization
 		SetMenuDescription(
-			fmt::format("{}: {}"sv, sStaffEnchanting, sStaffEnchantMenuDescription.c_str())
-				.c_str());
-
+			"Staff Enchanting: Combine a Staff, Spell, and Morpholith to create magic staves");
 		menu.SetMember("bCanCraft", true);
 		menu.GetMember("CategoryList", &inventoryLists);
 		if (inventoryLists.IsObject()) {
+			const std::array<const char*, Category::TOTAL>
+				labels{ "Special", "", "Staff", "Spell", "Morpholith" };
+
+			static constexpr std::array<FilterFlag, Category::TOTAL> filters{
+				FilterFlag::Recipe,
+				FilterFlag::None,
+				FilterFlag::Staff,
+				FilterFlag::Spell,
+				FilterFlag::Morpholith
+			};
+
 			enum
 			{
 				Text,
@@ -57,7 +54,7 @@ namespace UI
 
 			std::array<RE::GFxValue, Category::TOTAL * util::to_underlying(NumObjKeys)> categories;
 			for (const auto i : std::views::iota(0ull, Category::TOTAL)) {
-				categories[i * NumObjKeys + Text] = labels[i].c_str();
+				categories[i * NumObjKeys + Text] = labels[i];
 				categories[i * NumObjKeys + Flag] = filters[i];
 				categories[i * NumObjKeys + DontHide] = true;
 			}
@@ -111,7 +108,6 @@ namespace UI
 
 	void StaffCraftingMenu::PopulateEntryList(bool a_fullRebuild)
 	{
-		heartStoneCount = 0;
 		listEntries.clear();
 		ClearSelection();
 
@@ -129,8 +125,12 @@ namespace UI
 			essentialFavorites = SKSE::WinAPI::GetModuleHandle("po3_EssentialFavorites") !=
 			nullptr;
 
-		const auto disallowHeartStonesKwd = Forms::StaffEnchanting::DisallowHeartStones();
-		const auto allowSoulGemsKwd = Forms::StaffEnchanting::AllowSoulGems();
+		const auto disallowHeartStonesKwd = dataHandler->LookupForm<RE::BGSKeyword>(
+			0x800,
+			"StaffEnchanting.esp");
+		const auto allowSoulGemsKwd = dataHandler->LookupForm<RE::BGSKeyword>(
+			0x801,
+			"StaffEnchanting.esp");
 
 		const bool disallowHeartStones = disallowHeartStonesKwd
 			? workbench->HasKeyword(disallowHeartStonesKwd)
@@ -158,7 +158,6 @@ namespace UI
 
 			auto filterFlag = FilterFlag::None;
 			if (!disallowHeartStones && object == DLC2HeartStone) {
-				++heartStoneCount;
 				filterFlag = FilterFlag::Morpholith;
 			}
 			else if (allowSoulGems && object->Is(RE::FormType::SoulGem)) {
@@ -288,20 +287,6 @@ namespace UI
 		return -1.0f;
 	}
 
-	int32_t StaffCraftingMenu::GetSpellLevel(const RE::SpellItem* a_spell)
-	{
-		int32_t response = 0;
-		for (const auto effect : a_spell->effects) {
-			if (!effect || !effect->baseEffect)
-				continue;
-
-			response = effect->baseEffect->data.minimumSkill > response
-				? effect->baseEffect->data.minimumSkill
-				: response;
-		}
-		return response;
-	}
-
 	bool StaffCraftingMenu::MagicEffectHasDescription(RE::EffectSetting* a_effect)
 	{
 		assert(a_effect);
@@ -310,26 +295,6 @@ namespace UI
 		}
 
 		return !a_effect->magicItemDescription.empty();
-	}
-
-	bool StaffCraftingMenu::CanCraftWithSpell(const RE::SpellItem* a_spell)
-	{
-		const auto minLevel = GetSpellLevel(a_spell);
-		if (minLevel < 25) {
-			return heartStoneCount > 0;
-		}
-		else if (minLevel < 50) {
-			return heartStoneCount > 1;
-		}
-		else if (minLevel < 75) {
-			return heartStoneCount > 2;
-		}
-		else if (minLevel < 90) {
-			return heartStoneCount > 3;
-		}
-		else {
-			return heartStoneCount > 4;
-		}
 	}
 
 	void StaffCraftingMenu::UpdateEnchantmentCharge()
@@ -366,21 +331,6 @@ namespace UI
 		}
 	}
 
-	[[nodiscard]] static std::string MakeSuggestedName(const RE::SpellItem* a_spell)
-	{
-		const auto spellName = a_spell->GetName();
-		const auto CreatedStaffName = Forms::StaffEnchanting::CreatedStaffName();
-		const auto format = CreatedStaffName ? CreatedStaffName->GetName() : "Staff of %s";
-		const int size = std::snprintf(nullptr, 0, format, spellName);
-		if (size < 0) {
-			return std::string(format);
-		}
-
-		std::string suggestedName = std::string(size, '\0');
-		std::snprintf(suggestedName.data(), suggestedName.size() + 1, format, spellName);
-		return suggestedName;
-	}
-
 	void StaffCraftingMenu::UpdateEnchantment()
 	{
 		if (craftItemPreview) {
@@ -410,7 +360,9 @@ namespace UI
 		}
 
 		if (craftItemPreview && createdEnchantment) {
-			suggestedName = MakeSuggestedName(selected.spell->data);
+			const auto spellName = selected.spell->GetName();
+			// TODO: Localization
+			suggestedName = fmt::format("Staff of {}"sv, spellName);
 
 			if (craftItemPreview->extraLists && !craftItemPreview->extraLists->empty()) {
 				const auto& extraList = craftItemPreview->extraLists->front();
@@ -446,18 +398,14 @@ namespace UI
 
 			RE::GFxValue staff;
 			uiMovie->CreateObject(&staff);
-			staff.SetMember(
-				"Name",
-				selected.staff ? selected.staff->GetName() : labels[Category::Staff].c_str());
+			staff.SetMember("Name", selected.staff ? selected.staff->GetName() : "Staff");
 			staff.SetMember("RequiredCount", 1);
 			staff.SetMember("PlayerCount", selected.staff ? 1 : 0);
 			ingredients.PushBack(staff);
 
 			RE::GFxValue spell;
 			uiMovie->CreateObject(&spell);
-			spell.SetMember(
-				"Name",
-				selected.spell ? selected.spell->GetName() : labels[Category::Spell].c_str());
+			spell.SetMember("Name", selected.spell ? selected.spell->GetName() : "Spell");
 			spell.SetMember("RequiredCount", 1);
 			spell.SetMember("PlayerCount", selected.spell ? 1 : 0);
 			ingredients.PushBack(spell);
@@ -466,33 +414,9 @@ namespace UI
 			uiMovie->CreateObject(&morpholith);
 			morpholith.SetMember(
 				"Name",
-				selected.morpholith
-					? selected.morpholith->GetName()
-					: labels[Category::Morpholith].c_str());
-			if (selected.spell) {
-				const auto spellLevel = GetSpellLevel(selected.spell->data);
-
-				if (spellLevel < 25) {
-					morpholith.SetMember("RequiredCount", 1);
-				}
-				else if (spellLevel < 50) {
-					morpholith.SetMember("RequiredCount", 2);
-				}
-				else if (spellLevel < 75) {
-					morpholith.SetMember("RequiredCount", 3);
-				}
-				else if (spellLevel < 90) {
-					morpholith.SetMember("RequiredCount", 4);
-				}
-				else {
-					morpholith.SetMember("RequiredCount", 5);
-				}
-			}
-			else {
-				morpholith.SetMember("RequiredCount", 1);
-			}
-
-			morpholith.SetMember("PlayerCount", selected.morpholith ? heartStoneCount : 0);
+				selected.morpholith ? selected.morpholith->GetName() : "Morpholith");
+			morpholith.SetMember("RequiredCount", 1);
+			morpholith.SetMember("PlayerCount", selected.morpholith ? 1 : 0);
 			ingredients.PushBack(morpholith);
 		}
 		else {
@@ -610,10 +534,7 @@ namespace UI
 
 		if (!IsSpellValid(a_spell))
 			return;
-
-		const auto smartEntry = RE::make_smart<SpellEntry>(a_spell);
-		smartEntry->enabled = CanCraftWithSpell(a_spell);
-		a_entries.push_back(smartEntry);
+		a_entries.push_back(RE::make_smart<SpellEntry>(a_spell));
 	}
 
 	void StaffCraftingMenu::UpdateInterface()
@@ -809,12 +730,6 @@ namespace UI
 					return false;
 				}
 			}
-		}
-		else if (a_entry->filterFlag == FilterFlag::Spell) {
-			const auto spellEntry = static_cast<const SpellEntry*>(a_entry.get());
-			assert(spellEntry && spellEntry->data);
-
-			return CanCraftWithSpell(spellEntry->data);
 		}
 
 		// TODO
