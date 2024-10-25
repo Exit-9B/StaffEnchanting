@@ -126,6 +126,32 @@ namespace UI
 			RE::BSTSmartPointer<SpellEntry> spell;
 		};
 
+		static constexpr std::array<FilterFlag, Category::TOTAL> filters{
+			FilterFlag::Recipe,
+			FilterFlag::None,
+			FilterFlag::Staff,
+			FilterFlag::Spell,
+			FilterFlag::Morpholith
+		};
+
+		std::array<std::string, Category::TOTAL> labels = []()
+		{
+			std::array<std::string, Category::TOTAL> result;
+			if (!SKSE::Translation::Translate("$Special"s, result[Category::Recipe])) {
+				result[Category::Recipe] = "Special"s;
+			}
+			if (!SKSE::Translation::Translate("$Staff"s, result[Category::Staff])) {
+				result[Category::Staff] = "Staff"s;
+			}
+			if (!SKSE::Translation::Translate("$Spell"s, result[Category::Spell])) {
+				result[Category::Spell] = "Spell"s;
+			}
+			if (!SKSE::Translation::Translate("$Morpholith"s, result[Category::Morpholith])) {
+				result[Category::Morpholith] = "Morpholith"s;
+			}
+			return result;
+		}();
+
 		RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>> listEntries;
 		RE::BSString customName;
 		RE::BSString suggestedName;

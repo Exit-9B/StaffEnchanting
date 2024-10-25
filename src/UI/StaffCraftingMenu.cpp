@@ -47,24 +47,6 @@ namespace UI
 		menu.SetMember("bCanCraft", true);
 		menu.GetMember("CategoryList", &inventoryLists);
 		if (inventoryLists.IsObject()) {
-			std::array<std::string, Category::TOTAL> labels;
-			if (!SKSE::Translation::Translate("$Special"s, labels[Category::Recipe]))
-				labels[Category::Recipe] = "Special"s;
-			if (!SKSE::Translation::Translate("$Staff"s, labels[Category::Staff]))
-				labels[Category::Staff] = "Staff"s;
-			if (!SKSE::Translation::Translate("$Spell"s, labels[Category::Spell]))
-				labels[Category::Spell] = "Spell"s;
-			if (!SKSE::Translation::Translate("$Morpholith"s, labels[Category::Morpholith]))
-				labels[Category::Morpholith] = "Morpholith"s;
-
-			static constexpr std::array<FilterFlag, Category::TOTAL> filters{
-				FilterFlag::Recipe,
-				FilterFlag::None,
-				FilterFlag::Staff,
-				FilterFlag::Spell,
-				FilterFlag::Morpholith
-			};
-
 			enum
 			{
 				Text,
@@ -425,14 +407,18 @@ namespace UI
 
 			RE::GFxValue staff;
 			uiMovie->CreateObject(&staff);
-			staff.SetMember("Name", selected.staff ? selected.staff->GetName() : "Staff");
+			staff.SetMember(
+				"Name",
+				selected.staff ? selected.staff->GetName() : labels[Category::Staff].c_str());
 			staff.SetMember("RequiredCount", 1);
 			staff.SetMember("PlayerCount", selected.staff ? 1 : 0);
 			ingredients.PushBack(staff);
 
 			RE::GFxValue spell;
 			uiMovie->CreateObject(&spell);
-			spell.SetMember("Name", selected.spell ? selected.spell->GetName() : "Spell");
+			spell.SetMember(
+				"Name",
+				selected.spell ? selected.spell->GetName() : labels[Category::Spell].c_str());
 			spell.SetMember("RequiredCount", 1);
 			spell.SetMember("PlayerCount", selected.spell ? 1 : 0);
 			ingredients.PushBack(spell);
@@ -441,7 +427,9 @@ namespace UI
 			uiMovie->CreateObject(&morpholith);
 			morpholith.SetMember(
 				"Name",
-				selected.morpholith ? selected.morpholith->GetName() : "Morpholith");
+				selected.morpholith
+					? selected.morpholith->GetName()
+					: labels[Category::Morpholith].c_str());
 			morpholith.SetMember("RequiredCount", 1);
 			morpholith.SetMember("PlayerCount", selected.morpholith ? 1 : 0);
 			ingredients.PushBack(morpholith);
