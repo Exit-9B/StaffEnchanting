@@ -2,6 +2,7 @@
 #include "Hooks/Create.h"
 #include "Hooks/Workbench.h"
 #include "UI/StaffCraftingMenu.h"
+#include "common/Forms.h"
 
 namespace
 {
@@ -66,6 +67,28 @@ SKSEPlugin_Query(const SKSE::QueryInterface* a_skse, SKSE::PluginInfo* a_info)
 	return true;
 }
 
+static void MessageEventCallback(SKSE::MessagingInterface::Message* a_msg)
+{
+	switch (a_msg->type) {
+	case SKSE::MessagingInterface::kDataLoaded:
+	{
+		UI::StaffCraftingMenu::Register();
+
+		if (const auto
+				HelpStaffEnchantingLong = Forms::StaffEnchanting::HelpStaffEnchantingLong()) {
+
+			if (const auto HelpManualPC = RE::TESForm::LookupByID<RE::BGSListForm>(0x163)) {
+				HelpManualPC->AddForm(HelpStaffEnchantingLong);
+			}
+
+			if (const auto HelpManualXBox = RE::TESForm::LookupByID<RE::BGSListForm>(0x165)) {
+				HelpManualXBox->AddForm(HelpStaffEnchantingLong);
+			}
+		}
+	} break;
+	}
+}
+
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_skse)
 {
 	InitializeLog();
@@ -79,15 +102,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 	Hooks::BaseCharge::Install();
 
 	const auto messaging = SKSE::GetMessagingInterface();
-	messaging->RegisterListener(
-		[](SKSE::MessagingInterface::Message* msg)
-		{
-			switch (msg->type) {
-			case SKSE::MessagingInterface::kDataLoaded:
-				UI::StaffCraftingMenu::Register();
-				break;
-			}
-		});
+	messaging->RegisterListener(&MessageEventCallback);
 
 	return true;
 }

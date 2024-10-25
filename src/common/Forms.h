@@ -36,5 +36,15 @@ namespace Forms
 		{
 			return LookupForm<RE::BGSMessage>(0x803);
 		}
+
+		[[nodiscard]] inline auto HelpStaffEnchantingLong()
+		{
+			return LookupForm<RE::BGSMessage>(0x804);
+		}
+
+		[[nodiscard]] inline auto HelpStaffEnchantingShort()
+		{
+			return LookupForm<RE::BGSMessage>(0x805);
+		}
 	}
 }

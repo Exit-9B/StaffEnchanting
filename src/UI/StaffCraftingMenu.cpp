@@ -83,6 +83,9 @@ namespace UI
 
 		UpdateInterface();
 		UpdateBottomBar(RE::ActorValue::kEnchanting);
+
+		const auto HelpStaffEnchantingShort = Forms::StaffEnchanting::HelpStaffEnchantingShort();
+		RE::TutorialMenu::OpenTutorialMenu(HelpStaffEnchantingShort);
 	}
 
 	[[nodiscard]] static bool IsFavorite(const RE::InventoryEntryData* a_entry)
