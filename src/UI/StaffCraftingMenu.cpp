@@ -111,6 +111,7 @@ namespace UI
 
 	void StaffCraftingMenu::PopulateEntryList(bool a_fullRebuild)
 	{
+		heartStoneCount = 0;
 		listEntries.clear();
 		ClearSelection();
 
@@ -157,6 +158,7 @@ namespace UI
 
 			auto filterFlag = FilterFlag::None;
 			if (!disallowHeartStones && object == DLC2HeartStone) {
+				heartStoneCount = item->countDelta;
 				filterFlag = FilterFlag::Morpholith;
 			}
 			else if (allowSoulGems && object->Is(RE::FormType::SoulGem)) {
@@ -286,6 +288,20 @@ namespace UI
 		return -1.0f;
 	}
 
+	int32_t StaffCraftingMenu::GetSpellLevel(const RE::SpellItem* a_spell)
+	{
+		int32_t response = 0;
+		for (const auto effect : a_spell->effects) {
+			if (!effect || !effect->baseEffect)
+				continue;
+
+			response = effect->baseEffect->data.minimumSkill > response
+				? effect->baseEffect->data.minimumSkill
+				: response;
+		}
+		return response;
+	}
+
 	bool StaffCraftingMenu::MagicEffectHasDescription(RE::EffectSetting* a_effect)
 	{
 		assert(a_effect);
@@ -294,6 +310,27 @@ namespace UI
 		}
 
 		return !a_effect->magicItemDescription.empty();
+	}
+
+	bool StaffCraftingMenu::CanCraftWithSpell(const RE::SpellItem* a_spell)
+	{
+		// TODO: Return true if it is called from a non-heartstone station
+		const auto minLevel = GetSpellLevel(a_spell);
+		if (minLevel < 25) {
+			return heartStoneCount > 0;
+		}
+		else if (minLevel < 50) {
+			return heartStoneCount > 1;
+		}
+		else if (minLevel < 75) {
+			return heartStoneCount > 2;
+		}
+		else if (minLevel < 90) {
+			return heartStoneCount > 3;
+		}
+		else {
+			return heartStoneCount > 4;
+		}
 	}
 
 	void StaffCraftingMenu::UpdateEnchantmentCharge()
@@ -405,6 +442,23 @@ namespace UI
 		RE::GFxValue ingredients;
 		uiMovie->CreateArray(&ingredients);
 
+		heartStoneCount = 0;
+		for (const auto& entry : listEntries) {
+			if (entry->filterFlag != FilterFlag::Morpholith)
+				continue;
+
+			const auto morpholithEntry = static_cast<const ItemEntry*>(entry.get());
+			if (!morpholithEntry || !morpholithEntry->data)
+				continue;
+
+			if (const auto baseForm = morpholithEntry->data->GetObject(); baseForm->IsSoulGem())
+				continue;
+
+			heartStoneCount = morpholithEntry->data->countDelta > heartStoneCount
+				? morpholithEntry->data->countDelta
+				: heartStoneCount;
+		}
+
 		if (currentCategory != Category::Recipe || highlightIndex >= listEntries.size() ||
 			listEntries[highlightIndex]->filterFlag != FilterFlag::Recipe) {
 
@@ -433,8 +487,31 @@ namespace UI
 				selected.morpholith
 					? selected.morpholith->GetName()
 					: labels[Category::Morpholith].c_str());
-			morpholith.SetMember("RequiredCount", 1);
-			morpholith.SetMember("PlayerCount", selected.morpholith ? 1 : 0);
+			if (selected.spell) {
+				const auto spellLevel = GetSpellLevel(selected.spell->data);
+
+				if (spellLevel < 25) {
+					morpholith.SetMember("RequiredCount", 1);
+				}
+				else if (spellLevel < 50) {
+					morpholith.SetMember("RequiredCount", 2);
+				}
+				else if (spellLevel < 75) {
+					morpholith.SetMember("RequiredCount", 3);
+				}
+				else if (spellLevel < 90) {
+					morpholith.SetMember("RequiredCount", 4);
+				}
+				else {
+					morpholith.SetMember("RequiredCount", 5);
+				}
+			}
+			else {
+				morpholith.SetMember("RequiredCount", 1);
+			}
+
+			// TODO: Proper integration for non-heartstone stations
+			morpholith.SetMember("PlayerCount", selected.morpholith ? heartStoneCount : 0);
 			ingredients.PushBack(morpholith);
 		}
 		else {
@@ -552,7 +629,10 @@ namespace UI
 
 		if (!IsSpellValid(a_spell))
 			return;
-		a_entries.push_back(RE::make_smart<SpellEntry>(a_spell));
+
+		const auto smartEntry = RE::make_smart<SpellEntry>(a_spell);
+		smartEntry->enabled = CanCraftWithSpell(a_spell);
+		a_entries.push_back(smartEntry);
 	}
 
 	void StaffCraftingMenu::UpdateInterface()
@@ -748,6 +828,12 @@ namespace UI
 					return false;
 				}
 			}
+		}
+		else if (a_entry->filterFlag == FilterFlag::Spell) {
+			const auto spellEntry = static_cast<const SpellEntry*>(a_entry.get());
+			assert(spellEntry && spellEntry->data);
+
+			return CanCraftWithSpell(spellEntry->data);
 		}
 
 		// TODO
