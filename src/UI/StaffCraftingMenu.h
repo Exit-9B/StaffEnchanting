@@ -112,6 +112,17 @@ namespace UI
 
 		void UpdateInterface();
 
+		[[nodiscard]] static std::string TranslateFallback(
+			const std::string& a_key,
+			const std::string& a_fallback)
+		{
+			std::string result;
+			if (!SKSE::Translation::Translate(a_key, result)) {
+				result = a_fallback;
+			}
+			return result;
+		}
+
 	private:
 		class Selection
 		{
@@ -134,23 +145,13 @@ namespace UI
 			FilterFlag::Morpholith
 		};
 
-		std::array<std::string, Category::TOTAL> labels = []()
-		{
-			std::array<std::string, Category::TOTAL> result;
-			if (!SKSE::Translation::Translate("$Special"s, result[Category::Recipe])) {
-				result[Category::Recipe] = "Special"s;
-			}
-			if (!SKSE::Translation::Translate("$Staff"s, result[Category::Staff])) {
-				result[Category::Staff] = "Staff"s;
-			}
-			if (!SKSE::Translation::Translate("$Spell"s, result[Category::Spell])) {
-				result[Category::Spell] = "Spell"s;
-			}
-			if (!SKSE::Translation::Translate("$Morpholith"s, result[Category::Morpholith])) {
-				result[Category::Morpholith] = "Morpholith"s;
-			}
-			return result;
-		}();
+		std::array<std::string, Category::TOTAL> labels{
+			TranslateFallback("$Special"s, "Special"s),
+			""s,
+			TranslateFallback("$Staff"s, "Staff"s),
+			TranslateFallback("$Spell"s, "Spell"s),
+			TranslateFallback("$Morpholith"s, "Morpholith"s)
+		};
 
 		RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>> listEntries;
 		RE::BSString customName;
