@@ -166,6 +166,10 @@ namespace UI
 				filterFlag = FilterFlag::Morpholith;
 			}
 			else if (allowSoulGems && object->Is(RE::FormType::SoulGem)) {
+				if (item->GetSoulLevel() == RE::SOUL_LEVEL::kNone) {
+					continue;
+				}
+
 				const auto currentCharge = GetEntryDataSoulCharge(item.get());
 				maxSoulSize = std::max(currentCharge, maxSoulSize);
 				filterFlag = FilterFlag::Morpholith;
