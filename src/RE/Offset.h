@@ -4,6 +4,11 @@ namespace RE
 {
 	namespace Offset
 	{
+		namespace Actor
+		{
+			constexpr auto RefreshEquippedActorValueCharge = REL::ID(38752);
+		}
+
 		namespace InventoryChanges
 		{
 			constexpr auto EnchantObject = REL::ID(16146);

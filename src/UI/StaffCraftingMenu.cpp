@@ -865,13 +865,20 @@ namespace UI
 		if (!player || !staff || !enchantment)
 			return;
 
-		RE::ExtraDataList* const createdExtraList = RE::EnchantObject(
+		RE::ExtraDataList* staffExtraList = nullptr;
+		if (const auto extraLists = selected.staff->data->extraLists;
+			extraLists && !extraLists->empty()) {
+			staffExtraList = extraLists->front();
+		}
+
+		RE::ExtraDataList* const enchantedExtraList = RE::EnchantObject(
 			player->GetInventoryChanges(),
 			staff,
-			nullptr,
+			staffExtraList,
 			enchantment,
 			static_cast<uint16_t>(chargeAmount));
-		if (!createdExtraList)
+
+		if (!enchantedExtraList)
 			return;
 
 		const char* newName = "";
@@ -881,7 +888,15 @@ namespace UI
 		else {
 			newName = customName.c_str();
 		}
-		RE::SetOverrideName(createdExtraList, newName);
+		RE::SetOverrideName(enchantedExtraList, newName);
+
+		if (staffExtraList) {
+			const auto wornLeft = staffExtraList->HasType(RE::ExtraDataType::kWornLeft);
+			const auto worn = wornLeft || staffExtraList->HasType(RE::ExtraDataType::kWorn);
+			if (worn) {
+				RE::RefreshEquippedActorValueCharge(player, staff, staffExtraList, wornLeft);
+			}
+		}
 
 		if (selected.morpholith->data->GetObject()->IsSoulGem()) {
 			player->RemoveItem(
