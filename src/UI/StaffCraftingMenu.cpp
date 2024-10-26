@@ -167,9 +167,9 @@ namespace UI
 			}
 			else if (allowSoulGems && object->Is(RE::FormType::SoulGem)) {
 				const auto currentCharge = GetEntryDataSoulCharge(item.get());
-				maxSoulSize = std::max(currentCharge, maxSoulSize);
-				filterFlag = FilterFlag::Morpholith;
-			}
+					maxSoulSize = std::max(currentCharge, maxSoulSize);
+					filterFlag = FilterFlag::Morpholith;
+				}
 			else if (const auto weap = object->As<RE::TESObjectWEAP>()) {
 				if (weap->IsStaff() && !weap->formEnchanting &&
 					!weap->HasKeyword(MagicDisallowEnchanting)) {
@@ -902,12 +902,32 @@ namespace UI
 		}
 
 		if (selected.morpholith->data->GetObject()->IsSoulGem()) {
-			player->RemoveItem(
-				selected.morpholith->data->GetObject(),
-				1,
-				RE::ITEM_REMOVE_REASON::kRemove,
-				nullptr,
-				nullptr);
+			const auto baseMorpholith = selected.morpholith->data->GetObject()->As<RE::BGSKeywordForm>();
+
+			RE::ExtraDataList* morpholithExtraList = nullptr;
+			if (const auto extraLists = selected.morpholith->data->extraLists; !extraLists->empty()) {
+				morpholithExtraList = extraLists->front();
+			}
+
+			bool usingReusableSoulGem = false;
+			const auto defaultObjects = RE::BGSDefaultObjectManager::GetSingleton();
+			const auto KeywordReusableSoulGem = defaultObjects->GetObject<RE::BGSKeyword>(
+				RE::DEFAULT_OBJECT::kKeywordReusableSoulGem);
+			usingReusableSoulGem = baseMorpholith
+				? baseMorpholith->HasKeyword(KeywordReusableSoulGem)
+				: false;
+
+			if (usingReusableSoulGem && morpholithExtraList) {
+				morpholithExtraList->RemoveByType(RE::ExtraDataType::kSoul);
+			}
+			else {
+				player->RemoveItem(
+					selected.morpholith->data->GetObject(),
+					1,
+					RE::ITEM_REMOVE_REASON::kRemove,
+					nullptr,
+					nullptr);
+			}
 		}
 		else {
 			player->RemoveItem(
