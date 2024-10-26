@@ -172,7 +172,7 @@ namespace UI
 		bool exiting{ false };
 		bool hasHighlight{ false };
 		float maxSoulSize{ 0.0f };
-		int32_t heartStoneCount{ 0 };
+		std::int32_t heartStoneCount{ 0 };
 	};
 }
 
