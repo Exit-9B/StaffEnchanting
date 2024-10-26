@@ -468,8 +468,9 @@ namespace UI
 
 		const auto disallowHeartstonesKwd = Forms::StaffEnchanting::DisallowHeartStones();
 		const auto allowSoulGemsKwd = Forms::StaffEnchanting::AllowSoulGems();
-		if (disallowHeartstonesKwd && allowSoulGemsKwd && (workbench->HasKeyword(disallowHeartstonesKwd) ||
-			workbench->HasKeyword(allowSoulGemsKwd))) {
+		if (disallowHeartstonesKwd && allowSoulGemsKwd &&
+			(workbench->HasKeyword(disallowHeartstonesKwd) ||
+			 workbench->HasKeyword(allowSoulGemsKwd))) {
 			countHeartStones = false;
 		}
 		else {
