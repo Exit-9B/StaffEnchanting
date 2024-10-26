@@ -607,7 +607,7 @@ namespace UI
 		RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>>& a_entries,
 		const RE::SpellItem* a_spell)
 	{
-		
+
 	}
 	*/
 
