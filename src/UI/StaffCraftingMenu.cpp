@@ -951,6 +951,11 @@ namespace UI
 		RE::PlaySound("UIEnchantingItemCreate");
 	}
 
+	void StaffCraftingMenu::EditItemName()
+	{
+		// TODO: see 51409
+	}
+
 	void StaffCraftingMenu::Selection::Clear()
 	{
 		if (staff) {
