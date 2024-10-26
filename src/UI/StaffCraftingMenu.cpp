@@ -111,6 +111,8 @@ namespace UI
 
 	void StaffCraftingMenu::PopulateEntryList(bool a_fullRebuild)
 	{
+		heartStoneCount = 0;
+		maxSoulSize = 0.0f;
 		listEntries.clear();
 		ClearSelection();
 
@@ -157,9 +159,12 @@ namespace UI
 
 			auto filterFlag = FilterFlag::None;
 			if (!disallowHeartStones && object == DLC2HeartStone) {
+				heartStoneCount += item->countDelta;
 				filterFlag = FilterFlag::Morpholith;
 			}
 			else if (allowSoulGems && object->Is(RE::FormType::SoulGem)) {
+				const auto currentCharge = GetEntryDataSoulCharge(item.get());
+				maxSoulSize = std::max(currentCharge, maxSoulSize);
 				filterFlag = FilterFlag::Morpholith;
 			}
 			else if (const auto weap = object->As<RE::TESObjectWEAP>()) {
@@ -180,11 +185,17 @@ namespace UI
 		const auto spellData = playerBase->actorEffects;
 		assert(spellData);
 		for (const auto spell : std::span(spellData->spells, spellData->numSpells)) {
-			AddSpellIfUsable(listEntries, spell);
+			if (IsSpellValid(spell)) {
+				const auto& entry = listEntries.emplace_back(RE::make_smart<SpellEntry>(spell));
+				entry->enabled = CanCraftWithSpell(spell);
+			}
 		}
 
 		for (const auto spell : playerRef->addedSpells) {
-			AddSpellIfUsable(listEntries, spell);
+			if (IsSpellValid(spell)) {
+				const auto& entry = listEntries.emplace_back(RE::make_smart<SpellEntry>(spell));
+				entry->enabled = CanCraftWithSpell(spell);
+			}
 		}
 
 		const auto invChanges = playerRef->GetInventoryChanges();
@@ -286,6 +297,36 @@ namespace UI
 		return -1.0f;
 	}
 
+	std::int32_t StaffCraftingMenu::GetSpellHeartstones(const RE::SpellItem* a_spell)
+	{
+		auto evilSpell = const_cast<RE::SpellItem*>(a_spell);
+		if (!evilSpell) {
+			return 1;
+		}
+
+		const auto costliest = evilSpell->GetCostliestEffectItem();
+		if (!costliest || !costliest->baseEffect) {
+			return 1;
+		}
+
+		const std::int32_t level = costliest->baseEffect->GetMinimumSkillLevel();
+		if (level < 25) {
+			return 1;
+		}
+		else if (level < 50) {
+			return 2;
+		}
+		else if (level < 75) {
+			return 3;
+		}
+		else if (level < 100) {
+			return 4;
+		}
+		else {
+			return 5;
+		}
+	}
+
 	bool StaffCraftingMenu::MagicEffectHasDescription(RE::EffectSetting* a_effect)
 	{
 		assert(a_effect);
@@ -294,6 +335,12 @@ namespace UI
 		}
 
 		return !a_effect->magicItemDescription.empty();
+	}
+
+	bool StaffCraftingMenu::CanCraftWithSpell(const RE::SpellItem* a_spell)
+	{
+		return heartStoneCount >= GetSpellHeartstones(a_spell) ||
+			maxSoulSize >= a_spell->CalculateMagickaCost(nullptr);
 	}
 
 	void StaffCraftingMenu::UpdateEnchantmentCharge()
@@ -433,8 +480,21 @@ namespace UI
 				selected.morpholith
 					? selected.morpholith->GetName()
 					: labels[Category::Morpholith].c_str());
-			morpholith.SetMember("RequiredCount", 1);
-			morpholith.SetMember("PlayerCount", selected.morpholith ? 1 : 0);
+			if (!selected.spell || !selected.morpholith ||
+				selected.morpholith->data->GetObject()->IsSoulGem()) {
+				morpholith.SetMember("RequiredCount", 1);
+				morpholith.SetMember("PlayerCount", selected.morpholith ? 1 : 0);
+			}
+			else {
+				const auto playerRef = RE::PlayerCharacter::GetSingleton();
+				const auto invChanges = playerRef->GetInventoryChanges();
+				morpholith.SetMember("RequiredCount", GetSpellHeartstones(selected.spell->data));
+				morpholith.SetMember(
+					"PlayerCount",
+					invChanges->GetCount(
+						selected.morpholith->data->GetObject(),
+						RE::InventoryUtils::QuestItemFilter));
+			}
 			ingredients.PushBack(morpholith);
 		}
 		else {
@@ -483,6 +543,17 @@ namespace UI
 
 	bool StaffCraftingMenu::IsSpellValid(const RE::SpellItem* a_spell)
 	{
+		const auto castingType = a_spell->GetCastingType();
+		if (!(castingType == RE::MagicSystem::CastingType::kFireAndForget ||
+			  castingType == RE::MagicSystem::CastingType::kConcentration)) {
+			return false;
+		}
+		const auto delivery = a_spell->GetDelivery();
+		if (!(delivery == RE::MagicSystem::Delivery::kAimed ||
+			  delivery == RE::MagicSystem::Delivery::kTargetActor ||
+			  delivery == RE::MagicSystem::Delivery::kTargetLocation)) {
+			return false;
+		}
 		if (a_spell->CalculateMagickaCost(nullptr) < 1.0f) {
 			return false;
 		}
@@ -529,30 +600,6 @@ namespace UI
 			}
 		}
 		return hasDescription;
-	}
-
-	void StaffCraftingMenu::AddSpellIfUsable(
-		RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>>& a_entries,
-		const RE::SpellItem* a_spell)
-	{
-		assert(a_spell);
-
-		const auto castingType = a_spell->GetCastingType();
-		if (!(castingType == RE::MagicSystem::CastingType::kFireAndForget ||
-			  castingType == RE::MagicSystem::CastingType::kConcentration)) {
-			return;
-		}
-
-		const auto delivery = a_spell->GetDelivery();
-		if (!(delivery == RE::MagicSystem::Delivery::kAimed ||
-			  delivery == RE::MagicSystem::Delivery::kTargetActor ||
-			  delivery == RE::MagicSystem::Delivery::kTargetLocation)) {
-			return;
-		}
-
-		if (!IsSpellValid(a_spell))
-			return;
-		a_entries.push_back(RE::make_smart<SpellEntry>(a_spell));
 	}
 
 	void StaffCraftingMenu::UpdateInterface()
@@ -622,7 +669,6 @@ namespace UI
 		}
 		else if (a_userEvent == userEvents->xButton) {
 			if (!selected.staff || !selected.spell || !selected.morpholith) {
-				// TODO: Multi-morpholith check here for higher level spells.
 				return true;
 			}
 
@@ -749,6 +795,12 @@ namespace UI
 				}
 			}
 		}
+		else if (a_entry->filterFlag == FilterFlag::Spell) {
+			const auto spellEntry = static_cast<const SpellEntry*>(a_entry.get());
+			assert(spellEntry && spellEntry->data);
+
+			return CanCraftWithSpell(spellEntry->data);
+		}
 
 		// TODO
 		(void)a_showNotification;
@@ -831,12 +883,22 @@ namespace UI
 		}
 		RE::SetOverrideName(createdExtraList, newName);
 
-		player->RemoveItem(
-			selected.morpholith->data->GetObject(),
-			1,
-			RE::ITEM_REMOVE_REASON::kRemove,
-			nullptr,
-			nullptr);
+		if (selected.morpholith->data->GetObject()->IsSoulGem()) {
+			player->RemoveItem(
+				selected.morpholith->data->GetObject(),
+				1,
+				RE::ITEM_REMOVE_REASON::kRemove,
+				nullptr,
+				nullptr);
+		}
+		else {
+			player->RemoveItem(
+				selected.morpholith->data->GetObject(),
+				GetSpellHeartstones(selected.spell->data),
+				RE::ITEM_REMOVE_REASON::kRemove,
+				nullptr,
+				nullptr);
+		}
 
 		RE::SendHUDMessage::ShowInventoryChangeMessage(staff, 1, true, true, newName);
 

@@ -95,17 +95,16 @@ namespace UI
 
 		[[nodiscard]] static float GetEntryDataSoulCharge(RE::InventoryEntryData* a_entry);
 		[[nodiscard]] static bool MagicEffectHasDescription(RE::EffectSetting* a_effect);
+		[[nodiscard]] static bool IsSpellValid(const RE::SpellItem* a_spell);
+		[[nodiscard]] static std::int32_t GetSpellHeartstones(const RE::SpellItem* a_spell);
+		[[nodiscard]] bool CanCraftWithSpell(const RE::SpellItem* a_spell);
+
 		void UpdateEnchantmentCharge();
 		void UpdateEnchantment();
 		void UpdateIngredients();
 		void UpdateItemList(
 			RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>>& a_entries,
 			bool a_fullRebuild = false);
-
-		[[nodiscard]] static bool IsSpellValid(const RE::SpellItem* a_spell);
-		static void AddSpellIfUsable(
-			RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>>& a_entries,
-			const RE::SpellItem* a_spell);
 
 		void ClearSelection();
 		void PopulateEntryList(bool a_fullRebuild = false);
@@ -172,6 +171,8 @@ namespace UI
 
 		bool exiting{ false };
 		bool hasHighlight{ false };
+		float maxSoulSize{ 0.0f };
+		std::int32_t heartStoneCount{ 0 };
 	};
 }
 
