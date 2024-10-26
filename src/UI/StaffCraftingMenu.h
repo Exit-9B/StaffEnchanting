@@ -97,7 +97,7 @@ namespace UI
 		[[nodiscard]] static bool MagicEffectHasDescription(RE::EffectSetting* a_effect);
 		[[nodiscard]] static bool IsSpellValid(const RE::SpellItem* a_spell);
 		[[nodiscard]] static std::int32_t GetSpellHeartstones(const RE::SpellItem* a_spell);
-		[[nodiscard]] static bool CanCraftWithSpell(const RE::SpellItem* a_spell);
+		[[nodiscard]] bool CanCraftWithSpell(const RE::SpellItem* a_spell);
 
 		void UpdateEnchantmentCharge();
 		void UpdateEnchantment();
@@ -177,8 +177,8 @@ namespace UI
 
 		bool exiting{ false };
 		bool hasHighlight{ false };
-		inline static float maxSoulSize;
-		inline static int32_t heartStoneCount;
+		float maxSoulSize{ 0.0f };
+		int32_t heartStoneCount{ 0 };
 	};
 }
 
