@@ -602,15 +602,6 @@ namespace UI
 		return hasDescription;
 	}
 
-	/*
-	void StaffCraftingMenu::AddSpellIfUsable(
-		RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>>& a_entries,
-		const RE::SpellItem* a_spell)
-	{
-
-	}
-	*/
-
 	void StaffCraftingMenu::UpdateInterface()
 	{
 		// TODO: see 51459
