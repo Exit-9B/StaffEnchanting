@@ -95,7 +95,8 @@ namespace UI
 
 		[[nodiscard]] static float GetEntryDataSoulCharge(RE::InventoryEntryData* a_entry);
 		[[nodiscard]] static bool MagicEffectHasDescription(RE::EffectSetting* a_effect);
-		[[nodiscard]] static int32_t GetSpellHeartstones(const RE::SpellItem* a_spell);
+		[[nodiscard]] static bool IsSpellValid(const RE::SpellItem* a_spell);
+		[[nodiscard]] static std::int32_t GetSpellHeartstones(const RE::SpellItem* a_spell);
 		[[nodiscard]] static bool CanCraftWithSpell(const RE::SpellItem* a_spell);
 
 		void UpdateEnchantmentCharge();

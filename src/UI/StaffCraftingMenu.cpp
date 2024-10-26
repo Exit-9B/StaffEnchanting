@@ -164,7 +164,7 @@ namespace UI
 			}
 			else if (allowSoulGems && object->Is(RE::FormType::SoulGem)) {
 				const auto currentCharge = GetEntryDataSoulCharge(item.get());
-				maxSoulSize = currentCharge > maxSoulSize ? currentCharge : maxSoulSize;
+				maxSoulSize = std::max(currentCharge, maxSoulSize);
 				filterFlag = FilterFlag::Morpholith;
 			}
 			else if (const auto weap = object->As<RE::TESObjectWEAP>()) {
@@ -291,7 +291,7 @@ namespace UI
 		return -1.0f;
 	}
 
-	int32_t StaffCraftingMenu::GetSpellHeartstones(const RE::SpellItem* a_spell)
+	std::int32_t StaffCraftingMenu::GetSpellHeartstones(const RE::SpellItem* a_spell)
 	{
 		auto evilSpell = const_cast<RE::SpellItem*>(a_spell);
 		if (!evilSpell) {
@@ -303,7 +303,7 @@ namespace UI
 			return 1;
 		}
 
-		int32_t level = costliest->baseEffect->GetMinimumSkillLevel();
+		const std::int32_t level = costliest->baseEffect->GetMinimumSkillLevel();
 		if (level < 25) {
 			return 1;
 		}
@@ -535,29 +535,27 @@ namespace UI
 		menu.Invoke("UpdateItemList", std::to_array<RE::GFxValue>({ a_fullRebuild }));
 	}
 
-	void StaffCraftingMenu::AddSpellIfUsable(
-		RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>>& a_entries,
-		const RE::SpellItem* a_spell)
+	bool StaffCraftingMenu::IsSpellValid(const RE::SpellItem* a_spell)
 	{
 		const auto castingType = a_spell->GetCastingType();
 		if (!(castingType == RE::MagicSystem::CastingType::kFireAndForget ||
 			  castingType == RE::MagicSystem::CastingType::kConcentration)) {
-			return;
+			return false;
 		}
 		const auto delivery = a_spell->GetDelivery();
 		if (!(delivery == RE::MagicSystem::Delivery::kAimed ||
 			  delivery == RE::MagicSystem::Delivery::kTargetActor ||
 			  delivery == RE::MagicSystem::Delivery::kTargetLocation)) {
-			return;
+			return false;
 		}
 		if (a_spell->CalculateMagickaCost(nullptr) < 1.0f) {
-			return;
+			return false;
 		}
 		if (a_spell->effects.empty()) {
-			return;
+			return false;
 		}
 		if (a_spell->GetDelivery() == RE::MagicSystem::Delivery::kSelf) {
-			return;
+			return false;
 		}
 
 		static constexpr RE::FormID ritualEffectID = 0x806E1;
@@ -567,41 +565,45 @@ namespace UI
 		const auto eitherHandForm = defaultObjects->GetObject<RE::BGSEquipSlot>(
 			RE::DEFAULT_OBJECT::kEitherHandEquip);
 		if (!eitherHandForm) {
-			return;
+			return false;
 		}
 
 		if (const auto spellEquipSlot = a_spell->GetEquipSlot()) {
 			if (spellEquipSlot != eitherHandForm) {
-				return;
+				return false;
 			}
 		}
 		else {
-			return;
+			return false;
 		}
 
 		bool hasDescription = false;
 		for (const auto& effect : a_spell->effects) {
 			if (!effect->baseEffect) {
-				return;
+				return false;
 			}
 
 			const auto effectKwdForm = effect->baseEffect->As<RE::BGSKeywordForm>();
 			if (!effectKwdForm || effectKwdForm->HasKeyword(ritualEffectID) ||
 				effectKwdForm->HasKeyword(ritualEffectIllusionID)) {
-				return;
+				return false;
 			}
 
 			if (!hasDescription && MagicEffectHasDescription(effect->baseEffect)) {
 				hasDescription = true;
 			}
 		}
-		if (!hasDescription) {
-			return;
-		}
+		return hasDescription;
+	}
 
-		auto smartEntry = RE::make_smart<SpellEntry>(a_spell);
-		smartEntry->enabled = CanCraftWithSpell(a_spell);
-		a_entries.push_back(std::move(smartEntry));
+	void StaffCraftingMenu::AddSpellIfUsable(
+		RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>>& a_entries,
+		const RE::SpellItem* a_spell)
+	{
+		if (IsSpellValid(a_spell)) {
+			const auto& entry = a_entries.emplace_back(RE::make_smart<SpellEntry>(a_spell));
+			entry->enabled = CanCraftWithSpell(a_spell);
+		}
 	}
 
 	void StaffCraftingMenu::UpdateInterface()
