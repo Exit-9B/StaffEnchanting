@@ -105,7 +105,6 @@ namespace UI
 			RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>>& a_entries,
 			bool a_fullRebuild = false);
 
-		[[nodiscard]] static bool IsSpellValid(const RE::SpellItem* a_spell);
 		static void AddSpellIfUsable(
 			RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>>& a_entries,
 			const RE::SpellItem* a_spell);
@@ -175,7 +174,7 @@ namespace UI
 
 		bool exiting{ false };
 		bool hasHighlight{ false };
-		inline static bool countHeartStones;
+		inline static float maxSoulSize;
 		inline static int32_t heartStoneCount;
 	};
 }
