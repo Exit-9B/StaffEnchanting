@@ -185,11 +185,17 @@ namespace UI
 		const auto spellData = playerBase->actorEffects;
 		assert(spellData);
 		for (const auto spell : std::span(spellData->spells, spellData->numSpells)) {
-			AddSpellIfUsable(listEntries, spell);
+			if (IsSpellValid(spell)) {
+				const auto& entry = listEntries.emplace_back(RE::make_smart<SpellEntry>(spell));
+				entry->enabled = CanCraftWithSpell(spell);
+			}
 		}
 
 		for (const auto spell : playerRef->addedSpells) {
-			AddSpellIfUsable(listEntries, spell);
+			if (IsSpellValid(spell)) {
+				const auto& entry = listEntries.emplace_back(RE::make_smart<SpellEntry>(spell));
+				entry->enabled = CanCraftWithSpell(spell);
+			}
 		}
 
 		const auto invChanges = playerRef->GetInventoryChanges();
@@ -596,15 +602,14 @@ namespace UI
 		return hasDescription;
 	}
 
+	/*
 	void StaffCraftingMenu::AddSpellIfUsable(
 		RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>>& a_entries,
 		const RE::SpellItem* a_spell)
 	{
-		if (IsSpellValid(a_spell)) {
-			const auto& entry = a_entries.emplace_back(RE::make_smart<SpellEntry>(a_spell));
-			entry->enabled = CanCraftWithSpell(a_spell);
-		}
+		
 	}
+	*/
 
 	void StaffCraftingMenu::UpdateInterface()
 	{

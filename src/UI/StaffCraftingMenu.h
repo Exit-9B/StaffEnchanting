@@ -106,9 +106,11 @@ namespace UI
 			RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>>& a_entries,
 			bool a_fullRebuild = false);
 
+		/*
 		static void AddSpellIfUsable(
 			RE::BSTArray<RE::BSTSmartPointer<CategoryListEntry>>& a_entries,
 			const RE::SpellItem* a_spell);
+		*/
 
 		void ClearSelection();
 		void PopulateEntryList(bool a_fullRebuild = false);
