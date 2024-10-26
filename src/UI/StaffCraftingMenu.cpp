@@ -901,10 +901,7 @@ namespace UI
 			}
 		}
 
-		if (selected.morpholith->data->GetObject()->IsSoulGem()) {
-			const auto
-				baseMorpholith = selected.morpholith->data->GetObject()->As<RE::BGSKeywordForm>();
-
+		if (const auto soulGem = selected.morpholith->data->GetObject()->As<RE::TESSoulGem>()) {
 			RE::ExtraDataList* morpholithExtraList = nullptr;
 			if (const auto extraLists = selected.morpholith->data->extraLists;
 				!extraLists->empty()) {
@@ -915,9 +912,7 @@ namespace UI
 			const auto defaultObjects = RE::BGSDefaultObjectManager::GetSingleton();
 			const auto KeywordReusableSoulGem = defaultObjects->GetObject<RE::BGSKeyword>(
 				RE::DEFAULT_OBJECT::kKeywordReusableSoulGem);
-			usingReusableSoulGem = baseMorpholith
-				? baseMorpholith->HasKeyword(KeywordReusableSoulGem)
-				: false;
+			usingReusableSoulGem = soulGem->HasKeyword(KeywordReusableSoulGem);
 
 			if (usingReusableSoulGem && morpholithExtraList) {
 				morpholithExtraList->RemoveByType(RE::ExtraDataType::kSoul);
