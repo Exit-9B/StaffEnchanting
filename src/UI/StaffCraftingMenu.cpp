@@ -914,15 +914,19 @@ namespace UI
 				RE::DEFAULT_OBJECT::kKeywordReusableSoulGem);
 			usingReusableSoulGem = soulGem->HasKeyword(KeywordReusableSoulGem);
 
-			if (usingReusableSoulGem && morpholithExtraList) {
-				morpholithExtraList->RemoveByType(RE::ExtraDataType::kSoul);
+			if (usingReusableSoulGem) {
+				if (morpholithExtraList) {
+					if (const auto extraSoul = morpholithExtraList->GetByType<RE::ExtraSoul>()) {
+						extraSoul->soul = RE::SOUL_LEVEL::kNone;
+					}
+				}
 			}
 			else {
 				player->RemoveItem(
 					selected.morpholith->data->GetObject(),
 					1,
 					RE::ITEM_REMOVE_REASON::kRemove,
-					nullptr,
+					morpholithExtraList,
 					nullptr);
 			}
 		}
