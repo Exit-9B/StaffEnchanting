@@ -95,7 +95,7 @@ namespace UI
 
 		[[nodiscard]] static float GetEntryDataSoulCharge(RE::InventoryEntryData* a_entry);
 		[[nodiscard]] static bool MagicEffectHasDescription(RE::EffectSetting* a_effect);
-		[[nodiscard]] static int32_t GetSpellLevel(const RE::SpellItem* a_spell);
+		[[nodiscard]] static int32_t GetSpellHeartstones(const RE::SpellItem* a_spell);
 		[[nodiscard]] static bool CanCraftWithSpell(const RE::SpellItem* a_spell);
 
 		void UpdateEnchantmentCharge();
@@ -175,6 +175,7 @@ namespace UI
 
 		bool exiting{ false };
 		bool hasHighlight{ false };
+		inline static bool countHeartStones;
 		inline static int32_t heartStoneCount;
 	};
 }

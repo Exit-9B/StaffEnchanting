@@ -288,18 +288,38 @@ namespace UI
 		return -1.0f;
 	}
 
-	int32_t StaffCraftingMenu::GetSpellLevel(const RE::SpellItem* a_spell)
+	int32_t StaffCraftingMenu::GetSpellHeartstones(const RE::SpellItem* a_spell)
 	{
-		int32_t response = 0;
-		for (const auto effect : a_spell->effects) {
-			if (!effect || !effect->baseEffect)
-				continue;
-
-			response = effect->baseEffect->data.minimumSkill > response
-				? effect->baseEffect->data.minimumSkill
-				: response;
+		if (!countHeartStones) {
+			return 1;
 		}
-		return response;
+
+		auto evilSpell = const_cast<RE::SpellItem*>(a_spell);
+		if (!evilSpell) {
+			return 1;
+		}
+
+		const auto costliest = evilSpell->GetCostliestEffectItem();
+		if (!costliest || !costliest->baseEffect) {
+			return 1;
+		}
+
+		int32_t level = costliest->baseEffect->GetMinimumSkillLevel();
+		if (level < 25) {
+			return 1;
+		}
+		else if (level < 50) {
+			return 2;
+		}
+		else if (level < 75) {
+			return 3;
+		}
+		else if (level < 100) {
+			return 4;
+		}
+		else {
+			return 5;
+		}
 	}
 
 	bool StaffCraftingMenu::MagicEffectHasDescription(RE::EffectSetting* a_effect)
@@ -314,23 +334,10 @@ namespace UI
 
 	bool StaffCraftingMenu::CanCraftWithSpell(const RE::SpellItem* a_spell)
 	{
-		// TODO: Return true if it is called from a non-heartstone station
-		const auto minLevel = GetSpellLevel(a_spell);
-		if (minLevel < 25) {
-			return heartStoneCount > 0;
-		}
-		else if (minLevel < 50) {
-			return heartStoneCount > 1;
-		}
-		else if (minLevel < 75) {
-			return heartStoneCount > 2;
-		}
-		else if (minLevel < 90) {
-			return heartStoneCount > 3;
-		}
-		else {
-			return heartStoneCount > 4;
-		}
+		if (!countHeartStones)
+			return true;
+
+		return heartStoneCount >= GetSpellHeartstones(a_spell);
 	}
 
 	void StaffCraftingMenu::UpdateEnchantmentCharge()
@@ -459,6 +466,16 @@ namespace UI
 				: heartStoneCount;
 		}
 
+		const auto disallowHeartstonesKwd = Forms::StaffEnchanting::DisallowHeartStones();
+		const auto allowSoulGemsKwd = Forms::StaffEnchanting::AllowSoulGems();
+		if (disallowHeartstonesKwd && allowSoulGemsKwd && (workbench->HasKeyword(disallowHeartstonesKwd) ||
+			workbench->HasKeyword(allowSoulGemsKwd))) {
+			countHeartStones = false;
+		}
+		else {
+			countHeartStones = true;
+		}
+
 		if (currentCategory != Category::Recipe || highlightIndex >= listEntries.size() ||
 			listEntries[highlightIndex]->filterFlag != FilterFlag::Recipe) {
 
@@ -487,31 +504,19 @@ namespace UI
 				selected.morpholith
 					? selected.morpholith->GetName()
 					: labels[Category::Morpholith].c_str());
-			if (selected.spell) {
-				const auto spellLevel = GetSpellLevel(selected.spell->data);
-
-				if (spellLevel < 25) {
-					morpholith.SetMember("RequiredCount", 1);
-				}
-				else if (spellLevel < 50) {
-					morpholith.SetMember("RequiredCount", 2);
-				}
-				else if (spellLevel < 75) {
-					morpholith.SetMember("RequiredCount", 3);
-				}
-				else if (spellLevel < 90) {
-					morpholith.SetMember("RequiredCount", 4);
-				}
-				else {
-					morpholith.SetMember("RequiredCount", 5);
-				}
+			if (countHeartStones && selected.spell) {
+				morpholith.SetMember("RequiredCount", GetSpellHeartstones(selected.spell->data));
 			}
 			else {
 				morpholith.SetMember("RequiredCount", 1);
 			}
 
-			// TODO: Proper integration for non-heartstone stations
-			morpholith.SetMember("PlayerCount", selected.morpholith ? heartStoneCount : 0);
+			if (countHeartStones) {
+				morpholith.SetMember("PlayerCount", selected.morpholith ? heartStoneCount : 0);
+			}
+			else {
+				morpholith.SetMember("PlayerCount", selected.morpholith ? 1 : 0);
+			}
 			ingredients.PushBack(morpholith);
 		}
 		else {
@@ -702,7 +707,6 @@ namespace UI
 		}
 		else if (a_userEvent == userEvents->xButton) {
 			if (!selected.staff || !selected.spell || !selected.morpholith) {
-				// TODO: Multi-morpholith check here for higher level spells.
 				return true;
 			}
 
@@ -917,9 +921,14 @@ namespace UI
 		}
 		RE::SetOverrideName(createdExtraList, newName);
 
+		int32_t count = 1;
+		if (countHeartStones) {
+			count = GetSpellHeartstones(selected.spell->data);
+		}
+
 		player->RemoveItem(
 			selected.morpholith->data->GetObject(),
-			1,
+			count,
 			RE::ITEM_REMOVE_REASON::kRemove,
 			nullptr,
 			nullptr);
