@@ -42,19 +42,32 @@ namespace UI
 		menu->UpdateInterface();
 	}
 
-	bool StaffCraftingMenu::IsCategoryDisabled(Category a_category) const
+	bool StaffCraftingMenu::IsCategoryEmpty(Category a_category) const
 	{
-		RE::GFxValue entry;
-		if (!categoryEntryList.IsArray() || !categoryEntryList.GetElement(a_category, &entry)) {
+		RE::GFxValue entryList;
+		if (!itemList.IsObject() || !itemList.GetMember("entryList", &entryList) ||
+			!entryList.IsArray()) {
 			return false;
 		}
 
-		RE::GFxValue enabled;
-		if (!entry.IsObject() || !entry.GetMember("enabled", &enabled)) {
-			return false;
+		for (const auto i : std::views::iota(0u, entryList.GetArraySize())) {
+			RE::GFxValue entry;
+			if (!entryList.GetElement(i, &entry)) {
+				continue;
+			}
+
+			RE::GFxValue filterFlag;
+			if (!entry.IsObject() || !entry.GetMember("filterFlag", &filterFlag)) {
+				continue;
+			}
+
+			const auto filter = util::to_underlying(filters[a_category]);
+			if (filterFlag.IsNumber() && (filterFlag.GetUInt() & filter) == filter) {
+				return false;
+			}
 		}
 
-		return enabled.IsBool() && !enabled.GetBool();
+		return true;
 	}
 
 	void StaffCraftingMenu::SetSelectedCategory(const RE::FxDelegateArgs& a_params)
@@ -70,7 +83,7 @@ namespace UI
 			return;
 		}
 
-		if (category == Category::Recipe && menu->IsCategoryDisabled(Category::Recipe)) {
+		if (category == Category::Recipe && menu->IsCategoryEmpty(Category::Recipe)) {
 			RE::GFxValue categoriesList;
 			menu->inventoryLists.GetMember("CategoriesList", &categoriesList);
 			if (categoriesList.IsObject()) {
