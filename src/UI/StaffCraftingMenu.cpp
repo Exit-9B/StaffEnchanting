@@ -698,8 +698,12 @@ namespace UI
 			return true;
 		}
 		else if (a_userEvent == userEvents->yButton) {
-			// TODO: edit name
-			return true;
+			if (selected.staff && selected.morpholith && selected.spell && craftItemPreview &&
+				currentCategory != Category::Recipe) {
+
+				EditItemName();
+				return true;
+			}
 		}
 
 		return false;
@@ -969,6 +973,11 @@ namespace UI
 		UpdateItemPreview(nullptr);
 		menu.Invoke("UpdateItemDisplay");
 		RE::PlaySound("UIEnchantingItemCreate");
+	}
+
+	void StaffCraftingMenu::EditItemName()
+	{
+		// TODO: see 51409
 	}
 
 	void StaffCraftingMenu::Selection::Clear()
