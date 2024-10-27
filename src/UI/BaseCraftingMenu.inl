@@ -148,9 +148,9 @@ namespace UI
 		bottomBar = std::make_unique<RE::BottomBar>(uiMovie.get());
 
 		if (buttonText.IsArray()) {
-			buttonText.SetElement(0, *"sSelect"_gs);
-			buttonText.SetElement(1, *"sExit"_gs);
-			buttonText.SetElement(3, *"sCraft"_gs);
+			buttonText.SetElement(Button::Select, *"sSelect"_gs);
+			buttonText.SetElement(Button::Exit, *"sExit"_gs);
+			buttonText.SetElement(Button::Craft, *"sCraft"_gs);
 		}
 
 		menu.Invoke("UpdateButtonText");

@@ -42,6 +42,18 @@ namespace UI
 			RE::BSTEventSource<RE::TESFurnitureEvent>* a_eventSource) final;
 
 	protected:
+		struct BUTTONS
+		{
+			enum Button
+			{
+				Select = 0,
+				Exit = 1,
+				Aux = 2,
+				Craft = 3,
+			};
+		};
+		using Button = BUTTONS::Button;
+
 		void SetMenuDescription(const char* a_description);
 
 		void UpdateItemCard(const RE::InventoryEntryData* a_item);
