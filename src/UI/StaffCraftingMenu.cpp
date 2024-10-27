@@ -701,8 +701,12 @@ namespace UI
 			return true;
 		}
 		else if (a_userEvent == userEvents->yButton) {
-			// TODO: edit name
-			return true;
+			if (selected.staff && selected.morpholith && selected.spell && craftItemPreview &&
+				currentCategory != Category::Recipe) {
+
+				EditItemName();
+				return true;
+			}
 		}
 
 		return false;
@@ -859,7 +863,14 @@ namespace UI
 		UpdateItemPreview(nullptr);
 		menu.Invoke("UpdateItemDisplay");
 
-		RE::PlaySound("UISmithingCreateGeneric");
+		if (const auto enchantableForm = createdItem->As<RE::TESEnchantableForm>();
+			enchantableForm && enchantableForm->formEnchanting) {
+
+			RE::PlaySound("UIEnchantingItemCreate");
+		}
+		else {
+			RE::PlaySound("UISmithingCreateGeneric");
+		}
 	}
 
 	void StaffCraftingMenu::CreateStaff()
@@ -907,13 +918,33 @@ namespace UI
 			}
 		}
 
-		if (selected.morpholith->data->GetObject()->IsSoulGem()) {
-			player->RemoveItem(
-				selected.morpholith->data->GetObject(),
-				1,
-				RE::ITEM_REMOVE_REASON::kRemove,
-				nullptr,
-				nullptr);
+		if (const auto soulGem = selected.morpholith->data->GetObject()->As<RE::TESSoulGem>()) {
+			RE::ExtraDataList* morpholithExtraList = nullptr;
+			if (const auto extraLists = selected.morpholith->data->extraLists;
+				!extraLists->empty()) {
+				morpholithExtraList = extraLists->front();
+			}
+
+			const auto defaultObjects = RE::BGSDefaultObjectManager::GetSingleton();
+			const auto KeywordReusableSoulGem = defaultObjects->GetObject<RE::BGSKeyword>(
+				RE::DEFAULT_OBJECT::kKeywordReusableSoulGem);
+			const bool usingReusableSoulGem = soulGem->HasKeyword(KeywordReusableSoulGem);
+
+			if (usingReusableSoulGem) {
+				if (morpholithExtraList) {
+					if (const auto extraSoul = morpholithExtraList->GetByType<RE::ExtraSoul>()) {
+						extraSoul->soul = RE::SOUL_LEVEL::kNone;
+					}
+				}
+			}
+			else {
+				player->RemoveItem(
+					selected.morpholith->data->GetObject(),
+					1,
+					RE::ITEM_REMOVE_REASON::kRemove,
+					morpholithExtraList,
+					nullptr);
+			}
 		}
 		else {
 			player->RemoveItem(
@@ -958,6 +989,11 @@ namespace UI
 		UpdateItemPreview(nullptr);
 		menu.Invoke("UpdateItemDisplay");
 		RE::PlaySound("UIEnchantingItemCreate");
+	}
+
+	void StaffCraftingMenu::EditItemName()
+	{
+		// TODO: see 51409
 	}
 
 	void StaffCraftingMenu::Selection::Clear()

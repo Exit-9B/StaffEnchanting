@@ -8,16 +8,13 @@ namespace UI
 		a_processor->Process("SetSelectedCategory", &StaffCraftingMenu::SetSelectedCategory);
 		a_processor->Process("ChooseItem", &StaffCraftingMenu::ChooseItem);
 		a_processor->Process("ShowItem3D", &StaffCraftingMenu::ShowItem3D);
-		// TODO: figure out which callback functions need to be here
-		// CanFadeItemInfo
-		// EndItemRename
-		// SliderClose
-		// CalculateCharge
-		// CloseMenu
-		// CraftButtonPress
-		// StartMouseRotation
-		// StopMouseRotation
-		// AuxButtonPress
+		a_processor->Process("CanFadeItemInfo", &StaffCraftingMenu::CanFadeItemInfo);
+		a_processor->Process("EndItemRename", &StaffCraftingMenu::EndItemRename);
+		a_processor->Process("CloseMenu", &StaffCraftingMenu::CloseMenu);
+		a_processor->Process("CraftButtonPress", &StaffCraftingMenu::CraftButtonPress);
+		a_processor->Process("StartMouseRotation", &StaffCraftingMenu::StartMouseRotation);
+		a_processor->Process("StopMouseRotation", &StaffCraftingMenu::StopMouseRotation);
+		a_processor->Process("AuxButtonPress", &StaffCraftingMenu::AuxButtonPress);
 	}
 
 	void StaffCraftingMenu::SetSelectedItem(const RE::FxDelegateArgs& a_params)
@@ -149,5 +146,78 @@ namespace UI
 				inventory3D->Clear3D();
 			}
 		}
+	}
+
+	void StaffCraftingMenu::CanFadeItemInfo(const RE::FxDelegateArgs& a_params)
+	{
+		const auto menu = static_cast<StaffCraftingMenu*>(a_params.GetHandler());
+
+		RE::FxResponseArgs<1> response;
+		response.Add(!menu->craftItemPreview || menu->currentCategory == Category::Recipe);
+		a_params.Respond(response);
+	}
+
+	void StaffCraftingMenu::EndItemRename(const RE::FxDelegateArgs& a_params)
+	{
+		if (a_params.GetArgCount() < 1) {
+			return;
+		}
+
+		const auto menu = static_cast<StaffCraftingMenu*>(a_params.GetHandler());
+		const auto useNewName = a_params[0].GetBool();
+
+		if (useNewName && a_params.GetArgCount() >= 2) {
+			const auto newName = a_params[1].GetString();
+			const auto scaleformManager = RE::BSScaleformManager::GetSingleton();
+			if (newName && scaleformManager->IsValidName(newName)) {
+				menu->customName = newName;
+
+				if (menu->craftItemPreview) {
+					if (const auto extraLists = menu->craftItemPreview->extraLists;
+						extraLists && !extraLists->empty()) {
+						RE::SetOverrideName(extraLists->front(), newName);
+					}
+				}
+			}
+		}
+
+		const auto controlMap = RE::ControlMap::GetSingleton();
+		controlMap->AllowTextInput(false);
+
+		menu->UpdateInterface();
+	}
+
+	void StaffCraftingMenu::CloseMenu(const RE::FxDelegateArgs&)
+	{
+		const auto userEvents = RE::UserEvents::GetSingleton();
+		RE::BSUIMessageData::SendUIStringMessage(
+			MENU_NAME,
+			RE::UI_MESSAGE_TYPE::kUserEvent,
+			userEvents->cancel);
+	}
+
+	void StaffCraftingMenu::CraftButtonPress(const RE::FxDelegateArgs&)
+	{
+		const auto userEvents = RE::UserEvents::GetSingleton();
+		RE::BSUIMessageData::SendUIStringMessage(
+			MENU_NAME,
+			RE::UI_MESSAGE_TYPE::kUserEvent,
+			userEvents->xButton);
+	}
+
+	void StaffCraftingMenu::StartMouseRotation(const RE::FxDelegateArgs&)
+	{
+		RE::Inventory3DManager::SetMouseRotation(true);
+	}
+
+	void StaffCraftingMenu::StopMouseRotation(const RE::FxDelegateArgs&)
+	{
+		RE::Inventory3DManager::SetMouseRotation(false);
+	}
+
+	void StaffCraftingMenu::AuxButtonPress(const RE::FxDelegateArgs& a_params)
+	{
+		const auto menu = static_cast<StaffCraftingMenu*>(a_params.GetHandler());
+		menu->EditItemName();
 	}
 }

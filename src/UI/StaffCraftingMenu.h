@@ -77,6 +77,13 @@ namespace UI
 		static void SetSelectedCategory(const RE::FxDelegateArgs& a_params);
 		static void ChooseItem(const RE::FxDelegateArgs& a_params);
 		static void ShowItem3D(const RE::FxDelegateArgs& a_params);
+		static void CanFadeItemInfo(const RE::FxDelegateArgs& a_params);
+		static void EndItemRename(const RE::FxDelegateArgs& a_params);
+		static void CloseMenu(const RE::FxDelegateArgs& a_params);
+		static void CraftButtonPress(const RE::FxDelegateArgs& a_params);
+		static void StartMouseRotation(const RE::FxDelegateArgs& a_params);
+		static void StopMouseRotation(const RE::FxDelegateArgs& a_params);
+		static void AuxButtonPress(const RE::FxDelegateArgs& a_params);
 
 		[[nodiscard]] bool IsCategoryEmpty(Category a_category) const;
 
@@ -87,6 +94,7 @@ namespace UI
 			bool a_showNotification = false);
 		void CreateItem(const RE::BGSConstructibleObject* a_constructible);
 		void CreateStaff();
+		void EditItemName();
 
 		void UpdateItemPreview(std::unique_ptr<RE::InventoryEntryData>&& a_item);
 		void UpdateEnabledEntries(
