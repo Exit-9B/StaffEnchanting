@@ -1019,11 +1019,6 @@ namespace UI
 	{
 		if (!craftItemPreview)
 			return;
-		const auto staffEntry = selected.staff->data.get();
-		if (staffEntry->IsQuestObject()) {
-			return;
-		}
-
 		const auto extraLists = craftItemPreview->extraLists;
 		if (extraLists && !extraLists->empty()) {
 			const auto extraList = extraLists->front();
