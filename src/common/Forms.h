@@ -19,12 +19,12 @@ namespace Forms
 
 		[[nodiscard]] inline auto DisallowHeartStones()
 		{
-			return LookupForm<RE::BGSKeyword>(0x800);
+			return Forms::LookupForm<RE::BGSKeyword>(0x5EA000, "Update.esm"sv);
 		}
 
 		[[nodiscard]] inline auto AllowSoulGems()
 		{
-			return LookupForm<RE::BGSKeyword>(0x801);
+			return Forms::LookupForm<RE::BGSKeyword>(0x5EA001, "Update.esm"sv);
 		}
 
 		[[nodiscard]] inline auto CreatedStaffName()
