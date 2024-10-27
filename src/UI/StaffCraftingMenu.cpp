@@ -411,11 +411,13 @@ namespace UI
 		if (selected.spell) {
 			// TODO: calculate correct charge amount
 			UpdateEnchantmentCharge();
-
 			for (const auto& effect : selected.spell->data->effects) {
 				auto& createdEffect = createdEffects.emplace_back();
 				createdEffect.Copy(effect);
-				// TODO: calculate magnitude and duration changes
+				if (createdEffect.baseEffect->GetArchetype() ==
+					RE::EffectSetting::Archetype::kLight) {
+					createdEffect.SetMagnitude(1.0f);
+				}
 			}
 
 			if (!createdEffects.empty()) {
