@@ -1042,7 +1042,22 @@ namespace UI
 
 	void StaffCraftingMenu::EditItemName()
 	{
-		// TODO: see 51409
+		if (!craftItemPreview)
+			return;
+		const auto extraLists = craftItemPreview->extraLists;
+		if (extraLists && !extraLists->empty()) {
+			const auto extraList = extraLists->front();
+			const auto extraTextData = extraList ? extraList->GetExtraTextDisplayData() : nullptr;
+			if (extraTextData && (extraTextData->displayNameText || extraTextData->ownerQuest)) {
+				return;
+			}
+		}
+
+		const auto maxString = *"uMaxCustomItemNameLength:Interface"_ini;
+		RE::ControlMap::GetSingleton()->AllowTextInput(true);
+		menu.Invoke(
+			"EditItemName",
+			std::to_array<RE::GFxValue>({ suggestedName.c_str(), maxString }));
 	}
 
 	void StaffCraftingMenu::Selection::Clear()
