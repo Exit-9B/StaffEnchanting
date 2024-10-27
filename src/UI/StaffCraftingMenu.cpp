@@ -908,11 +908,10 @@ namespace UI
 				morpholithExtraList = extraLists->front();
 			}
 
-			bool usingReusableSoulGem = false;
 			const auto defaultObjects = RE::BGSDefaultObjectManager::GetSingleton();
 			const auto KeywordReusableSoulGem = defaultObjects->GetObject<RE::BGSKeyword>(
 				RE::DEFAULT_OBJECT::kKeywordReusableSoulGem);
-			usingReusableSoulGem = soulGem->HasKeyword(KeywordReusableSoulGem);
+			const bool usingReusableSoulGem = soulGem->HasKeyword(KeywordReusableSoulGem);
 
 			if (usingReusableSoulGem) {
 				if (morpholithExtraList) {
