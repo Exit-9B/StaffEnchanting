@@ -153,7 +153,7 @@ namespace UI
 		const auto menu = static_cast<StaffCraftingMenu*>(a_params.GetHandler());
 
 		RE::FxResponseArgs<1> response;
-		response.Add(!menu->craftItemPreview || menu->currentCategory != Category::Recipe);
+		response.Add(!menu->craftItemPreview || menu->currentCategory == Category::Recipe);
 		a_params.Respond(response);
 	}
 
