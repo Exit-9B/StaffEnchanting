@@ -924,6 +924,11 @@ namespace UI
 				nullptr);
 		}
 
+		player->AddChange(
+			RE::TESObjectREFR::ChangeFlags::kInventory |
+			RE::TESObjectREFR::ChangeFlags::kItemExtraData |
+			RE::TESObjectREFR::ChangeFlags::kLeveledInventory);
+
 		RE::SendHUDMessage::ShowInventoryChangeMessage(staff, 1, true, true, newName);
 
 		const auto skill = workbench->workBenchData.usesSkill;
