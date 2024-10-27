@@ -302,8 +302,7 @@ namespace UI
 		return -1.0f;
 	}
 
-	std::int32_t StaffCraftingMenu::GetSpellHeartstones(
-		const RE::SpellItem* a_spell)
+	std::int32_t StaffCraftingMenu::GetSpellHeartstones(const RE::SpellItem* a_spell)
 	{
 		return GetSpellLevel(a_spell) + 1;
 	}
