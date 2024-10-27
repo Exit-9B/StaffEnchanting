@@ -331,7 +331,6 @@ namespace UI
 			return morpholithCharge > 0.0f
 				? morpholithCharge >= a_spell->CalculateMagickaCost(nullptr)
 				: heartStoneCount >= GetSpellHeartstones(a_spell);
-
 		}
 		return heartStoneCount >= GetSpellHeartstones(a_spell) ||
 			maxSoulSize >= a_spell->CalculateMagickaCost(nullptr);
