@@ -324,16 +324,16 @@ namespace UI
 		return !a_effect->magicItemDescription.empty();
 	}
 
-	bool StaffCraftingMenu::CanCraftWithSpell(const RE::SpellItem* a_spell)
+	bool StaffCraftingMenu::CanCraftWithSpell(const RE::SpellItem* a_spell) const
 	{
 		if (selected.morpholith) {
 			const auto morpholithCharge = GetEntryDataSoulCharge(selected.morpholith->data.get());
 			return morpholithCharge > 0.0f
-				? morpholithCharge >= a_spell->CalculateMagickaCost(nullptr)
+				? morpholithCharge >= CalculateSpellCost(a_spell)
 				: heartStoneCount >= GetSpellHeartstones(a_spell);
 		}
 		return heartStoneCount >= GetSpellHeartstones(a_spell) ||
-			maxSoulSize >= a_spell->CalculateMagickaCost(nullptr);
+			maxSoulSize >= CalculateSpellCost(a_spell);
 	}
 
 	void StaffCraftingMenu::UpdateEnchantmentCharge()
@@ -541,7 +541,7 @@ namespace UI
 			  delivery == RE::MagicSystem::Delivery::kTargetLocation)) {
 			return false;
 		}
-		if (a_spell->CalculateMagickaCost(nullptr) < 1.0f) {
+		if (CalculateSpellCost(a_spell) < 1.0f) {
 			return false;
 		}
 		if (a_spell->effects.empty()) {
@@ -587,6 +587,31 @@ namespace UI
 			}
 		}
 		return hasDescription;
+	}
+
+	float StaffCraftingMenu::CalculateSpellCost(const RE::SpellItem* a_spell)
+	{
+		float cost = 0.0f;
+		if (!a_spell)
+			return cost;
+
+		for (const RE::Effect* const effect : a_spell->effects) {
+			const auto baseEffect = effect->baseEffect;
+			if (baseEffect->GetArchetype() == RE::EffectSetting::Archetype::kLight &&
+				baseEffect->data.flags.none(
+					RE::EffectSetting::EffectSettingData::Flag::kNoMagnitude)) {
+
+				RE::Effect tempEffect;
+				tempEffect.Copy(effect);
+				tempEffect.SetMagnitude(1.0f);
+				cost += tempEffect.cost;
+			}
+			else {
+				cost += effect->cost;
+			}
+		}
+
+		return cost;
 	}
 
 	StaffCraftingMenu::SpellLevel StaffCraftingMenu::GetSpellLevel(const RE::SpellItem* a_spell)
