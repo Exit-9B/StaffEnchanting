@@ -307,6 +307,11 @@ namespace UI
 		return GetSpellLevel(a_spell) + 1;
 	}
 
+	float StaffCraftingMenu::GetDefaultCharge(const RE::SpellItem* a_spell)
+	{
+		return std::max(500.0f, static_cast<int>(GetSpellLevel(a_spell)) * 1000.0f);
+	}
+
 	bool StaffCraftingMenu::MagicEffectHasDescription(RE::EffectSetting* a_effect)
 	{
 		assert(a_effect);
@@ -331,33 +336,26 @@ namespace UI
 				chargeAmount = soulCharge;
 			}
 			else {
-				const auto count = GetSpellLevel(selected.spell->data) * 1000;
-				chargeAmount = static_cast<float>(std::max(heartstoneCharge, count));
+				chargeAmount = GetDefaultCharge(selected.spell->data);
 			}
 		}
 		else {
+			float maxCharge = std::numeric_limits<float>::lowest();
 			for (const auto& entry : listEntries) {
-				if (entry->filterFlag != FilterFlag::Morpholith)
+				if (!entry || entry->filterFlag != FilterFlag::Morpholith)
 					continue;
 				const auto itemEntry = static_cast<const ItemEntry*>(entry.get());
-				if (!itemEntry)
-					continue;
-				const auto entryData = itemEntry->data.get();
+				const auto& entryData = itemEntry->data;
 				if (!entryData)
 					continue;
-
-				float soulCharge = GetEntryDataSoulCharge(entryData);
-
-				if (entryData->GetObject()->IsSoulGem()) {
-					if (soulCharge > chargeAmount) {
-						chargeAmount = soulCharge;
-					}
-				}
-				else {
-					const auto count = GetSpellLevel(selected.spell->data) * 1000;
-					chargeAmount = static_cast<float>(std::max(heartstoneCharge, count));
-				}
+				const auto soulValue = GetEntryDataSoulCharge(entryData.get());
+				const auto itemCharge = soulValue > 0.0f
+					? soulValue
+					: GetDefaultCharge(selected.spell->data);
+				maxCharge = std::max(maxCharge, itemCharge);
 			}
+
+			chargeAmount = maxCharge > 0.0f ? maxCharge : GetDefaultCharge(selected.spell->data);
 		}
 	}
 

@@ -23,14 +23,18 @@ namespace UI
 			All = 0x7F,
 		};
 
-		enum SpellLevel
+		struct SPELL_LEVEL
 		{
-			kNovice = 0,
-			kApprentice = 1,
-			kAdept = 2,
-			kExpert = 3,
-			kMaster = 4,
+			enum Spell_Level
+			{
+				kNovice = 0,
+				kApprentice = 1,
+				kAdept = 2,
+				kExpert = 3,
+				kMaster = 4,
+			};
 		};
+		using SpellLevel = SPELL_LEVEL::Spell_Level;
 
 		struct CATEGORY
 		{
@@ -107,6 +111,7 @@ namespace UI
 		[[nodiscard]] static bool IsSpellValid(const RE::SpellItem* a_spell);
 		[[nodiscard]] static SpellLevel GetSpellLevel(const RE::SpellItem* a_spell);
 		[[nodiscard]] static std::int32_t GetSpellHeartstones(const RE::SpellItem* a_spell);
+		[[nodiscard]] static float GetDefaultCharge(const RE::SpellItem* a_spell);
 		[[nodiscard]] bool CanCraftWithSpell(const RE::SpellItem* a_spell);
 
 		void UpdateEnchantmentCharge();
@@ -183,7 +188,6 @@ namespace UI
 		bool hasHighlight{ false };
 		float maxSoulSize{ 0.0f };
 		std::int32_t heartStoneCount{ 0 };
-		std::int32_t heartstoneCharge{ 500 };
 	};
 }
 
