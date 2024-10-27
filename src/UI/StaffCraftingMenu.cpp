@@ -192,14 +192,13 @@ namespace UI
 		assert(playerBase);
 		const auto spellData = playerBase->actorEffects;
 		assert(spellData);
-		for (const auto spell : std::span(spellData->spells, spellData->numSpells)) {
-			if (IsSpellValid(spell)) {
-				const auto& entry = listEntries.emplace_back(RE::make_smart<SpellEntry>(spell));
-				entry->enabled = CanCraftWithSpell(spell);
-			}
-		}
 
-		for (const auto spell : playerRef->addedSpells) {
+		const auto spellLists = {
+			std::span(spellData->spells, spellData->numSpells),
+			std::span(playerRef->addedSpells)
+		};
+
+		for (const auto spell : std::views::join(spellLists)) {
 			if (IsSpellValid(spell)) {
 				const auto& entry = listEntries.emplace_back(RE::make_smart<SpellEntry>(spell));
 				entry->enabled = CanCraftWithSpell(spell);
