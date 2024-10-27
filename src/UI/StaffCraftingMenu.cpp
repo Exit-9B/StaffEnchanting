@@ -309,7 +309,7 @@ namespace UI
 
 	float StaffCraftingMenu::GetDefaultCharge(const RE::SpellItem* a_spell)
 	{
-		return std::max(500.0f, static_cast<int>(GetSpellLevel(a_spell)) * 1000.0f);
+		return std::max(500.0f, util::to_underlying(GetSpellLevel(a_spell)) * 1000.0f);
 	}
 
 	bool StaffCraftingMenu::MagicEffectHasDescription(RE::EffectSetting* a_effect)
@@ -331,13 +331,9 @@ namespace UI
 	void StaffCraftingMenu::UpdateEnchantmentCharge()
 	{
 		if (selected.morpholith) {
-			float soulCharge = GetEntryDataSoulCharge(selected.morpholith->data.get());
-			if (selected.morpholith->data->GetObject()->IsSoulGem()) {
-				chargeAmount = soulCharge;
-			}
-			else {
-				chargeAmount = GetDefaultCharge(selected.spell->data);
-			}
+			const auto& entryData = selected.morpholith->data;
+			const auto soulValue = GetEntryDataSoulCharge(entryData.get());
+			chargeAmount = soulValue > 0.0f ? soulValue : GetDefaultCharge(selected.spell->data);
 		}
 		else {
 			float maxCharge = std::numeric_limits<float>::lowest();
