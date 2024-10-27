@@ -197,8 +197,7 @@ namespace UI
 				}
 			}
 			else if (const auto weap = object->As<RE::TESObjectWEAP>(); weap && weap->IsStaff()) {
-				if (!weap->formEnchanting &&
-					!weap->HasKeyword(MagicDisallowEnchanting)) {
+				if (!weap->formEnchanting && !weap->HasKeyword(MagicDisallowEnchanting)) {
 
 					filterFlag = FilterFlag::Staff;
 				}
