@@ -327,13 +327,13 @@ namespace UI
 	void StaffCraftingMenu::UpdateEnchantmentCharge()
 	{
 		if (selected.morpholith) {
-			float response = GetEntryDataSoulCharge(selected.morpholith->data.get());
-			if (response < 0.0f) {
-				const auto count = GetSpellLevel(selected.spell->data) * 1000;
-				chargeAmount = static_cast<float>(std::max(heartstoneCharge, count));
+			float soulCharge = GetEntryDataSoulCharge(selected.morpholith->data.get());
+			if (selected.morpholith->data->GetObject()->IsSoulGem()) {
+				chargeAmount = soulCharge;
 			}
 			else {
-				chargeAmount = response;
+				const auto count = GetSpellLevel(selected.spell->data) * 1000;
+				chargeAmount = static_cast<float>(std::max(heartstoneCharge, count));
 			}
 		}
 		else {
@@ -347,14 +347,16 @@ namespace UI
 				if (!entryData)
 					continue;
 
-				float response = GetEntryDataSoulCharge(entryData);
+				float soulCharge = GetEntryDataSoulCharge(entryData);
 
-				if (response < 0.0f) {
+				if (entryData->GetObject()->IsSoulGem()) {
+					if (soulCharge > chargeAmount) {
+						chargeAmount = soulCharge;
+					}
+				}
+				else {
 					const auto count = GetSpellLevel(selected.spell->data) * 1000;
 					chargeAmount = static_cast<float>(std::max(heartstoneCharge, count));
-				}
-				if (response > chargeAmount) {
-					chargeAmount = response;
 				}
 			}
 		}
@@ -387,9 +389,7 @@ namespace UI
 		ClearEffects();
 
 		if (selected.spell) {
-			// TODO: calculate correct charge amount
 			UpdateEnchantmentCharge();
-
 			for (const auto& effect : selected.spell->data->effects) {
 				auto& createdEffect = createdEffects.emplace_back();
 				createdEffect.Copy(effect);
