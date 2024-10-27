@@ -859,7 +859,14 @@ namespace UI
 		UpdateItemPreview(nullptr);
 		menu.Invoke("UpdateItemDisplay");
 
-		RE::PlaySound("UISmithingCreateGeneric");
+		if (const auto enchantableForm = createdItem->As<RE::TESEnchantableForm>();
+			enchantableForm && enchantableForm->formEnchanting) {
+
+			RE::PlaySound("UIEnchantingItemCreate");
+		}
+		else {
+			RE::PlaySound("UISmithingCreateGeneric");
+		}
 	}
 
 	void StaffCraftingMenu::CreateStaff()
