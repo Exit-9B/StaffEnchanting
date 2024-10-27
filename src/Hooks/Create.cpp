@@ -28,7 +28,8 @@ namespace Hooks
 				mov(rdx, rsi);
 				mov(rcx, rdi);
 				call(ptr[rip + funcLbl]);
-				jmp(retnLbl);
+				jmp(retnLbl, T_SHORT);
+				nop(3);
 
 				L(funcLbl);
 				dq(std::bit_cast<std::uintptr_t>(&Create::InitEnchantment));
@@ -36,6 +37,7 @@ namespace Hooks
 				L(retnLbl);
 			}
 		} patch{};
+		assert(patch.getSize() == size);
 
 		REL::safe_write(hook.address(), patch.getCode(), patch.getSize());
 	}

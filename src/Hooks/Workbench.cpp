@@ -22,22 +22,17 @@ namespace Hooks
 		}
 
 		const auto baseForm = a_refr->GetBaseObject();
-		const auto keywordForm = skyrim_cast<const RE::BGSKeywordForm*>(baseForm);
-		if (!keywordForm) {
+		const auto furniture = baseForm->As<RE::TESFurniture>();
+		if (!furniture) {
 			return false;
 		}
 
 		const auto dataHandler = RE::TESDataHandler::GetSingleton();
-		const auto idx_Dragonborn = dataHandler
-			? dataHandler->GetModIndex("Dragonborn.esm"sv)
-			: std::nullopt;
+		const auto DLC2StaffEnchanter = dataHandler->LookupForm<RE::BGSKeyword>(
+			0x17738,
+			"Dragonborn.esm"sv);
 
-		if (!idx_Dragonborn) {
-			return false;
-		}
-
-		const RE::FormID DLC2StaffEnchanter = (*idx_Dragonborn << 24) | 0x17738;
-		return keywordForm->HasKeyword(DLC2StaffEnchanter);
+		return furniture->HasKeyword(DLC2StaffEnchanter);
 	}
 
 	static void ShowStaffCraftingMenu()

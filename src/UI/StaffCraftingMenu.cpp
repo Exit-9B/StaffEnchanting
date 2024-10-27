@@ -82,7 +82,10 @@ namespace UI
 		}
 
 		UpdateInterface();
-		UpdateBottomBar(RE::ActorValue::kEnchanting);
+		const auto skill = workbench->workBenchData.usesSkill;
+		if (skill >= RE::ActorValue::kOneHanded && skill <= RE::ActorValue::kEnchanting) {
+			UpdateBottomBar(skill.get());
+		}
 
 		const auto HelpStaffEnchantingShort = Forms::StaffEnchanting::HelpStaffEnchantingShort();
 		RE::TutorialMenu::OpenTutorialMenu(HelpStaffEnchantingShort);
@@ -189,14 +192,13 @@ namespace UI
 		assert(playerBase);
 		const auto spellData = playerBase->actorEffects;
 		assert(spellData);
-		for (const auto spell : std::span(spellData->spells, spellData->numSpells)) {
-			if (IsSpellValid(spell)) {
-				const auto& entry = listEntries.emplace_back(RE::make_smart<SpellEntry>(spell));
-				entry->enabled = CanCraftWithSpell(spell);
-			}
-		}
 
-		for (const auto spell : playerRef->addedSpells) {
+		const auto spellLists = {
+			std::span(spellData->spells, spellData->numSpells),
+			std::span(playerRef->addedSpells)
+		};
+
+		for (const auto spell : std::views::join(spellLists)) {
 			if (IsSpellValid(spell)) {
 				const auto& entry = listEntries.emplace_back(RE::make_smart<SpellEntry>(spell));
 				entry->enabled = CanCraftWithSpell(spell);
@@ -842,8 +844,9 @@ namespace UI
 			true);
 
 		const auto skill = workbench->workBenchData.usesSkill;
-		if (skill.underlying() - 6u <= 17u) {
+		if (skill >= RE::ActorValue::kOneHanded && skill <= RE::ActorValue::kEnchanting) {
 			playerRef->UseSkill(skill.get(), a_constructible->CalcSkillUse());
+			UpdateBottomBar(skill.get());
 		}
 
 		const auto workbenchRef = playerRef->currentProcess->GetOccupiedFurniture().get();
@@ -959,10 +962,15 @@ namespace UI
 				nullptr);
 		}
 
+		player->AddChange(
+			RE::TESObjectREFR::ChangeFlags::kInventory |
+			RE::TESObjectREFR::ChangeFlags::kItemExtraData |
+			RE::TESObjectREFR::ChangeFlags::kLeveledInventory);
+
 		RE::SendHUDMessage::ShowInventoryChangeMessage(staff, 1, true, true, newName);
 
 		const auto skill = workbench->workBenchData.usesSkill;
-		if (skill.underlying() - 6u <= 17u) {
+		if (skill >= RE::ActorValue::kOneHanded && skill <= RE::ActorValue::kEnchanting) {
 			player->UseSkill(skill.get(), 20.0f);
 			UpdateBottomBar(skill.get());
 		}
@@ -1008,6 +1016,12 @@ namespace UI
 		}
 
 		spell.reset();
+
+		if (morpholith) {
+			morpholith->selected = false;
+		}
+
+		morpholith.reset();
 	}
 
 	void StaffCraftingMenu::Selection::Toggle(
