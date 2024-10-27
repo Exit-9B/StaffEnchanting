@@ -326,6 +326,13 @@ namespace UI
 
 	bool StaffCraftingMenu::CanCraftWithSpell(const RE::SpellItem* a_spell)
 	{
+		if (selected.morpholith) {
+			const auto morpholithCharge = GetEntryDataSoulCharge(selected.morpholith->data.get());
+			return morpholithCharge > 0.0f
+				? morpholithCharge >= a_spell->CalculateMagickaCost(nullptr)
+				: heartStoneCount >= GetSpellHeartstones(a_spell);
+
+		}
 		return heartStoneCount >= GetSpellHeartstones(a_spell) ||
 			maxSoulSize >= a_spell->CalculateMagickaCost(nullptr);
 	}
@@ -819,6 +826,17 @@ namespace UI
 			assert(spellEntry && spellEntry->data);
 
 			return CanCraftWithSpell(spellEntry->data);
+		}
+		else if (a_entry->filterFlag == FilterFlag::Morpholith && selected.spell) {
+			const auto itemEntry = static_cast<const ItemEntry*>(a_entry.get());
+			const auto& morpholithEntry = itemEntry->data.get();
+			if (!morpholithEntry)
+				return false;
+
+			const auto morpholithCharge = GetEntryDataSoulCharge(morpholithEntry);
+			return morpholithCharge > 0.0f
+				? morpholithCharge > selected.spell->data->CalculateMagickaCost(nullptr)
+				: heartStoneCount >= GetSpellHeartstones(selected.spell->data);
 		}
 
 		// TODO
