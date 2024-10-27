@@ -304,6 +304,10 @@ namespace UI
 
 	std::int32_t StaffCraftingMenu::GetSpellHeartstones(const RE::SpellItem* a_spell)
 	{
+		if (!a_spell) {
+			return 0;
+		}
+
 		auto evilSpell = const_cast<RE::SpellItem*>(a_spell);
 		if (!evilSpell) {
 			return 1;
@@ -353,7 +357,8 @@ namespace UI
 		if (selected.morpholith) {
 			float response = GetEntryDataSoulCharge(selected.morpholith->data.get());
 			if (response < 0.0f) {
-				chargeAmount = static_cast<float>(*"iSoulLevelValueGrand"_gs);
+				const auto count = (GetSpellHeartstones(selected.spell->data) - 1) * 1000;
+				chargeAmount = static_cast<float>(std::max(heartstoneCharge, count));
 			}
 			else {
 				chargeAmount = response;
@@ -373,7 +378,8 @@ namespace UI
 				float response = GetEntryDataSoulCharge(entryData);
 
 				if (response < 0.0f) {
-					chargeAmount = static_cast<float>(*"iSoulLevelValueGrand"_gs);
+					const auto count = (GetSpellHeartstones(selected.spell->data) - 1) * 1000;
+					chargeAmount = static_cast<float>(std::max(heartstoneCharge, count));
 				}
 				if (response > chargeAmount) {
 					chargeAmount = response;
