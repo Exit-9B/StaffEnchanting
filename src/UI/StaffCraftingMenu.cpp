@@ -304,32 +304,12 @@ namespace UI
 
 	std::int32_t StaffCraftingMenu::GetSpellHeartstones(const RE::SpellItem* a_spell)
 	{
-		auto evilSpell = const_cast<RE::SpellItem*>(a_spell);
-		if (!evilSpell) {
-			return 1;
-		}
+		return GetSpellLevel(a_spell) + 1;
+	}
 
-		const auto costliest = evilSpell->GetCostliestEffectItem();
-		if (!costliest || !costliest->baseEffect) {
-			return 1;
-		}
-
-		const std::int32_t level = costliest->baseEffect->GetMinimumSkillLevel();
-		if (level < 25) {
-			return 1;
-		}
-		else if (level < 50) {
-			return 2;
-		}
-		else if (level < 75) {
-			return 3;
-		}
-		else if (level < 100) {
-			return 4;
-		}
-		else {
-			return 5;
-		}
+	float StaffCraftingMenu::GetDefaultCharge(const RE::SpellItem* a_spell)
+	{
+		return std::max(500.0f, util::to_underlying(GetSpellLevel(a_spell)) * 1000.0f);
 	}
 
 	bool StaffCraftingMenu::MagicEffectHasDescription(RE::EffectSetting* a_effect)
@@ -351,34 +331,27 @@ namespace UI
 	void StaffCraftingMenu::UpdateEnchantmentCharge()
 	{
 		if (selected.morpholith) {
-			float response = GetEntryDataSoulCharge(selected.morpholith->data.get());
-			if (response < 0.0f) {
-				chargeAmount = static_cast<float>(*"iSoulLevelValueGrand"_gs);
-			}
-			else {
-				chargeAmount = response;
-			}
+			const auto& entryData = selected.morpholith->data;
+			const auto soulValue = GetEntryDataSoulCharge(entryData.get());
+			chargeAmount = soulValue > 0.0f ? soulValue : GetDefaultCharge(selected.spell->data);
 		}
 		else {
+			float maxCharge = std::numeric_limits<float>::lowest();
 			for (const auto& entry : listEntries) {
-				if (entry->filterFlag != FilterFlag::Morpholith)
+				if (!entry || entry->filterFlag != FilterFlag::Morpholith)
 					continue;
 				const auto itemEntry = static_cast<const ItemEntry*>(entry.get());
-				if (!itemEntry)
-					continue;
-				const auto entryData = itemEntry->data.get();
+				const auto& entryData = itemEntry->data;
 				if (!entryData)
 					continue;
-
-				float response = GetEntryDataSoulCharge(entryData);
-
-				if (response < 0.0f) {
-					chargeAmount = static_cast<float>(*"iSoulLevelValueGrand"_gs);
-				}
-				if (response > chargeAmount) {
-					chargeAmount = response;
-				}
+				const auto soulValue = GetEntryDataSoulCharge(entryData.get());
+				const auto itemCharge = soulValue > 0.0f
+					? soulValue
+					: GetDefaultCharge(selected.spell->data);
+				maxCharge = std::max(maxCharge, itemCharge);
 			}
+
+			chargeAmount = maxCharge > 0.0f ? maxCharge : GetDefaultCharge(selected.spell->data);
 		}
 	}
 
@@ -409,7 +382,6 @@ namespace UI
 		ClearEffects();
 
 		if (selected.spell) {
-			// TODO: calculate correct charge amount
 			UpdateEnchantmentCharge();
 			for (const auto& effect : selected.spell->data->effects) {
 				auto& createdEffect = createdEffects.emplace_back();
@@ -607,6 +579,40 @@ namespace UI
 			}
 		}
 		return hasDescription;
+	}
+
+	StaffCraftingMenu::SpellLevel StaffCraftingMenu::GetSpellLevel(const RE::SpellItem* a_spell)
+	{
+		if (!a_spell) {
+			return SpellLevel::kNovice;
+		}
+
+		auto evilSpell = const_cast<RE::SpellItem*>(a_spell);
+		if (!evilSpell) {
+			return SpellLevel::kNovice;
+		}
+
+		const auto costliest = evilSpell->GetCostliestEffectItem();
+		if (!costliest || !costliest->baseEffect) {
+			return SpellLevel::kNovice;
+		}
+
+		const std::int32_t level = costliest->baseEffect->GetMinimumSkillLevel();
+		if (level < 25) {
+			return SpellLevel::kNovice;
+		}
+		else if (level < 50) {
+			return SpellLevel::kApprentice;
+		}
+		else if (level < 75) {
+			return SpellLevel::kAdept;
+		}
+		else if (level < 100) {
+			return SpellLevel::kExpert;
+		}
+		else {
+			return SpellLevel::kMaster;
+		}
 	}
 
 	void StaffCraftingMenu::UpdateInterface()
