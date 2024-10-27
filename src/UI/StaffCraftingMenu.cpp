@@ -287,6 +287,20 @@ namespace UI
 		}
 	}
 
+	bool StaffCraftingMenu::CanSetOverrideName(RE::InventoryEntryData* a_item)
+	{
+		const auto extraLists = a_item ? a_item->extraLists : nullptr;
+		if (extraLists && !extraLists->empty()) {
+			const auto extraList = extraLists->front();
+			const auto extraTextData = extraList ? extraList->GetExtraTextDisplayData() : nullptr;
+			if (extraTextData && (extraTextData->displayNameText || extraTextData->ownerQuest)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	float StaffCraftingMenu::GetEntryDataSoulCharge(RE::InventoryEntryData* a_entry)
 	{
 		switch (a_entry->GetSoulLevel()) {
@@ -650,19 +664,33 @@ namespace UI
 
 	void StaffCraftingMenu::UpdateInterface()
 	{
-		// TODO: see 51459
 		if (craftItemPreview) {
 			UpdateItemCard(craftItemPreview.get());
 		}
 		else if (hasHighlight && highlightIndex < listEntries.size()) {
 			listEntries[highlightIndex]->ShowInItemCard(this);
 		}
-		else {
-			UpdateItemCard(nullptr);
-		}
 
-		if (currentCategory == Category::Recipe) {
-			UpdateIngredients();
+		UpdateIngredients();
+
+		if (buttonText.IsArray()) {
+			const char* auxText = "";
+			if (currentCategory != Category::Recipe) {
+				if (selected.staff && selected.morpholith && selected.spell) {
+					if (CanSetOverrideName(craftItemPreview.get())) {
+						auxText = *"sRenameItem"_gs;
+					}
+				}
+			}
+
+			buttonText.SetElement(Button::Aux, auxText);
+
+			const char* const craftText = currentCategory == Category::Recipe
+				? *"sCreate"_gs
+				: *"sCraft"_gs;
+			buttonText.SetElement(Button::Craft, craftText);
+
+			menu.Invoke("UpdateButtonText");
 		}
 	}
 
@@ -1042,15 +1070,8 @@ namespace UI
 
 	void StaffCraftingMenu::EditItemName()
 	{
-		if (!craftItemPreview)
+		if (!CanSetOverrideName(craftItemPreview.get())) {
 			return;
-		const auto extraLists = craftItemPreview->extraLists;
-		if (extraLists && !extraLists->empty()) {
-			const auto extraList = extraLists->front();
-			const auto extraTextData = extraList ? extraList->GetExtraTextDisplayData() : nullptr;
-			if (extraTextData && (extraTextData->displayNameText || extraTextData->ownerQuest)) {
-				return;
-			}
 		}
 
 		const auto maxString = *"uMaxCustomItemNameLength:Interface"_ini;

@@ -114,6 +114,7 @@ namespace UI
 			FilterFlag a_flags = FilterFlag::All,
 			bool a_fullRebuild = false);
 
+		[[nodiscard]] static bool CanSetOverrideName(RE::InventoryEntryData* a_item);
 		[[nodiscard]] static float GetEntryDataSoulCharge(RE::InventoryEntryData* a_entry);
 		[[nodiscard]] static bool MagicEffectHasDescription(RE::EffectSetting* a_effect);
 		[[nodiscard]] static bool IsSpellValid(const RE::SpellItem* a_spell);
