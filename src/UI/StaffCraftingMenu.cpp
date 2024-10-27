@@ -302,38 +302,10 @@ namespace UI
 		return -1.0f;
 	}
 
-	std::int32_t StaffCraftingMenu::GetSpellHeartstones(const RE::SpellItem* a_spell)
+	std::int32_t StaffCraftingMenu::GetSpellHeartstones(
+		const RE::SpellItem* a_spell)
 	{
-		if (!a_spell) {
-			return 0;
-		}
-
-		auto evilSpell = const_cast<RE::SpellItem*>(a_spell);
-		if (!evilSpell) {
-			return 1;
-		}
-
-		const auto costliest = evilSpell->GetCostliestEffectItem();
-		if (!costliest || !costliest->baseEffect) {
-			return 1;
-		}
-
-		const std::int32_t level = costliest->baseEffect->GetMinimumSkillLevel();
-		if (level < 25) {
-			return 1;
-		}
-		else if (level < 50) {
-			return 2;
-		}
-		else if (level < 75) {
-			return 3;
-		}
-		else if (level < 100) {
-			return 4;
-		}
-		else {
-			return 5;
-		}
+		return GetSpellLevel(a_spell) + 1;
 	}
 
 	bool StaffCraftingMenu::MagicEffectHasDescription(RE::EffectSetting* a_effect)
@@ -357,7 +329,7 @@ namespace UI
 		if (selected.morpholith) {
 			float response = GetEntryDataSoulCharge(selected.morpholith->data.get());
 			if (response < 0.0f) {
-				const auto count = (GetSpellHeartstones(selected.spell->data) - 1) * 1000;
+				const auto count = GetSpellLevel(selected.spell->data) * 1000;
 				chargeAmount = static_cast<float>(std::max(heartstoneCharge, count));
 			}
 			else {
@@ -378,7 +350,7 @@ namespace UI
 				float response = GetEntryDataSoulCharge(entryData);
 
 				if (response < 0.0f) {
-					const auto count = (GetSpellHeartstones(selected.spell->data) - 1) * 1000;
+					const auto count = GetSpellLevel(selected.spell->data) * 1000;
 					chargeAmount = static_cast<float>(std::max(heartstoneCharge, count));
 				}
 				if (response > chargeAmount) {
@@ -611,6 +583,40 @@ namespace UI
 			}
 		}
 		return hasDescription;
+	}
+
+	StaffCraftingMenu::SpellLevel StaffCraftingMenu::GetSpellLevel(const RE::SpellItem* a_spell)
+	{
+		if (!a_spell) {
+			return SpellLevel::kNovice;
+		}
+
+		auto evilSpell = const_cast<RE::SpellItem*>(a_spell);
+		if (!evilSpell) {
+			return SpellLevel::kNovice;
+		}
+
+		const auto costliest = evilSpell->GetCostliestEffectItem();
+		if (!costliest || !costliest->baseEffect) {
+			return SpellLevel::kNovice;
+		}
+
+		const std::int32_t level = costliest->baseEffect->GetMinimumSkillLevel();
+		if (level < 25) {
+			return SpellLevel::kNovice;
+		}
+		else if (level < 50) {
+			return SpellLevel::kApprentice;
+		}
+		else if (level < 75) {
+			return SpellLevel::kAdept;
+		}
+		else if (level < 100) {
+			return SpellLevel::kExpert;
+		}
+		else {
+			return SpellLevel::kMaster;
+		}
 	}
 
 	void StaffCraftingMenu::UpdateInterface()

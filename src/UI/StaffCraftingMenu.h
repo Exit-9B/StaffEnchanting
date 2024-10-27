@@ -23,6 +23,15 @@ namespace UI
 			All = 0x7F,
 		};
 
+		enum SpellLevel
+		{
+			kNovice = 0,
+			kApprentice = 1,
+			kAdept = 2,
+			kExpert = 3,
+			kMaster = 4,
+		};
+
 		struct CATEGORY
 		{
 			enum Category
@@ -96,6 +105,7 @@ namespace UI
 		[[nodiscard]] static float GetEntryDataSoulCharge(RE::InventoryEntryData* a_entry);
 		[[nodiscard]] static bool MagicEffectHasDescription(RE::EffectSetting* a_effect);
 		[[nodiscard]] static bool IsSpellValid(const RE::SpellItem* a_spell);
+		[[nodiscard]] static SpellLevel GetSpellLevel(const RE::SpellItem* a_spell);
 		[[nodiscard]] static std::int32_t GetSpellHeartstones(const RE::SpellItem* a_spell);
 		[[nodiscard]] bool CanCraftWithSpell(const RE::SpellItem* a_spell);
 
