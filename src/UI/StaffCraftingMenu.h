@@ -114,6 +114,7 @@ namespace UI
 			FilterFlag a_flags = FilterFlag::All,
 			bool a_fullRebuild = false);
 
+		[[nodiscard]] static bool CanSetOverrideName(RE::InventoryEntryData* a_item);
 		[[nodiscard]] static float GetEntryDataSoulCharge(RE::InventoryEntryData* a_entry);
 		[[nodiscard]] static bool MagicEffectHasDescription(RE::EffectSetting* a_effect);
 		[[nodiscard]] static bool IsSpellValid(const RE::SpellItem* a_spell);
@@ -136,7 +137,7 @@ namespace UI
 		void ClearSelection();
 		void PopulateEntryList(bool a_fullRebuild = false);
 
-		void UpdateInterface();
+		void UpdateTextElements();
 
 		[[nodiscard]] static std::string TranslateFallback(
 			const std::string& a_key,
@@ -154,6 +155,7 @@ namespace UI
 		{
 		public:
 			[[nodiscard]] constexpr bool Empty() const { return !staff && !morpholith && !spell; }
+			[[nodiscard]] constexpr bool Complete() const { return staff && morpholith && spell; }
 			void Clear();
 			void Toggle(const RE::BSTSmartPointer<CategoryListEntry>& a_entry);
 

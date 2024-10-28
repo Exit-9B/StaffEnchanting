@@ -81,7 +81,7 @@ namespace UI
 			PopulateEntryList();
 		}
 
-		UpdateInterface();
+		UpdateTextElements();
 		const auto skill = workbench->workBenchData.usesSkill;
 		if (skill >= RE::ActorValue::kOneHanded && skill <= RE::ActorValue::kEnchanting) {
 			UpdateBottomBar(skill.get());
@@ -291,7 +291,7 @@ namespace UI
 		}
 
 		customName.clear();
-		UpdateInterface();
+		UpdateTextElements();
 	}
 
 	void StaffCraftingMenu::UpdateEnabledEntries(FilterFlag a_flags, bool a_fullRebuild)
@@ -305,6 +305,20 @@ namespace UI
 		if (menu.IsObject()) {
 			menu.Invoke("UpdateItemList", std::to_array<RE::GFxValue>({ a_fullRebuild }));
 		}
+	}
+
+	bool StaffCraftingMenu::CanSetOverrideName(RE::InventoryEntryData* a_item)
+	{
+		const auto extraLists = a_item ? a_item->extraLists : nullptr;
+		if (extraLists && !extraLists->empty()) {
+			const auto extraList = extraLists->front();
+			const auto extraTextData = extraList ? extraList->GetExtraTextDisplayData() : nullptr;
+			if (extraTextData && (extraTextData->displayNameText || extraTextData->ownerQuest)) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	float StaffCraftingMenu::GetEntryDataSoulCharge(RE::InventoryEntryData* a_entry)
@@ -685,21 +699,35 @@ namespace UI
 		}
 	}
 
-	void StaffCraftingMenu::UpdateInterface()
+	void StaffCraftingMenu::UpdateTextElements()
 	{
-		// TODO: see 51459
-		if (craftItemPreview) {
+		if (craftItemPreview &&
+			(currentCategory == Category::Staff || currentCategory == Category::Spell ||
+			 selected.Complete())) {
+
 			UpdateItemCard(craftItemPreview.get());
 		}
 		else if (hasHighlight && highlightIndex < listEntries.size()) {
 			listEntries[highlightIndex]->ShowInItemCard(this);
 		}
-		else {
-			UpdateItemCard(nullptr);
+		else if (craftItemPreview) {
+			UpdateItemCard(craftItemPreview.get());
 		}
 
-		if (currentCategory == Category::Recipe) {
-			UpdateIngredients();
+		UpdateIngredients();
+
+		if (buttonText.IsArray()) {
+			const bool isEnchanting = currentCategory != Category::Recipe;
+			const bool canRename = isEnchanting && selected.Complete() &&
+				CanSetOverrideName(craftItemPreview.get());
+
+			const auto auxText = canRename ? *"sRenameItem"_gs : "";
+			buttonText.SetElement(Button::Aux, auxText);
+
+			const auto craftText = isEnchanting ? *"sCraft"_gs : *"sCreate"_gs;
+			buttonText.SetElement(Button::Craft, craftText);
+
+			menu.Invoke("UpdateButtonText");
 		}
 	}
 
@@ -854,7 +882,7 @@ namespace UI
 				UpdateEnchantment();
 				// TODO: display error if insufficient charge
 
-				UpdateInterface();
+				UpdateTextElements();
 				UpdateEnabledEntries();
 				UpdateItemList(listEntries, false);
 				UpdateIngredients();
@@ -1080,15 +1108,8 @@ namespace UI
 
 	void StaffCraftingMenu::EditItemName()
 	{
-		if (!craftItemPreview)
+		if (!CanSetOverrideName(craftItemPreview.get())) {
 			return;
-		const auto extraLists = craftItemPreview->extraLists;
-		if (extraLists && !extraLists->empty()) {
-			const auto extraList = extraLists->front();
-			const auto extraTextData = extraList ? extraList->GetExtraTextDisplayData() : nullptr;
-			if (extraTextData && (extraTextData->displayNameText || extraTextData->ownerQuest)) {
-				return;
-			}
 		}
 
 		const auto maxString = *"uMaxCustomItemNameLength:Interface"_ini;
