@@ -146,7 +146,7 @@ namespace UI
 			? workbench->HasKeyword(allowSoulGemsKwd)
 			: false;
 
-		std::vector<RE::BGSKeyword*> acceptedMorpholiths{};
+		std::vector<const RE::BGSKeyword*> acceptedMorpholiths{};
 		for (const auto keyword : std::span(workbench->keywords, workbench->numKeywords)) {
 			if (!keyword)
 				continue;
@@ -359,21 +359,15 @@ namespace UI
 
 	bool StaffCraftingMenu::IsValidMorpholith(
 		const RE::BGSKeywordForm* a_obj,
-		const std::vector<RE::BGSKeyword*>& a_vec)
+		const std::vector<const RE::BGSKeyword*>& a_vec)
 	{
 		if (a_vec.empty()) {
 			return false;
 		}
 
-		for (const RE::BGSKeyword* const keyword :
-			 std::span(a_obj->keywords, a_obj->numKeywords)) {
-			if (!keyword)
-				continue;
-
-			for (const auto recordedKeyword : a_vec) {
-				if (recordedKeyword == keyword) {
-					return true;
-				}
+		for (const auto recordedKeyword : a_vec) {
+			if (a_obj->HasKeyword(recordedKeyword)) {
+				return true;
 			}
 		}
 		return false;

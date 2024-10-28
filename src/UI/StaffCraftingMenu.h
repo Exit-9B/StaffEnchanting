@@ -124,7 +124,7 @@ namespace UI
 		[[nodiscard]] bool CanCraftWithSpell(const RE::SpellItem* a_spell) const;
 		[[nodiscard]] static bool IsValidMorpholith(
 			const RE::BGSKeywordForm* a_obj,
-			const std::vector<RE::BGSKeyword*>& a_vec);
+			const std::vector<const RE::BGSKeyword*>& a_vec);
 
 		void UpdateEnchantmentCharge();
 		void UpdateEnchantment();
