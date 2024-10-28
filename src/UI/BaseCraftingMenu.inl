@@ -108,16 +108,7 @@ namespace UI
 	template <typename Impl>
 	inline void BaseCraftingMenu<Impl>::Update(const RE::BSUIMessageData* a_data)
 	{
-		if (!a_data) {
-			return;
-		}
-
-		const auto& ev = a_data->fixedStr;
-		if (ev != "VirtualKeyboardCancelled"sv && ev != "VirtualKeyboardDone"sv) {
-			return;
-		}
-
-		// TODO: virtual keyboard events
+		GetImpl()->ProcessUpdate(a_data);
 	}
 
 	template <typename Impl>

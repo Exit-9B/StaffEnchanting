@@ -815,6 +815,95 @@ namespace UI
 		return false;
 	}
 
+	void StaffCraftingMenu::ProcessUpdate(const RE::BSUIMessageData* a_data)
+	{
+		if (!a_data) {
+			return;
+		}
+
+		const auto& ev = a_data->fixedStr;
+		if (ev != "VirtualKeyboardCancelled"sv && ev != "VirtualKeyboardDone"sv) {
+			return;
+		}
+
+		const auto str = a_data->str ? a_data->str->c_str() : nullptr;
+		const auto scaleformManager = RE::BSScaleformManager::GetSingleton();
+		const bool isValid = a_data->str && scaleformManager->IsValidName(str);
+		const bool cancelled = ev == "VirtualKeyboardCancelled"sv;
+
+		const auto text = (isValid && !cancelled) ? str : nullptr;
+		TextEntered(text);
+
+		if (!cancelled && !isValid) {
+			RE::ControlMap::GetSingleton()->AllowTextInput(true);
+
+			const bool usingVirtualKeyboard =
+				RE::BSWin32SystemUtility::GetSingleton()->isRunningOnSteamDeck;
+
+			if (usingVirtualKeyboard) {
+				ShowVirtualKeyboard();
+			}
+		}
+	}
+
+	void StaffCraftingMenu::TextEntered(const char* a_text)
+	{
+		if (a_text) {
+			customName = a_text;
+
+			if (craftItemPreview) {
+				if (const auto extraLists = craftItemPreview->extraLists;
+					extraLists && !extraLists->empty()) {
+					RE::SetOverrideName(extraLists->front(), a_text);
+				}
+			}
+		}
+
+		RE::ControlMap::GetSingleton()->AllowTextInput(false);
+		UpdateTextElements();
+	}
+
+	void StaffCraftingMenu::ShowVirtualKeyboard()
+	{
+		static const auto doneCallback = +[](void*, const char* a_text)
+		{
+			const auto uiMessageQueue = RE::UIMessageQueue::GetSingleton();
+			if (!uiMessageQueue)
+				return;
+
+			const auto msgData = RE::UIMessageDataFactory::Create<RE::BSUIMessageData>();
+			msgData->fixedStr = "VirtualKeyboardDone"sv;
+			msgData->str = new RE::BSString(a_text);
+
+			uiMessageQueue->AddMessage(MENU_NAME, RE::UI_MESSAGE_TYPE::kUpdate, msgData);
+		};
+
+		static const auto cancelCallback = +[]()
+		{
+			const auto uiMessageQueue = RE::UIMessageQueue::GetSingleton();
+			if (!uiMessageQueue)
+				return;
+
+			const auto msgData = RE::UIMessageDataFactory::Create<RE::BSUIMessageData>();
+			msgData->fixedStr = "VirtualKeyboardCancelled"sv;
+
+			uiMessageQueue->AddMessage(MENU_NAME, RE::UI_MESSAGE_TYPE::kUpdate, msgData);
+		};
+
+		const auto device = RE::BSInputDeviceManager::GetSingleton()->GetVirtualKeyboard();
+		if (device) {
+			const RE::BSVirtualKeyboardDevice::kbInfo kbInfo{
+				.startingText = suggestedName.c_str(),
+				.doneCallback = doneCallback,
+				.cancelCallback = cancelCallback,
+				.userParam = nullptr,
+				.maxChars = "uMaxCustomItemNameLength:Interface"_ini.value_or(20),
+			};
+
+			device->Start(&kbInfo);
+		}
+	}
+
 	bool StaffCraftingMenu::RenderItem3DOnTop() const
 	{
 		return currentCategory != Category::Spell || craftItemPreview;
@@ -1112,11 +1201,20 @@ namespace UI
 			return;
 		}
 
-		const auto maxString = *"uMaxCustomItemNameLength:Interface"_ini;
 		RE::ControlMap::GetSingleton()->AllowTextInput(true);
-		menu.Invoke(
-			"EditItemName",
-			std::to_array<RE::GFxValue>({ suggestedName.c_str(), maxString }));
+
+		const bool
+			usingVirtualKeyboard = RE::BSWin32SystemUtility::GetSingleton()->isRunningOnSteamDeck;
+
+		if (usingVirtualKeyboard) {
+			ShowVirtualKeyboard();
+		}
+		else {
+			const auto maxString = "uMaxCustomItemNameLength:Interface"_ini.value_or(32);
+			menu.Invoke(
+				"EditItemName",
+				std::to_array<RE::GFxValue>({ suggestedName.c_str(), maxString }));
+		}
 	}
 
 	void StaffCraftingMenu::Selection::Clear()
