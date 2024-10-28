@@ -12,26 +12,6 @@ namespace RE
 		}
 	}
 
-	[[nodiscard]] inline std::int32_t GetInventoryItemCount(
-		const RE::TESObjectREFR* a_refr,
-		bool a_isViewingContainer = false,
-		bool a_playable = true)
-	{
-		using func_t = decltype(&GetInventoryItemCount);
-		REL::Relocation<func_t> func{ RE::Offset::TESObjectREFR::GetInventoryItemCount };
-		return func(a_refr, a_isViewingContainer, a_playable);
-	}
-
-	[[nodiscard]] inline RE::InventoryEntryData* GetInventoryItemAt(
-		const RE::TESObjectREFR* a_refr,
-		std::int32_t a_index,
-		bool a_isViewingContainer = false)
-	{
-		using func_t = decltype(&GetInventoryItemAt);
-		REL::Relocation<func_t> func{ RE::Offset::TESObjectREFR::GetInventoryItemAt };
-		return func(a_refr, a_index, a_isViewingContainer);
-	}
-
 	template <std::invocable<RE::IMessageBoxCallback::Message> F>
 	[[nodiscard]] RE::BSTSmartPointer<RE::IMessageBoxCallback> MakeMessageBoxCallback(
 		F&& a_callback)
@@ -62,41 +42,5 @@ namespace RE
 		}
 
 		return sound;
-	}
-
-	inline void SetOverrideName(RE::ExtraDataList* a_extraList, const char* a_name)
-	{
-		auto textData = a_extraList->GetByType<RE::ExtraTextDisplayData>();
-		if (!textData) {
-			textData = new RE::ExtraTextDisplayData();
-			a_extraList->Add(textData);
-		}
-
-		if (!textData->displayNameText && !textData->ownerQuest) {
-			textData->SetName(a_name);
-		}
-	}
-
-	inline RE::ExtraDataList* EnchantObject(
-		RE::InventoryChanges* a_inventoryChanges,
-		RE::TESBoundObject* a_obj,
-		RE::ExtraDataList* a_extraList,
-		RE::EnchantmentItem* a_enchantment,
-		uint16_t a_charge)
-	{
-		using func_t = decltype(&EnchantObject);
-		static REL::Relocation<func_t> func{ RE::Offset::InventoryChanges::EnchantObject };
-		return func(a_inventoryChanges, a_obj, a_extraList, a_enchantment, a_charge);
-	}
-
-	inline void RefreshEquippedActorValueCharge(
-		RE::Actor* a_actor,
-		const RE::TESForm* a_object,
-		const RE::ExtraDataList* a_extraList,
-		bool a_isLeft)
-	{
-		using func_t = decltype(&RefreshEquippedActorValueCharge);
-		static REL::Relocation<func_t> func{ RE::Offset::Actor::RefreshEquippedActorValueCharge };
-		return func(a_actor, a_object, a_extraList, a_isLeft);
 	}
 }
