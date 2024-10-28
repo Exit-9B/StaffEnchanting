@@ -81,7 +81,7 @@ namespace UI
 			PopulateEntryList();
 		}
 
-		UpdateInterface();
+		UpdateTextElements();
 		const auto skill = workbench->workBenchData.usesSkill;
 		if (skill >= RE::ActorValue::kOneHanded && skill <= RE::ActorValue::kEnchanting) {
 			UpdateBottomBar(skill.get());
@@ -271,7 +271,7 @@ namespace UI
 		}
 
 		customName.clear();
-		UpdateInterface();
+		UpdateTextElements();
 	}
 
 	void StaffCraftingMenu::UpdateEnabledEntries(FilterFlag a_flags, bool a_fullRebuild)
@@ -662,7 +662,7 @@ namespace UI
 		}
 	}
 
-	void StaffCraftingMenu::UpdateInterface()
+	void StaffCraftingMenu::UpdateTextElements()
 	{
 		if (craftItemPreview) {
 			UpdateItemCard(craftItemPreview.get());
@@ -845,7 +845,7 @@ namespace UI
 				UpdateEnchantment();
 				// TODO: display error if insufficient charge
 
-				UpdateInterface();
+				UpdateTextElements();
 				UpdateEnabledEntries();
 				UpdateItemList(listEntries, false);
 				UpdateIngredients();

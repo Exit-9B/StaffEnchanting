@@ -36,7 +36,7 @@ namespace UI
 			}
 		}
 
-		menu->UpdateInterface();
+		menu->UpdateTextElements();
 	}
 
 	bool StaffCraftingMenu::IsCategoryEmpty(Category a_category) const
@@ -92,7 +92,7 @@ namespace UI
 
 		const auto previousCategory = menu->currentCategory;
 		menu->currentCategory = category;
-		menu->UpdateInterface();
+		menu->UpdateTextElements();
 
 		const auto inventory3D = RE::Inventory3DManager::GetSingleton();
 		assert(inventory3D);
@@ -184,7 +184,7 @@ namespace UI
 		const auto controlMap = RE::ControlMap::GetSingleton();
 		controlMap->AllowTextInput(false);
 
-		menu->UpdateInterface();
+		menu->UpdateTextElements();
 	}
 
 	void StaffCraftingMenu::CloseMenu(const RE::FxDelegateArgs&)

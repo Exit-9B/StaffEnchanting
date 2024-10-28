@@ -134,7 +134,7 @@ namespace UI
 		void ClearSelection();
 		void PopulateEntryList(bool a_fullRebuild = false);
 
-		void UpdateInterface();
+		void UpdateTextElements();
 
 		[[nodiscard]] static std::string TranslateFallback(
 			const std::string& a_key,
