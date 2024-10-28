@@ -161,9 +161,9 @@ namespace UI
 			acceptedMorpholiths.push_back(keyword);
 		}
 
-		const auto itemCount = RE::GetInventoryItemCount(playerRef);
+		const auto itemCount = playerRef->GetInventoryItemCount();
 		for (const auto i : std::views::iota(0, itemCount)) {
-			std::unique_ptr<RE::InventoryEntryData> item{ RE::GetInventoryItemAt(playerRef, i) };
+			std::unique_ptr<RE::InventoryEntryData> item{ playerRef->GetInventoryItemAt(i) };
 			if (!item) {
 				continue;
 			}
@@ -468,7 +468,7 @@ namespace UI
 					static_cast<std::uint16_t>(chargeAmount),
 					false);
 
-				RE::SetOverrideName(extraList, suggestedName.c_str());
+				extraList->SetOverrideName(suggestedName.c_str());
 			}
 			else {
 				// InventoryEntryData does not take ownership, so we need to hold ownership.
@@ -477,9 +477,9 @@ namespace UI
 					createdEnchantment,
 					static_cast<std::uint16_t>(chargeAmount),
 					false);
-				craftItemPreview->AddExtraList(tempExtraList.get());
 
-				RE::SetOverrideName(tempExtraList.get(), suggestedName.c_str());
+				tempExtraList->SetOverrideName(suggestedName.c_str());
+				craftItemPreview->AddExtraList(tempExtraList.get());
 			}
 			UpdateItemPreview(std::move(craftItemPreview));
 		}
@@ -854,7 +854,7 @@ namespace UI
 			if (craftItemPreview) {
 				if (const auto extraLists = craftItemPreview->extraLists;
 					extraLists && !extraLists->empty()) {
-					RE::SetOverrideName(extraLists->front(), a_text);
+					extraLists->front()->SetOverrideName(a_text);
 				}
 			}
 		}
@@ -1103,14 +1103,18 @@ namespace UI
 		if (!player || !staff || !enchantment)
 			return;
 
+		const auto invChanges = player->GetInventoryChanges();
+		if (!invChanges) {
+			return;
+		}
+
 		RE::ExtraDataList* staffExtraList = nullptr;
 		if (const auto extraLists = selected.staff->data->extraLists;
 			extraLists && !extraLists->empty()) {
 			staffExtraList = extraLists->front();
 		}
 
-		RE::ExtraDataList* const enchantedExtraList = RE::EnchantObject(
-			player->GetInventoryChanges(),
+		RE::ExtraDataList* const enchantedExtraList = invChanges->EnchantObject(
 			staff,
 			staffExtraList,
 			enchantment,
@@ -1126,13 +1130,13 @@ namespace UI
 		else {
 			newName = customName.c_str();
 		}
-		RE::SetOverrideName(enchantedExtraList, newName);
+		enchantedExtraList->SetOverrideName(newName);
 
 		if (staffExtraList) {
 			const auto wornLeft = staffExtraList->HasType(RE::ExtraDataType::kWornLeft);
 			const auto worn = wornLeft || staffExtraList->HasType(RE::ExtraDataType::kWorn);
 			if (worn) {
-				RE::RefreshEquippedActorValueCharge(player, staff, staffExtraList, wornLeft);
+				player->RefreshEquippedActorValueCharge(staff, staffExtraList, wornLeft);
 			}
 		}
 

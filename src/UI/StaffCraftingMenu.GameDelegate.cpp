@@ -175,7 +175,7 @@ namespace UI
 				if (menu->craftItemPreview) {
 					if (const auto extraLists = menu->craftItemPreview->extraLists;
 						extraLists && !extraLists->empty()) {
-						RE::SetOverrideName(extraLists->front(), newName);
+						extraLists->front()->SetOverrideName(newName);
 					}
 				}
 			}
