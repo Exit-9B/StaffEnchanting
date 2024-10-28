@@ -664,11 +664,17 @@ namespace UI
 
 	void StaffCraftingMenu::UpdateTextElements()
 	{
-		if (craftItemPreview) {
+		if (craftItemPreview &&
+			(currentCategory == Category::Staff || currentCategory == Category::Spell ||
+			 (selected.staff && selected.morpholith && selected.spell))) {
+
 			UpdateItemCard(craftItemPreview.get());
 		}
 		else if (hasHighlight && highlightIndex < listEntries.size()) {
 			listEntries[highlightIndex]->ShowInItemCard(this);
+		}
+		else if (craftItemPreview) {
+			UpdateItemCard(craftItemPreview.get());
 		}
 
 		UpdateIngredients();
