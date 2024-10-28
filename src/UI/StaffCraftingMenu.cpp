@@ -969,7 +969,6 @@ namespace UI
 				}
 				UpdateItemPreview(std::move(itemPreview));
 				UpdateEnchantment();
-				// TODO: display error if insufficient charge
 
 				UpdateTextElements();
 				UpdateEnabledEntries();
@@ -1003,7 +1002,15 @@ namespace UI
 			const auto spellEntry = static_cast<const SpellEntry*>(a_entry.get());
 			assert(spellEntry && spellEntry->data);
 
-			return CanCraftWithSpell(spellEntry->data);
+			if (CanCraftWithSpell(spellEntry->data)) {
+				return true;
+			}
+			else {
+				if (a_showNotification) {
+					RE::SendHUDMessage::ShowHUDMessage(*"sEnchantInsufficientCharge"_gs);
+				}
+				return false;
+			}
 		}
 		else if (a_entry->filterFlag == FilterFlag::Morpholith && selected.spell) {
 			const auto itemEntry = static_cast<const ItemEntry*>(a_entry.get());
@@ -1013,13 +1020,20 @@ namespace UI
 
 			const auto morpholithCharge = GetEntryDataSoulCharge(morpholithEntry);
 			const auto morpholithCount = morpholithEntry->countDelta;
-			return morpholithCharge > 0.0f
+			const bool canCraft = morpholithCharge > 0.0f
 				? morpholithCharge > selected.spell->data->CalculateMagickaCost(nullptr)
 				: morpholithCount >= GetSpellHeartstones(selected.spell->data);
+			if (canCraft) {
+				return true;
+			}
+			else {
+				if (a_showNotification) {
+					RE::SendHUDMessage::ShowHUDMessage(*"sEnchantInsufficientCharge"_gs);
+				}
+				return false;
+			}
 		}
 
-		// TODO
-		(void)a_showNotification;
 		return true;
 	}
 
