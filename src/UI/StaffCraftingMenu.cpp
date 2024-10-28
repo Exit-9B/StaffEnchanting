@@ -815,8 +815,9 @@ namespace UI
 		return false;
 	}
 
-	void StaffCraftingMenu::ProcessUpdate(const RE::BSUIMessageData* a_data)
+	void StaffCraftingMenu::ProcessUpdate([[maybe_unused]] const RE::BSUIMessageData* a_data)
 	{
+#ifndef SKYRIMVR
 		if (!a_data) {
 			return;
 		}
@@ -844,6 +845,7 @@ namespace UI
 				ShowVirtualKeyboard();
 			}
 		}
+#endif
 	}
 
 	void StaffCraftingMenu::TextEntered(const char* a_text)
@@ -1221,8 +1223,9 @@ namespace UI
 
 		RE::ControlMap::GetSingleton()->AllowTextInput(true);
 
-		const bool
-			usingVirtualKeyboard = RE::BSWin32SystemUtility::GetSingleton()->isRunningOnSteamDeck;
+		const bool usingVirtualKeyboard = IF_SKYRIMSE(
+			RE::BSWin32SystemUtility::GetSingleton()->isRunningOnSteamDeck,
+			false);
 
 		if (usingVirtualKeyboard) {
 			ShowVirtualKeyboard();

@@ -22,6 +22,14 @@ namespace util
 	using SKSE::stl::to_underlying;
 }
 
+#ifndef SKYRIMVR
+#define IF_SKYRIMSE(a_ifSE, a_ifVR) a_ifSE
+#else
+#define IF_SKYRIMSE(a_ifSE, a_ifVR) a_ifVR
+#endif
+
+#define MAKE_OFFSET(a_idSE, a_offsetVR) IF_SKYRIMSE(REL::ID(a_idSE), REL::Offset(a_offsetVR))
+
 #define DLLEXPORT __declspec(dllexport)
 
 #include "Plugin.h"

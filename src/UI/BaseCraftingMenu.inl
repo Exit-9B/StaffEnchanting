@@ -168,7 +168,9 @@ namespace UI
 		assert(playerRef->currentProcess);
 		const auto furnitureRef = playerRef->currentProcess->GetOccupiedFurniture().get();
 		if (!furnitureRef ||
-			RE::BSFurnitureMarkerNode::GetNumFurnitureMarkers(furnitureRef->Get3D())) {
+			IF_SKYRIMSE(
+				RE::BSFurnitureMarkerNode::GetNumFurnitureMarkers(furnitureRef->Get3D()),
+				false)) {
 			if (playerRef->actorState1.sitSleepState == RE::SIT_SLEEP_STATE::kIsSitting) {
 				playerRef->InitiateGetUpPackage();
 			}

@@ -60,9 +60,15 @@ SKSEPlugin_Query(const SKSE::QueryInterface* a_skse, SKSE::PluginInfo* a_info)
 	}
 
 	const auto ver = a_skse->RuntimeVersion();
+#ifndef SKYRIMVR
 	if (ver < SKSE::RUNTIME_1_6_1130) {
 		return false;
 	}
+#else
+	if (ver != SKSE::RUNTIME_VR_1_4_15_1) {
+		return false;
+	}
+#endif
 
 	return true;
 }

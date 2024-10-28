@@ -34,24 +34,31 @@ set_target_properties(CommonLibSSE PROPERTIES
 	FOLDER External
 )
 
+set(COMMON_DATA_DIR "${PROJECT_SOURCE_DIR}/data/Common")
+if(NOT BUILD_SKYRIMVR)
+	set(GAME_DATA_DIR "${PROJECT_SOURCE_DIR}/data/SkyrimSE")
+else()
+	set(GAME_DATA_DIR "${PROJECT_SOURCE_DIR}/data/SkyrimVR")
+endif()
+
 install(
 	FILES
-		"${PROJECT_SOURCE_DIR}/data/StaffEnchanting.esp"
+		"${COMMON_DATA_DIR}/StaffEnchanting.esp"
 	DESTINATION
 		"."
 )
 
 install(
 	FILES
-		"${PROJECT_SOURCE_DIR}/data/Interface/Translations/StaffEnchanting_ENGLISH.txt"
+		"${COMMON_DATA_DIR}/Interface/Translations/StaffEnchanting_ENGLISH.txt"
 	DESTINATION
 		"Interface/Translations"
 )
 
-if(INSTALL_SKYUI_MENU)
+if(INSTALL_SKYUI_MENU AND NOT BUILD_SKYRIMVR)
 	install(
 		FILES
-			"${PROJECT_SOURCE_DIR}/data/Interface/StaffCraftingMenu.swf"
+			"${GAME_DATA_DIR}/Interface/StaffCraftingMenu.swf"
 		DESTINATION
 			"Interface"
 	)
