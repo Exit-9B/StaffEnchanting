@@ -146,24 +146,19 @@ namespace UI
 			? workbench->HasKeyword(allowSoulGemsKwd)
 			: false;
 
-		std::vector<std::string_view> acceptedMorpholiths{};
-		if (const auto
-				furnitureKwdForm = workbench ? workbench->As<RE::BGSKeywordForm>() : nullptr;
-			furnitureKwdForm) {
-			for (const auto keyword :
-				 std::span(furnitureKwdForm->keywords, furnitureKwdForm->numKeywords)) {
-				if (!keyword)
-					continue;
+		std::vector<RE::BGSKeyword*> acceptedMorpholiths{};
+		for (const auto keyword : std::span(workbench->keywords, workbench->numKeywords)) {
+			if (!keyword)
+				continue;
 
-				const auto str = std::string_view(keyword->formEditorID);
-				static constexpr auto prefix = "STENEnchanter_"sv;
-				if (str.size() <= prefix.size() ||
-					::_strnicmp(str.data(), prefix.data(), prefix.size()) != 0) {
-					continue;
-				}
-
-				acceptedMorpholiths.push_back(std::move(str.substr(prefix.size())));
+			const auto str = std::string_view(keyword->formEditorID);
+			static constexpr auto prefix = "EnchantMorpholith"sv;
+			if (str.size() <= prefix.size() ||
+				::_strnicmp(str.data(), prefix.data(), prefix.size()) != 0) {
+				continue;
 			}
+
+			acceptedMorpholiths.push_back(keyword);
 		}
 
 		const auto itemCount = RE::GetInventoryItemCount(playerRef);
@@ -364,23 +359,19 @@ namespace UI
 
 	bool StaffCraftingMenu::IsValidMorpholith(
 		const RE::BGSKeywordForm* a_obj,
-		const std::vector<std::string_view>& a_vec)
+		const std::vector<RE::BGSKeyword*>& a_vec)
 	{
+		if (a_vec.empty()) {
+			return false;
+		}
+
 		for (const RE::BGSKeyword* const keyword :
 			 std::span(a_obj->keywords, a_obj->numKeywords)) {
 			if (!keyword)
 				continue;
 
-			const auto str = std::string_view(keyword->formEditorID);
-			static constexpr auto prefix = "STENMorpholith_"sv;
-			if (str.size() <= prefix.size() ||
-				::_strnicmp(str.data(), prefix.data(), prefix.size()) != 0) {
-				continue;
-			}
-			const auto keywordEDID = str.substr(prefix.size());
-
-			for (const auto& recordedKeyword : a_vec) {
-				if (recordedKeyword == keywordEDID) {
+			for (const auto recordedKeyword : a_vec) {
+				if (recordedKeyword == keyword) {
 					return true;
 				}
 			}
