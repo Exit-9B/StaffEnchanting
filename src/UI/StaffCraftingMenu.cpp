@@ -666,7 +666,7 @@ namespace UI
 	{
 		if (craftItemPreview &&
 			(currentCategory == Category::Staff || currentCategory == Category::Spell ||
-			 (selected.staff && selected.morpholith && selected.spell))) {
+			 selected.Complete())) {
 
 			UpdateItemCard(craftItemPreview.get());
 		}
@@ -680,20 +680,14 @@ namespace UI
 		UpdateIngredients();
 
 		if (buttonText.IsArray()) {
-			const char* auxText = "";
-			if (currentCategory != Category::Recipe) {
-				if (selected.staff && selected.morpholith && selected.spell) {
-					if (CanSetOverrideName(craftItemPreview.get())) {
-						auxText = *"sRenameItem"_gs;
-					}
-				}
-			}
+			const bool isEnchanting = currentCategory != Category::Recipe;
+			const bool canRename = isEnchanting && selected.Complete() &&
+				CanSetOverrideName(craftItemPreview.get());
 
+			const auto auxText = canRename ? *"sRenameItem"_gs : "";
 			buttonText.SetElement(Button::Aux, auxText);
 
-			const char* const craftText = currentCategory == Category::Recipe
-				? *"sCreate"_gs
-				: *"sCraft"_gs;
+			const auto craftText = isEnchanting ? *"sCraft"_gs : *"sCreate"_gs;
 			buttonText.SetElement(Button::Craft, craftText);
 
 			menu.Invoke("UpdateButtonText");

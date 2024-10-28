@@ -152,6 +152,7 @@ namespace UI
 		{
 		public:
 			[[nodiscard]] constexpr bool Empty() const { return !staff && !morpholith && !spell; }
+			[[nodiscard]] constexpr bool Complete() const { return staff && morpholith && spell; }
 			void Clear();
 			void Toggle(const RE::BSTSmartPointer<CategoryListEntry>& a_entry);
 
