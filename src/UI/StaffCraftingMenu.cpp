@@ -117,7 +117,7 @@ namespace UI
 
 	void StaffCraftingMenu::PopulateEntryList(bool a_fullRebuild)
 	{
-		heartStoneCount = 0;
+		highestMorpholithCount = 0;
 		maxSoulSize = 0.0f;
 		listEntries.clear();
 		ClearSelection();
@@ -146,6 +146,21 @@ namespace UI
 			? workbench->HasKeyword(allowSoulGemsKwd)
 			: false;
 
+		std::vector<const RE::BGSKeyword*> acceptedMorpholiths{};
+		for (const auto keyword : std::span(workbench->keywords, workbench->numKeywords)) {
+			if (!keyword)
+				continue;
+
+			const auto str = std::string_view(keyword->formEditorID);
+			static constexpr auto prefix = "EnchantMorpholith"sv;
+			if (str.size() <= prefix.size() ||
+				::_strnicmp(str.data(), prefix.data(), prefix.size()) != 0) {
+				continue;
+			}
+
+			acceptedMorpholiths.push_back(keyword);
+		}
+
 		const auto itemCount = RE::GetInventoryItemCount(playerRef);
 		for (const auto i : std::views::iota(0, itemCount)) {
 			std::unique_ptr<RE::InventoryEntryData> item{ RE::GetInventoryItemAt(playerRef, i) };
@@ -164,8 +179,9 @@ namespace UI
 			}
 
 			auto filterFlag = FilterFlag::None;
+
 			if (!disallowHeartStones && object == DLC2HeartStone) {
-				heartStoneCount += item->countDelta;
+				highestMorpholithCount = std::max(highestMorpholithCount, item->countDelta);
 				filterFlag = FilterFlag::Morpholith;
 			}
 			else if (allowSoulGems && object->Is(RE::FormType::SoulGem)) {
@@ -175,12 +191,16 @@ namespace UI
 					filterFlag = FilterFlag::Morpholith;
 				}
 			}
-			else if (const auto weap = object->As<RE::TESObjectWEAP>()) {
-				if (weap->IsStaff() && !weap->formEnchanting &&
-					!weap->HasKeyword(MagicDisallowEnchanting)) {
+			else if (const auto weap = object->As<RE::TESObjectWEAP>(); weap && weap->IsStaff()) {
+				if (!weap->formEnchanting && !weap->HasKeyword(MagicDisallowEnchanting)) {
 
 					filterFlag = FilterFlag::Staff;
 				}
+			}
+			else if (const auto obj = object->As<RE::BGSKeywordForm>();
+					 obj && IsValidMorpholith(obj, acceptedMorpholiths)) {
+				highestMorpholithCount = std::max(highestMorpholithCount, item->countDelta);
+				filterFlag = FilterFlag::Morpholith;
 			}
 
 			if (filterFlag != FilterFlag::None) {
@@ -328,12 +348,29 @@ namespace UI
 	{
 		if (selected.morpholith) {
 			const auto morpholithCharge = GetEntryDataSoulCharge(selected.morpholith->data.get());
+			const auto morpholithCount = selected.morpholith->data->countDelta;
 			return morpholithCharge > 0.0f
 				? morpholithCharge >= CalculateSpellCost(a_spell)
-				: heartStoneCount >= GetSpellHeartstones(a_spell);
+				: morpholithCount >= GetSpellHeartstones(a_spell);
 		}
-		return heartStoneCount >= GetSpellHeartstones(a_spell) ||
+		return highestMorpholithCount >= GetSpellHeartstones(a_spell) ||
 			maxSoulSize >= CalculateSpellCost(a_spell);
+	}
+
+	bool StaffCraftingMenu::IsValidMorpholith(
+		const RE::BGSKeywordForm* a_obj,
+		const std::vector<const RE::BGSKeyword*>& a_vec)
+	{
+		if (a_vec.empty()) {
+			return false;
+		}
+
+		for (const auto recordedKeyword : a_vec) {
+			if (a_obj->HasKeyword(recordedKeyword)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	void StaffCraftingMenu::UpdateEnchantmentCharge()
@@ -858,9 +895,10 @@ namespace UI
 				return false;
 
 			const auto morpholithCharge = GetEntryDataSoulCharge(morpholithEntry);
+			const auto morpholithCount = morpholithEntry->countDelta;
 			return morpholithCharge > 0.0f
 				? morpholithCharge > selected.spell->data->CalculateMagickaCost(nullptr)
-				: heartStoneCount >= GetSpellHeartstones(selected.spell->data);
+				: morpholithCount >= GetSpellHeartstones(selected.spell->data);
 		}
 
 		// TODO

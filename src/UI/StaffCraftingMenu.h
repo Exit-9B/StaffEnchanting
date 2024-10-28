@@ -122,6 +122,9 @@ namespace UI
 		[[nodiscard]] static std::int32_t GetSpellHeartstones(const RE::SpellItem* a_spell);
 		[[nodiscard]] static float GetDefaultCharge(const RE::SpellItem* a_spell);
 		[[nodiscard]] bool CanCraftWithSpell(const RE::SpellItem* a_spell) const;
+		[[nodiscard]] static bool IsValidMorpholith(
+			const RE::BGSKeywordForm* a_obj,
+			const std::vector<const RE::BGSKeyword*>& a_vec);
 
 		void UpdateEnchantmentCharge();
 		void UpdateEnchantment();
@@ -196,7 +199,7 @@ namespace UI
 		bool exiting{ false };
 		bool hasHighlight{ false };
 		float maxSoulSize{ 0.0f };
-		std::int32_t heartStoneCount{ 0 };
+		std::int32_t highestMorpholithCount{ 0 };
 	};
 }
 
