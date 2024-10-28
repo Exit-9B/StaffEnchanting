@@ -83,6 +83,8 @@ namespace UI
 
 		bool ProcessUserEvent(const RE::BSFixedString& a_userEvent);
 
+		void ProcessUpdate(const RE::BSUIMessageData* a_data);
+
 		[[nodiscard]] bool RenderItem3DOnTop() const;
 
 	private:
@@ -138,6 +140,9 @@ namespace UI
 		void PopulateEntryList(bool a_fullRebuild = false);
 
 		void UpdateTextElements();
+
+		void TextEntered(const char* a_text);
+		void ShowVirtualKeyboard();
 
 		[[nodiscard]] static std::string TranslateFallback(
 			const std::string& a_key,
