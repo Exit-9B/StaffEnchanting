@@ -61,7 +61,7 @@ namespace Hooks
 
 				L(funcLbl);
 				dq(std::bit_cast<std::uintptr_t>(&Create::InitEnchantment));
-				nop(size - 0xA);
+				nop(size - 0x12);
 				L(retnLbl);
 			}
 		} patch{};
