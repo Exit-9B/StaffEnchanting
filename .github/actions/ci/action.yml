@@ -20,6 +20,7 @@ runs:
 
   steps:
   - name: Setup vcpkg
+    shell: pwsh
     run: |
       mkdir -p ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
       cd $env:VCPKG_INSTALLATION_ROOT
@@ -36,12 +37,15 @@ runs:
       key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('main/**/vcpkg.json', 'vcpkg-version.txt') }}
 
   - name: Configure CMake
+    shell: pwsh
     run: cmake --preset ${{ inputs.cmake-preset }} -B ${{ inputs.build-dir }} -Wno-deprecated
 
   - name: Build
+    shell: pwsh
     run: cmake --build ${{ github.workspace }}/${{ inputs.build-dir }} --config ${{ env.BUILD_TYPE }}
 
   - name: Install
+    shell: pwsh
     run: cmake --install ${{ github.workspace }}/${{ inputs.build-dir }} --config ${{ env.BUILD_TYPE }} --prefix ${{ github.workspace }}/${{ inputs.install-dir }}
 
   - name: Upload Artifact
