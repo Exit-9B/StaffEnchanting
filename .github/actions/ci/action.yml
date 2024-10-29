@@ -1,0 +1,55 @@
+name: 'Continuous Integration'
+description: 'Builds a project and uploads the output'
+inputs:
+  cmake-preset:
+    description: 'CMake preset'
+    required: true
+  build-dir:
+    description: 'Build directory'
+    required: false
+    default: 'build'
+  install-dir:
+    description: 'Install directory'
+    required: false
+    default: 'install'
+  artifact-name:
+    description: 'Artifact name'
+    required: true
+runs:
+  using: "composite"
+
+  steps:
+  - uses: actions/checkout@v4
+    with:
+      submodules: recursive
+
+  - name: Setup vcpkg
+    run: |
+      mkdir -p ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+      cd $env:VCPKG_INSTALLATION_ROOT
+      ./bootstrap-vcpkg.bat
+      ./vcpkg --version > ${{ github.workspace }}/vcpkg-version.txt
+
+  - name: Cache vcpkg
+    uses: actions/cache@v4
+    id: vcpkg-cache
+    env:
+      cache-name: vcpkg-cache
+    with:
+      path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}/*
+      key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('main/**/vcpkg.json', 'vcpkg-version.txt') }}
+
+  - name: Configure CMake
+    run: cmake --preset ${{ inputs.cmake-preset }} -B ${{ inputs.build-dir }} -Wno-deprecated
+
+  - name: Build
+    run: cmake --build ${{ github.workspace }}/${{ inputs.build-dir }} --config ${{ env.BUILD_TYPE }}
+
+  - name: Install
+    run: cmake --install ${{ github.workspace }}/${{ inputs.build-dir }} --config ${{ env.BUILD_TYPE }} --prefix ${{ github.workspace }}/${{ inputs.install-dir }}
+
+  - name: Upload Artifact
+    uses: actions/upload-artifact@v4
+    with:
+      name: ${{ inputs.artifact-name }}
+      path: ${{ github.workspace }}/${{ inputs.install-dir }}
