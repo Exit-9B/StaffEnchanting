@@ -33,13 +33,13 @@ namespace util
 	}
 
 	template <typename T = std::byte*>
-	inline auto MakeHook(REL::ID a_id, std::ptrdiff_t a_offset = 0)
+	inline auto GameAddress(REL::ID a_id, std::ptrdiff_t a_offset = 0)
 	{
 		return REL::Relocation<T>(a_id, a_offset);
 	}
 
 	template <typename T = std::byte*>
-	inline auto MakeHook(REL::Offset a_address, std::ptrdiff_t a_offset = 0)
+	inline auto GameAddress(REL::Offset a_address, std::ptrdiff_t a_offset = 0)
 	{
 		return REL::Relocation<T>(a_address.address() + a_offset);
 	}
