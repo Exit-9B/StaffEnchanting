@@ -471,15 +471,14 @@ namespace UI
 				extraList->SetOverrideName(suggestedName.c_str());
 			}
 			else {
-				// InventoryEntryData does not take ownership, so we need to hold ownership.
-				tempExtraList = std::make_unique<RE::ExtraDataList>();
-				tempExtraList->SetEnchantment(
+				const auto extraList = new RE::ExtraDataList();
+				extraList->SetEnchantment(
 					createdEnchantment,
 					static_cast<std::uint16_t>(chargeAmount),
 					false);
 
-				tempExtraList->SetOverrideName(suggestedName.c_str());
-				craftItemPreview->AddExtraList(tempExtraList.get());
+				extraList->SetOverrideName(suggestedName.c_str());
+				craftItemPreview->AddExtraList(extraList);
 			}
 			UpdateItemPreview(std::move(craftItemPreview));
 		}
@@ -957,14 +956,12 @@ namespace UI
 
 				std::unique_ptr<RE::InventoryEntryData> itemPreview;
 				if (selected.staff) {
-					// Vanilla EnchantConstructMenu would do a deep copy here, duplicating the
-					// extra lists. To avoid memory leaks, we prefer to use a shallow copy.
-					itemPreview = std::make_unique<RE::InventoryEntryData>(*selected.staff->data);
+					itemPreview = std::make_unique<RE::InventoryEntryData>();
+					itemPreview->DeepCopy(*selected.staff->data);
 					itemPreview->countDelta = 1;
 					if (itemPreview->IsWorn()) {
-						// Do not delete removed lists, since we do not have ownership.
-						itemPreview->SetWorn(false, true, false);
-						itemPreview->SetWorn(false, false, false);
+						itemPreview->SetWorn(false, true, true);
+						itemPreview->SetWorn(false, false, true);
 					}
 				}
 				UpdateItemPreview(std::move(itemPreview));
