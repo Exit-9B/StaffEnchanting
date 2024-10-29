@@ -17,6 +17,9 @@ jobs:
     runs-on: windows-latest
 
     steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
     - uses: ./.github/actions/ci
       with:
         cmake-preset: vs2022-windows
@@ -26,6 +29,9 @@ jobs:
     runs-on: windows-latest
 
     steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
     - uses: ./.github/actions/ci
       with:
         cmake-preset: vs2022-windows-vr

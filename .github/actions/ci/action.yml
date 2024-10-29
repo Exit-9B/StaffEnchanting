@@ -19,10 +19,6 @@ runs:
   using: "composite"
 
   steps:
-  - uses: actions/checkout@v4
-    with:
-      submodules: recursive
-
   - name: Setup vcpkg
     run: |
       mkdir -p ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
