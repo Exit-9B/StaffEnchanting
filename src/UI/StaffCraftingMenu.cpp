@@ -1053,7 +1053,7 @@ namespace UI
 
 		const auto skill = workbench->workBenchData.usesSkill;
 		if (skill >= RE::ActorValue::kOneHanded && skill <= RE::ActorValue::kEnchanting) {
-			playerRef->UseSkill(skill.get(), a_constructible->CalcSkillUse());
+			playerRef->UseSkill(skill.get(), 20.0f);
 			UpdateBottomBar(skill.get());
 		}
 
