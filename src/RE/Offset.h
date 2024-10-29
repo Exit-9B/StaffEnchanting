@@ -13,17 +13,17 @@ namespace RE
 
 		namespace MagicItemCreationHelpers
 		{
-			constexpr auto CreateNewEnchantment = MAKE_OFFSET(36178, 0x5A7E20);
+			constexpr auto CreateNewEnchantment = util::MakeOffset(36178, 0x5A7E20);
 		}
 
 		namespace TESEnchantableForm
 		{
-			constexpr auto GetFormBaseCharge = MAKE_OFFSET(14564, 0x1A0AF0);
+			constexpr auto GetFormBaseCharge = util::MakeOffset(14564, 0x1A0AF0);
 		}
 
 		namespace TESObjectREFR
 		{
-			constexpr auto ActivateCraftingWorkbench = MAKE_OFFSET(52941, 0x90B2D0);
+			constexpr auto ActivateCraftingWorkbench = util::MakeOffset(52941, 0x90B2D0);
 		}
 	}
 }

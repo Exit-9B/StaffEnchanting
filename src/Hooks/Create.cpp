@@ -10,7 +10,7 @@ namespace Hooks
 	void Create::Install()
 	{
 #ifndef SKYRIMVR
-		auto hook = REL::Relocation<std::uintptr_t>(
+		auto hook = util::MakeHook(
 			RE::Offset::MagicItemCreationHelpers::CreateNewEnchantment,
 			0x6B);
 
@@ -42,9 +42,7 @@ namespace Hooks
 
 		REL::safe_write(hook.address(), patch.getCode(), patch.getSize());
 #else
-		auto hook = REL::Relocation<std::uintptr_t>(
-			RE::Offset::BGSCreatedObjectManager::InitEnchantment,
-			0x26);
+		auto hook = util::MakeHook(RE::Offset::BGSCreatedObjectManager::InitEnchantment, 0x26);
 
 		static constexpr std::size_t size = 0x5E;
 
@@ -54,6 +52,9 @@ namespace Hooks
 		{
 			Patch() : Xbyak::CodeGenerator(size)
 			{
+				Xbyak::Label funcLbl;
+				Xbyak::Label retnLbl;
+
 				call(ptr[rip + funcLbl]);
 				jmp(retnLbl, T_SHORT);
 				nop(2);

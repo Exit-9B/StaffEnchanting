@@ -35,6 +35,7 @@ namespace
 	}
 }
 
+#ifndef SKYRIMVR
 extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []()
 {
 	SKSE::PluginVersionData v{};
@@ -47,6 +48,7 @@ extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []()
 
 	return v;
 }();
+#endif
 
 extern "C" DLLEXPORT bool SKSEAPI
 SKSEPlugin_Query(const SKSE::QueryInterface* a_skse, SKSE::PluginInfo* a_info)

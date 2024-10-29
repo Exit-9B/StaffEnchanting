@@ -17,6 +17,7 @@ include(SKSEPlugin)
 set(INSTALL_SKYUI_MENU ON CACHE BOOL "Install custom menu for SkyUI.")
 
 set(SKSE_USE_XBYAK ON)
+set(SKSE_SUPPORT_VR ON)
 
 SKSEPlugin_Add(
 	${PROJECT_NAME}
