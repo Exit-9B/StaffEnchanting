@@ -22,7 +22,7 @@
 							<description>Installs a Staff Enchanting menu based on the style of SkyUI.</description> 
 							<image path="FOMOD\Images\SkyUIRegular.jpg" /> 
 							<files> 
-								<folder source="Menu/SkyUI" destination="" priority="0" /> 
+								<folder source="Menu\SkyUI" destination="" priority="0" /> 
 							</files> 
 							<typeDescriptor> 
 								<dependencyType> 
