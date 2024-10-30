@@ -2,8 +2,8 @@
 
 #include "RE/Misc.h"
 #include "RE/Offset.h"
-#include "common/Forms.h"
 #include "Settings/JSONSettings.h"
+#include "common/Forms.h"
 
 namespace UI
 {
