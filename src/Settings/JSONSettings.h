@@ -12,7 +12,7 @@ namespace JSONSettings
 		}
 
 		void Read();
-		bool IsProhibitedSpell(const RE::SpellItem* a_spell);
+		[[nodiscard]] const bool IsProhibitedSpell(const RE::SpellItem* a_spell);
 
 	protected:
 		SettingsHolder() = default;

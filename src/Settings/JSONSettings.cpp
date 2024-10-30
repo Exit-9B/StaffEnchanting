@@ -87,17 +87,18 @@ namespace JSONSettings
 						continue;
 					}
 
-					if (std::ranges::find(excludedSpells, foundSpell) ==
-						std::ranges::end(excludedSpells)) {
-						excludedSpells.push_back(foundSpell);
+					const auto it = std::ranges::lower_bound(excludedSpells, foundSpell);
+					if (it == std::ranges::end(excludedSpells) || *it != foundSpell) {
+						excludedSpells.emplace(it, foundSpell);
 					}
 				}
 			}
 		}
 	}
 
-	bool SettingsHolder::IsProhibitedSpell(const RE::SpellItem* a_spell)
+	const bool SettingsHolder::IsProhibitedSpell(const RE::SpellItem* a_spell)
 	{
-		return std::ranges::find(excludedSpells, a_spell) != std::ranges::end(excludedSpells);
+		const auto it = std::ranges::lower_bound(excludedSpells, a_spell);
+		return it != std::ranges::end(excludedSpells) && *it == a_spell;
 	}
 }
