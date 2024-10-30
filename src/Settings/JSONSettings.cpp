@@ -1,7 +1,7 @@
 #include "JSONSettings.h"
 
-#include "json/json.h"
 #include "UI/StaffCraftingMenu.h"
+#include "json/json.h"
 
 namespace JSONSettings
 {
@@ -44,8 +44,7 @@ namespace JSONSettings
 
 	static RE::FormID GetSpellFormID(const std::string& a_identifier)
 	{
-		if (const auto splitID = Split(a_identifier);
-			splitID.size() == 2) {
+		if (const auto splitID = Split(a_identifier); splitID.size() == 2) {
 			if (!IsHex(splitID[1]))
 				return 0;
 			const RE::FormID localFormID = std::stoi(splitID[1], nullptr, 16);
@@ -105,8 +104,9 @@ namespace JSONSettings
 				continue;
 			}
 
-			for (const auto& entry : exclusions) {
-				if (const auto& entryText = entry.isString() ? entry.asString() : ""; !entryText.empty()) {
+			for (const auto& entry : JSONFile) {
+				if (const auto& entryText = entry.isString() ? entry.asString() : "";
+					!entryText.empty()) {
 					const auto FoundSpellID = GetSpellFormID(entryText);
 					if (FoundSpellID == 0) {
 						logger::warn("Failed to find spell {} in {}.", entryText, path);
