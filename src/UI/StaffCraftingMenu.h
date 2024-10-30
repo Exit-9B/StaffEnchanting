@@ -195,7 +195,6 @@ namespace UI
 		Selection selected;
 
 		std::unique_ptr<RE::InventoryEntryData> craftItemPreview;
-		std::unique_ptr<RE::ExtraDataList> tempExtraList;
 		RE::BSTArray<RE::Effect> createdEffects;
 		RE::EnchantmentItem* createdEnchantment{ nullptr };
 
