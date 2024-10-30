@@ -307,6 +307,16 @@ namespace UI
 		}
 	}
 
+	void StaffCraftingMenu::AddExcludedSpell(RE::FormID a_spellID)
+	{
+		for (const auto& storedID : excludedSpells) {
+			if (storedID == a_spellID) {
+				return;
+			}
+		}
+		excludedSpells.push_back(a_spellID);
+	}
+
 	bool StaffCraftingMenu::CanSetOverrideName(RE::InventoryEntryData* a_item)
 	{
 		const auto extraLists = a_item ? a_item->extraLists : nullptr;
@@ -599,6 +609,12 @@ namespace UI
 		}
 		if (a_spell->GetDelivery() == RE::MagicSystem::Delivery::kSelf) {
 			return false;
+		}
+		const auto& spellID = a_spell->formID;
+		for (const auto& storedID : excludedSpells) {
+			if (storedID == spellID) {
+				return false;
+			}
 		}
 
 		static constexpr RE::FormID ritualEffectID = 0x806E1;

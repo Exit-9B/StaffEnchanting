@@ -85,6 +85,8 @@ namespace UI
 
 		void ProcessUpdate(const RE::BSUIMessageData* a_data);
 
+		static void AddExcludedSpell(RE::FormID a_spellID);
+
 		[[nodiscard]] bool RenderItem3DOnTop() const;
 
 	private:
@@ -206,6 +208,7 @@ namespace UI
 		bool hasHighlight{ false };
 		float maxSoulSize{ 0.0f };
 		std::int32_t highestMorpholithCount{ 0 };
+		inline static std::vector<RE::FormID> excludedSpells;
 	};
 }
 
