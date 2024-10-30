@@ -92,14 +92,14 @@ namespace JSONSettings
 			}
 
 			if (!JSONFile.isObject()) {
-				logger::warn("Warning: {} is not an object. File will be ignored.", path);
+				logger::warn("Warning: <{}> is not an object. File will be ignored.", path);
 				continue;
 			}
 
 			const auto& exclusions = JSONFile["exclusions"];
 			if (!exclusions || !exclusions.isArray()) {
 				logger::warn(
-					"Warning: {} is missing exclusions, or it is not an array. File will be "
+					"Warning: <{}> is missing exclusions, or it is not an array. File will be "
 					"ignored.",
 					path);
 				continue;
@@ -110,7 +110,7 @@ namespace JSONSettings
 					!entryText.empty()) {
 					const auto FoundSpellID = GetSpellFormID(entryText);
 					if (FoundSpellID == 0) {
-						logger::warn("Failed to find spell {} in {}.", entryText, path);
+						logger::warn("Failed to find spell <{}> in <{}>.", entryText, path);
 						continue;
 					}
 
