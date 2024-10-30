@@ -3,7 +3,15 @@
 namespace UI
 {
 	template <typename Impl>
-	class BaseCraftingMenu : public RE::IMenu, public RE::BSTEventSink<RE::TESFurnitureEvent>
+	class BaseCraftingMenu :
+		public RE::IMenu
+#ifndef SKYRIMVR
+		,
+		public RE::BSTEventSink<RE::TESFurnitureEvent>
+#else
+		,
+		public RE::MenuEventHandler
+#endif
 	{
 	public:
 		static void Register()
@@ -28,6 +36,9 @@ namespace UI
 		BaseCraftingMenu& operator=(const BaseCraftingMenu&) = delete;
 		BaseCraftingMenu& operator=(BaseCraftingMenu&&) = delete;
 
+		using RE::IMenu::operator new;
+		using RE::IMenu::operator delete;
+
 	public:
 		// FxDelegateHandler
 		void Accept(CallbackProcessor* a_processor) final;
@@ -36,10 +47,18 @@ namespace UI
 		RE::UI_MESSAGE_RESULTS ProcessMessage(RE::UIMessage& a_message) final;
 		void PostDisplay() final;
 
+#ifndef SKYRIMVR
 		// BSTEventSink<TESFurnitureEvent>
 		RE::BSEventNotifyControl ProcessEvent(
 			const RE::TESFurnitureEvent* a_event,
 			RE::BSTEventSource<RE::TESFurnitureEvent>* a_eventSource) final;
+#endif
+
+#ifdef SKYRIMVR
+		// MenuEventHandler
+		bool ShouldHandleEvent(const RE::InputEvent* a_event) final;
+		bool HandleEvent(const RE::VrWandTouchpadPositionEvent* a_event) final;
+#endif
 
 	protected:
 		struct BUTTONS
