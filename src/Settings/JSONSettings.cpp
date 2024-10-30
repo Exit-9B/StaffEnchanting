@@ -92,15 +92,26 @@ namespace JSONSettings
 				continue;
 			}
 
-			if (!JSONFile.isArray()) {
+			if (!JSONFile.isObject()) {
+				logger::warn("Warning: {} is not an object. File will be ignored.", path);
 				continue;
 			}
 
-			for (const auto& entry : JSONFile) {
+			const auto& exclusions = JSONFile["exclusions"];
+			if (!exclusions || !exclusions.isArray()) {
+				logger::warn(
+					"Warning: {} is missing exclusions, or it is not an array. File will be "
+					"ignored.", path);
+				continue;
+			}
+
+			for (const auto& entry : exclusions) {
 				if (const auto& entryText = entry.isString() ? entry.asString() : ""; !entryText.empty()) {
 					const auto FoundSpellID = GetSpellFormID(entryText);
-					if (FoundSpellID == 0)
+					if (FoundSpellID == 0) {
+						logger::warn("Failed to find spell {} in {}.", entryText, path);
 						continue;
+					}
 
 					UI::StaffCraftingMenu::AddExcludedSpell(FoundSpellID);
 				}
