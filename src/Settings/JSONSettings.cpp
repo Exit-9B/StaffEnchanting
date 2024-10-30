@@ -100,7 +100,8 @@ namespace JSONSettings
 			if (!exclusions || !exclusions.isArray()) {
 				logger::warn(
 					"Warning: {} is missing exclusions, or it is not an array. File will be "
-					"ignored.", path);
+					"ignored.",
+					path);
 				continue;
 			}
 
