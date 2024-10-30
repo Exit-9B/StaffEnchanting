@@ -34,29 +34,34 @@ set_target_properties(CommonLibSSE PROPERTIES
 	FOLDER External
 )
 
-install(
-	FILES
-		"${PROJECT_SOURCE_DIR}/data/StaffEnchanting.esp"
-	DESTINATION
-		"."
+set(DATA_DIR "${PROJECT_SOURCE_DIR}/data")
+
+set(TRANSLATION_FILES
+	"${DATA_DIR}/Common/Interface/Translations/StaffEnchanting_ENGLISH.txt"
 )
 
 install(
 	FILES
-		"${PROJECT_SOURCE_DIR}/data/Interface/Translations/StaffEnchanting_ENGLISH.txt"
-	DESTINATION
-		"Interface/Translations"
+		"${DATA_DIR}/Common/StaffEnchanting.esp"
+	DESTINATION "."
+)
+
+install(
+	FILES ${TRANSLATION_FILES}
+	DESTINATION "Interface/Translations"
 )
 
 if(INSTALL_SKYUI_MENU)
 	install(
 		FILES
-			"${PROJECT_SOURCE_DIR}/data/Interface/StaffCraftingMenu.swf"
-		DESTINATION
-			"Interface"
+			"${DATA_DIR}/Menu/SkyUI/Interface/StaffCraftingMenu.swf"
+		DESTINATION "Interface"
 	)
 endif()
 
+include(fomod.cmake)
+
+set(CPACK_INSTALL_CMAKE_PROJECTS ".;${PROJECT_NAME};fomod;/")
 set(CPACK_GENERATOR "7Z")
 set(CPACK_PACKAGE_FILE_NAME ${PROJECT_NAME}-${PROJECT_VERSION})
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY FALSE)

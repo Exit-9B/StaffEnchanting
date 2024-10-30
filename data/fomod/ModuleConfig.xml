@@ -1,0 +1,70 @@
+<!-- Created with FOMOD Creation Tool 1.7.0.37 [http://www.nexusmods.com/fallout4/mods/6821] --> 
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://qconsulting.ca/fo3/ModConfig5.0.xsd"> 
+	<moduleName>Staff Enchanting</moduleName> 
+	<moduleImage path="FOMOD\Images\StaffEnchanting.jpg" /> 
+	<requiredInstallFiles> 
+		<folder source="Common" destination="" /> 
+		<folder source="Core\SkyrimSE" destination="" /> 
+	</requiredInstallFiles> 
+	<installSteps order="Explicit"> 
+		<installStep name="Installation"> 
+			<optionalFileGroups order="Explicit"> 
+				<group name="Menu" type="SelectExactlyOne"> 
+					<plugins order="Explicit"> 
+						<plugin name="Default"> 
+							<description>Doesn't install any files. The menu will fit in with vanilla menus, or use your installed mods for the Enchanting UI.</description> 
+							<image path="FOMOD\Images\SkyrimSE.jpg" /> 
+							<typeDescriptor> 
+								<type name="Optional"/> 
+							</typeDescriptor> 
+						</plugin> 
+						<plugin name="SkyUI"> 
+							<description>Installs a Staff Enchanting menu based on the style of SkyUI.</description> 
+							<image path="FOMOD\Images\SkyUIRegular.jpg" /> 
+							<files> 
+								<folder source="Menu/SkyUI" destination="" priority="0" /> 
+							</files> 
+							<typeDescriptor> 
+								<dependencyType> 
+									<defaultType name="Optional"/> 
+									<patterns> 
+										<pattern> 
+											<dependencies operator="And"> 
+												<fileDependency file="SkyUI_SE.esp" state="Active"/> 
+											</dependencies> 
+											<type name="Recommended"/> 
+										</pattern> 
+									</patterns> 
+								</dependencyType> 
+							</typeDescriptor> 
+						</plugin> 
+					</plugins> 
+				</group> 
+				<group name="Patches" type="SelectAny"> 
+					<plugins order="Explicit"> 
+						<plugin name="Sorcerer - A Staff and Scroll Overhaul"> 
+							<description>A patch for Sorcerer - A Staff and Scroll Overhaul. Preserves the changes to pre-enchanted staves while making the Staff Enchanter a soul gem fueled staff enchanter.</description> 
+							<image path="FOMOD\Images\SorcererPatch.jpg" /> 
+							<files> 
+								<folder source="Patches\Sorcerer" destination="" priority="0" /> 
+							</files> 
+							<typeDescriptor> 
+								<dependencyType> 
+									<defaultType name="Optional"/> 
+									<patterns> 
+										<pattern> 
+											<dependencies operator="And"> 
+												<fileDependency file="Sorcerer.esp" state="Active"/> 
+											</dependencies> 
+											<type name="Recommended"/> 
+										</pattern> 
+									</patterns> 
+								</dependencyType> 
+							</typeDescriptor> 
+						</plugin> 
+					</plugins> 
+				</group> 
+			</optionalFileGroups> 
+		</installStep> 
+	</installSteps> 
+</config>
