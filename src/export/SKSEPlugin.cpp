@@ -86,7 +86,7 @@ static void MessageEventCallback(SKSE::MessagingInterface::Message* a_msg)
 				HelpManualXBox->AddForm(HelpStaffEnchantingLong);
 			}
 		}
-		JSONSettings::Read();
+		JSONSettings::SettingsHolder::GetSingleton()->Read();
 	} break;
 	}
 }

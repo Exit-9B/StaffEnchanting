@@ -19,59 +19,32 @@ namespace JSONSettings
 		return jsonFilePaths;
 	}
 
-	static std::vector<std::string> Split(const std::string& input)
+	static RE::SpellItem* GetSpellFormID(const std::string& a_identifier)
 	{
-		std::vector<std::string> parts;
-		size_t start = 0;
-		size_t end = input.find('|');
+		std::istringstream ss{ a_identifier };
+		std::string plugin, id;
 
-		while (end != std::string::npos) {
-			parts.push_back(input.substr(start, end - start));
-			start = end + 1;
-			end = input.find('|', start);
-		}
+		std::getline(ss, plugin, '|');
+		std::getline(ss, id);
+		RE::FormID rawFormID;
+		std::istringstream(id) >> std::hex >> rawFormID;
 
-		parts.push_back(input.substr(start));
-
-		return parts;
+		const auto dataHandler = RE::TESDataHandler::GetSingleton();
+		return dataHandler->LookupForm<RE::SpellItem>(rawFormID, plugin);
 	}
 
-	static bool IsHex(std::string const& s)
-	{
-		return s.compare(0, 2, "0x") == 0 && s.size() > 2 &&
-			s.find_first_not_of("0123456789abcdefABCDEF", 2) == std::string::npos;
-	}
-
-	static RE::FormID GetSpellFormID(const std::string& a_identifier)
-	{
-		if (const auto splitID = Split(a_identifier); splitID.size() == 2) {
-			if (!IsHex(splitID[1]))
-				return 0;
-			const RE::FormID localFormID = std::stoi(splitID[1], nullptr, 16);
-
-			const auto& modName = splitID[0];
-			if (!RE::TESDataHandler::GetSingleton()->LookupModByName(modName))
-				return 0;
-
-			auto* baseForm = RE::TESDataHandler::GetSingleton()->LookupForm<RE::SpellItem>(
-				localFormID,
-				modName);
-			return baseForm ? baseForm->formID : 0;
-		}
-		return 0;
-	}
-
-	void Read()
+	void SettingsHolder::Read()
 	{
 		std::vector<std::string> paths{};
 		try {
 			paths = findJsonFiles();
 		}
-		catch (std::exception e) {
+		catch (const std::exception& e) {
 			logger::warn("Caught {} while reading files.", e.what());
 			return;
 		}
 		if (paths.empty()) {
+			logger::info("No settings found");
 			return;
 		}
 
@@ -82,11 +55,11 @@ namespace JSONSettings
 				std::ifstream rawJSON(path);
 				JSONReader.parse(rawJSON, JSONFile);
 			}
-			catch (Json::Exception e) {
+			catch (const Json::Exception& e) {
 				logger::warn("Caught {} while reading files.", e.what());
 				continue;
 			}
-			catch (std::exception e) {
+			catch (const std::exception& e) {
 				logger::error("Caught unhandled exception {} while reading files.", e.what());
 				continue;
 			}
@@ -105,18 +78,26 @@ namespace JSONSettings
 				continue;
 			}
 
-			for (const auto& entry : JSONFile) {
+			for (const auto& entry : exclusions) {
 				if (const auto& entryText = entry.isString() ? entry.asString() : "";
 					!entryText.empty()) {
-					const auto FoundSpellID = GetSpellFormID(entryText);
-					if (FoundSpellID == 0) {
+					const auto foundSpell = GetSpellFormID(entryText);
+					if (!foundSpell) {
 						logger::warn("Failed to find spell <{}> in <{}>.", entryText, path);
 						continue;
 					}
 
-					UI::StaffCraftingMenu::AddExcludedSpell(FoundSpellID);
+					if (std::ranges::find(excludedSpells, foundSpell) ==
+						std::ranges::end(excludedSpells)) {
+						excludedSpells.push_back(foundSpell);
+					}
 				}
 			}
 		}
+	}
+
+	bool SettingsHolder::IsProhibitedSpell(const RE::SpellItem* a_spell)
+	{
+		return std::ranges::find(excludedSpells, a_spell) != std::ranges::end(excludedSpells);
 	}
 }
