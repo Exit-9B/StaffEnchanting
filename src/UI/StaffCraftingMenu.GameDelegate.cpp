@@ -136,7 +136,7 @@ namespace UI
 		const auto show = a_params[0].GetBool();
 		const auto menu = static_cast<StaffCraftingMenu*>(a_params.GetHandler());
 
-		if (!menu->craftItemPreview) {
+		if (!menu->craftItemPreview || menu->currentCategory == Category::Recipe) {
 			if (menu->highlightIndex < menu->listEntries.size()) {
 				menu->listEntries[menu->highlightIndex]->ShowItem3D(show);
 			}

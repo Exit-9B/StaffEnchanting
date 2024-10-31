@@ -706,7 +706,7 @@ namespace UI
 	{
 		if (craftItemPreview &&
 			(currentCategory == Category::Staff || currentCategory == Category::Spell ||
-			 selected.Complete())) {
+			 (currentCategory != Category::Recipe && selected.Complete()))) {
 
 			UpdateItemCard(craftItemPreview.get());
 		}
