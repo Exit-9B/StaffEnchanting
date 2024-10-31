@@ -96,7 +96,7 @@ namespace JSONSettings
 		}
 	}
 
-	const bool SettingsHolder::IsProhibitedSpell(const RE::SpellItem* a_spell)
+	bool SettingsHolder::IsProhibitedSpell(const RE::SpellItem* a_spell) const
 	{
 		const auto it = std::ranges::lower_bound(excludedSpells, a_spell);
 		return it != std::ranges::end(excludedSpells) && *it == a_spell;

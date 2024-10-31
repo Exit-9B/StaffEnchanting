@@ -12,16 +12,16 @@ namespace JSONSettings
 		}
 
 		void Read();
-		[[nodiscard]] const bool IsProhibitedSpell(const RE::SpellItem* a_spell);
-
-	protected:
-		SettingsHolder() = default;
-		~SettingsHolder() = default;
+		[[nodiscard]] bool IsProhibitedSpell(const RE::SpellItem* a_spell) const;
 
 		SettingsHolder(const SettingsHolder&) = delete;
 		SettingsHolder(SettingsHolder&&) = delete;
 		SettingsHolder& operator=(const SettingsHolder&) = delete;
 		SettingsHolder& operator=(SettingsHolder&&) = delete;
+
+	protected:
+		SettingsHolder() = default;
+		~SettingsHolder() = default;
 
 	private:
 		std::vector<RE::SpellItem*> excludedSpells;
