@@ -4,8 +4,10 @@
   "version": "1",
   "dependencies": [
     "boost-stl-interfaces",
+    "jsoncpp",
     "rsm-binary-io",
     "spdlog",
     "xbyak"
-  ]
+  ],
+  "builtin-baseline": "ea295dff0b3e9e9caeb49d1225dc7272d3231cf1"
 }

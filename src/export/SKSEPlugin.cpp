@@ -1,6 +1,7 @@
 #include "Hooks/BaseCharge.h"
 #include "Hooks/Create.h"
 #include "Hooks/Workbench.h"
+#include "Settings/JSONSettings.h"
 #include "UI/StaffCraftingMenu.h"
 #include "common/Forms.h"
 
@@ -85,6 +86,7 @@ static void MessageEventCallback(SKSE::MessagingInterface::Message* a_msg)
 				HelpManualXBox->AddForm(HelpStaffEnchantingLong);
 			}
 		}
+		JSONSettings::SettingsHolder::GetSingleton()->Read();
 	} break;
 	}
 }

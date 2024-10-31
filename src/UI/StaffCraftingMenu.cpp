@@ -2,6 +2,7 @@
 
 #include "RE/Misc.h"
 #include "RE/Offset.h"
+#include "Settings/JSONSettings.h"
 #include "common/Forms.h"
 
 namespace UI
@@ -598,6 +599,9 @@ namespace UI
 			return false;
 		}
 		if (a_spell->GetDelivery() == RE::MagicSystem::Delivery::kSelf) {
+			return false;
+		}
+		if (JSONSettings::SettingsHolder::GetSingleton()->IsProhibitedSpell(a_spell)) {
 			return false;
 		}
 
