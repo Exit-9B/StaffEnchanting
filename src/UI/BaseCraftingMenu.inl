@@ -21,7 +21,7 @@ namespace UI
 			this,
 			uiMovie,
 			GetImpl()->GetMoviePath(),
-			RE::GFxMovieView::ScaleModeType::kNoBorder);
+			RE::GFxMovieView::ScaleModeType::kExactFit);
 		assert(movieLoaded);
 		assert(uiMovie);
 
