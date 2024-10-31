@@ -42,7 +42,7 @@ extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []()
 
 	v.PluginVersion(Plugin::VERSION);
 	v.PluginName(Plugin::NAME);
-	v.AuthorName("Parapets"sv);
+	v.AuthorName("Parapets and SeaSparrow"sv);
 
 	v.UsesAddressLibrary(true);
 
