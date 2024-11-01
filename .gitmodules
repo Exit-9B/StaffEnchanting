@@ -8,3 +8,7 @@
 	path = external/skyui
 	url = https://github.com/Exit-9B/skyui.git
 	branch = staffench
+[submodule "external/skyui-vr"]
+	path = external/skyui-vr
+	url = https://github.com/Exit-9B/skyui.git
+	branch = staffench-vr

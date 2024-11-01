@@ -56,7 +56,7 @@ install(
 		"Interface/Translations"
 )
 
-if(INSTALL_SKYUI_MENU AND NOT BUILD_SKYRIMVR)
+if(INSTALL_SKYUI_MENU)
 	install(
 		FILES
 			"${GAME_DATA_DIR}/Interface/StaffCraftingMenu.swf"
