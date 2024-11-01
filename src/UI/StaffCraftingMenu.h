@@ -89,6 +89,8 @@ namespace UI
 
 #ifdef SKYRIMVR
 		void AdvanceMovie();
+
+		bool HandleMenuInput(const RE::VrWandTouchpadPositionEvent* a_event);
 #endif
 
 		[[nodiscard]] bool RenderItem3DOnTop() const;
@@ -207,11 +209,14 @@ namespace UI
 		std::uint32_t highlightIndex;
 		Category currentCategory;
 		float chargeAmount{ 0.0f };
+		float maxSoulSize{ 0.0f };
+		std::int32_t highestMorpholithCount{ 0 };
 
 		bool exiting{ false };
 		bool hasHighlight{ false };
-		float maxSoulSize{ 0.0f };
-		std::int32_t highestMorpholithCount{ 0 };
+#ifdef SKYRIMVR
+		bool virtualKeyboardClosing{ false };
+#endif
 	};
 }
 

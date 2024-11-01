@@ -292,8 +292,12 @@ namespace UI
 	template <typename Impl>
 	inline bool BaseCraftingMenu<Impl>::HandleEvent(const RE::VrWandTouchpadPositionEvent* a_event)
 	{
-		(void)a_event;
-		return false;
+		if constexpr (requires { GetImpl()->HandleMenuInput(a_event); }) {
+			return GetImpl()->HandleMenuInput(a_event);
+		}
+		else {
+			return false;
+		}
 	}
 #endif
 

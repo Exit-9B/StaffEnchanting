@@ -865,6 +865,7 @@ namespace UI
 			case vr::VREvent_KeyboardClosed:
 			{
 				controlMap->AllowTextInput(false);
+				virtualKeyboardClosing = true;
 			} break;
 
 			case vr::VREvent_KeyboardDone:
@@ -873,9 +874,67 @@ namespace UI
 				const auto buffer = std::make_unique<char[]>(maxChars);
 				openVR->VROverlay()->GetKeyboardText(buffer.get(), maxChars);
 				TextEntered(buffer.get());
+				virtualKeyboardClosing = true;
 			} break;
 			}
 		}
+	}
+
+	bool StaffCraftingMenu::HandleMenuInput(const RE::VrWandTouchpadPositionEvent* a_event)
+	{
+		bool handled = false;
+
+		if (!a_event->unk38 && a_event->unk44 && !virtualKeyboardClosing) {
+			using func_t = std::uint32_t(
+				const RE::VrWandTouchpadPositionEvent*,
+				std::uint32_t,
+				float,
+				float);
+			REL::Relocation<func_t> getTouchpadRegion{ REL::Offset(0xC5A650) };
+			std::uint32_t input = getTouchpadRegion(a_event, 4, 0.0f, 0.0f);
+
+			switch (input) {
+			case 0:
+			{
+				if (const auto uiMessageQueue = RE::UIMessageQueue::GetSingleton()) {
+					const auto userEvents = RE::UserEvents::GetSingleton();
+					assert(userEvents);
+
+					const auto msgData = RE::UIMessageDataFactory::Create<RE::BSUIMessageData>();
+					assert(msgData);
+					msgData->fixedStr = userEvents->yButton;
+
+					uiMessageQueue
+						->AddMessage(MENU_NAME, RE::UI_MESSAGE_TYPE::kUserEvent, msgData);
+				}
+
+				handled = true;
+			} break;
+
+			case 1:
+			{
+				if (const auto uiMessageQueue = RE::UIMessageQueue::GetSingleton()) {
+					const auto userEvents = RE::UserEvents::GetSingleton();
+					assert(userEvents);
+
+					const auto msgData = RE::UIMessageDataFactory::Create<RE::BSUIMessageData>();
+					assert(msgData);
+					msgData->fixedStr = userEvents->xButton;
+
+					uiMessageQueue
+						->AddMessage(MENU_NAME, RE::UI_MESSAGE_TYPE::kUserEvent, msgData);
+				}
+
+				handled = true;
+			} break;
+			}
+		}
+
+		if (!a_event->unk38 && virtualKeyboardClosing) {
+			virtualKeyboardClosing = false;
+		}
+
+		return handled;
 	}
 #endif
 
