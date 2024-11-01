@@ -53,3 +53,9 @@ jobs:
         cmake --install ${{ github.workspace }}/build --component "SKSEPlugin" --config ${{ env.BUILD_TYPE }} --prefix ${{ github.workspace }}/build-fomod/Core/SkyrimSE
         cmake --install ${{ github.workspace }}/buildVR --component "SKSEPlugin" --config ${{ env.BUILD_TYPE }} --prefix ${{ github.workspace }}/build-fomod/Core/SkyrimVR
 
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: StaffEnchanting
+        path: ${{ github.workspace }}/build-fomod
+
