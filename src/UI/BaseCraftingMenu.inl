@@ -26,7 +26,7 @@ namespace UI
 		assert(uiMovie);
 
 		depthPriority = 0;
-		inputContext = Context::kItemMenu;
+		inputContext = IF_SKYRIMSE(Context::kItemMenu, Context::kUnk17);
 		RE::SendHUDMessage::PushHudMode("InventoryMode");
 
 		const auto controlMap = RE::ControlMap::GetSingleton();
@@ -37,6 +37,15 @@ namespace UI
 		controlMap->ToggleControls(RE::UserEvents::USER_EVENT_FLAG::kPOVSwitch, false, false);
 		controlMap->ToggleControls(RE::UserEvents::USER_EVENT_FLAG::kWheelZoom, false, false);
 
+#ifdef SKYRIMVR
+		const auto menuControls = RE::MenuControls::GetSingleton();
+		menuControls->RegisterHandler(this);
+
+		const auto openVR = RE::BSOpenVR::GetSingleton();
+		openVR->VROverlay()
+			->CreateOverlay(Impl::MENU_NAME.data(), "Input Name", &openVR->currentOverlay);
+#endif
+
 		const auto uiBlurManager = RE::UIBlurManager::GetSingleton();
 		assert(uiBlurManager);
 		uiBlurManager->IncrementBlurCount();
@@ -45,6 +54,14 @@ namespace UI
 	template <typename Impl>
 	inline BaseCraftingMenu<Impl>::~BaseCraftingMenu()
 	{
+#ifdef SKYRIMVR
+		const auto menuControls = RE::MenuControls::GetSingleton();
+		menuControls->UnregisterHandler(this);
+
+		const auto openVR = RE::BSOpenVR::GetSingleton();
+		openVR->VROverlay()->DestroyOverlay(openVR->currentOverlay);
+#endif
+
 		const auto controlMap = RE::ControlMap::GetSingleton();
 		assert(controlMap);
 		controlMap->LoadStoredControls();
@@ -64,9 +81,11 @@ namespace UI
 			inventory3D->End3D();
 		}
 
+#ifndef SKYRIMVR
 		const auto eventSource = RE::ScriptEventSourceHolder::GetSingleton();
 		assert(eventSource);
 		eventSource->RemoveEventSink(this);
+#endif
 	}
 
 	template <typename Impl>
@@ -108,7 +127,9 @@ namespace UI
 	template <typename Impl>
 	inline void BaseCraftingMenu<Impl>::Update(const RE::BSUIMessageData* a_data)
 	{
-		GetImpl()->ProcessUpdate(a_data);
+		if constexpr (requires { GetImpl()->ProcessUpdate(a_data); }) {
+			GetImpl()->ProcessUpdate(a_data);
+		}
 	}
 
 	template <typename Impl>
@@ -149,9 +170,11 @@ namespace UI
 		assert(inventory3D);
 		inventory3D->Begin3D(1);
 
+#ifndef SKYRIMVR
 		const auto eventSource = RE::ScriptEventSourceHolder::GetSingleton();
 		assert(eventSource);
 		eventSource->AddEventSink(this);
+#endif
 
 		GetImpl()->Init();
 	}
@@ -167,14 +190,14 @@ namespace UI
 		assert(playerRef);
 		assert(playerRef->currentProcess);
 		const auto furnitureRef = playerRef->currentProcess->GetOccupiedFurniture().get();
-		if (!furnitureRef ||
-			RE::BSFurnitureMarkerNode::GetNumFurnitureMarkers(furnitureRef->Get3D())) {
-			if (playerRef->actorState1.sitSleepState == RE::SIT_SLEEP_STATE::kIsSitting) {
-				playerRef->InitiateGetUpPackage();
-			}
+		if (furnitureRef &&
+			IF_SKYRIMSE(
+				RE::BSFurnitureMarkerNode::GetNumFurnitureMarkers(furnitureRef->Get3D()),
+				0) == 0) {
+			playerRef->currentProcess->ClearFurniture(playerRef);
 		}
-		else {
-			playerRef->currentProcess->ClearFurniture();
+		else if (playerRef->actorState1.sitSleepState == RE::SIT_SLEEP_STATE::kIsSitting) {
+			playerRef->InitiateGetUpPackage();
 		}
 	}
 
@@ -211,6 +234,15 @@ namespace UI
 	}
 
 	template <typename Impl>
+	inline void BaseCraftingMenu<Impl>::AdvanceMovie(float a_interval, std::uint32_t a_currentTime)
+	{
+		if constexpr (requires { GetImpl()->AdvanceMovie(); }) {
+			GetImpl()->AdvanceMovie();
+		}
+		RE::IMenu::AdvanceMovie(a_interval, a_currentTime);
+	}
+
+	template <typename Impl>
 	inline void BaseCraftingMenu<Impl>::PostDisplay()
 	{
 		const auto inventory3D = RE::Inventory3DManager::GetSingleton();
@@ -226,6 +258,7 @@ namespace UI
 		}
 	}
 
+#ifndef SKYRIMVR
 	template <typename Impl>
 	inline RE::BSEventNotifyControl BaseCraftingMenu<Impl>::ProcessEvent(
 		const RE::TESFurnitureEvent* a_event,
@@ -243,6 +276,30 @@ namespace UI
 
 		return kContinue;
 	}
+#endif
+
+#ifdef SKYRIMVR
+	template <typename Impl>
+	inline bool BaseCraftingMenu<Impl>::ShouldHandleEvent(const RE::InputEvent* a_event)
+	{
+		static REL::Relocation<bool*> bUsingVRController{ REL::Offset(0x1E717A8) };
+
+		return *bUsingVRController && RE::IsVRWandDevice(a_event->GetDevice()) &&
+			a_event->GetEventType() == RE::INPUT_EVENT_TYPE::kVrWandTouchpadPosition &&
+			RE::ControlMap::GetSingleton()->textEntryCount == 0;
+	}
+
+	template <typename Impl>
+	inline bool BaseCraftingMenu<Impl>::HandleEvent(const RE::VrWandTouchpadPositionEvent* a_event)
+	{
+		if constexpr (requires { GetImpl()->HandleMenuInput(a_event); }) {
+			return GetImpl()->HandleMenuInput(a_event);
+		}
+		else {
+			return false;
+		}
+	}
+#endif
 
 	template <typename Impl>
 	inline void BaseCraftingMenu<Impl>::SetMenuDescription(const char* a_description)

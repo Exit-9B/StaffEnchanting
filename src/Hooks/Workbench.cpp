@@ -7,10 +7,9 @@ namespace Hooks
 {
 	void Workbench::Install()
 	{
-		auto hook = REL::Relocation<std::uintptr_t>(
-			RE::Offset::TESObjectREFR::ActivateCraftingWorkbench,
-			0xE);
+		auto hook = util::GameAddress(RE::Offset::TESObjectREFR::ActivateCraftingWorkbench, 0xE);
 		REL::make_pattern<"E8">().match_or_fail(hook.address());
+
 		auto& trampoline = SKSE::GetTrampoline();
 		_IsFurniture = trampoline.write_call<5>(hook.address(), &Workbench::CheckFurniture);
 	}

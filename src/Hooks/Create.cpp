@@ -9,7 +9,8 @@ namespace Hooks
 {
 	void Create::Install()
 	{
-		auto hook = REL::Relocation<std::uintptr_t>(
+#ifndef SKYRIMVR
+		auto hook = util::GameAddress(
 			RE::Offset::MagicItemCreationHelpers::CreateNewEnchantment,
 			0x6B);
 
@@ -40,6 +41,34 @@ namespace Hooks
 		assert(patch.getSize() == size);
 
 		REL::safe_write(hook.address(), patch.getCode(), patch.getSize());
+#else
+		auto hook = util::GameAddress(RE::Offset::BGSCreatedObjectManager::InitEnchantment, 0x26);
+
+		static constexpr std::size_t size = 0x5E;
+
+		REL::safe_fill(hook.address(), REL::NOP, size);
+
+		struct Patch : Xbyak::CodeGenerator
+		{
+			Patch() : Xbyak::CodeGenerator(size)
+			{
+				Xbyak::Label funcLbl;
+				Xbyak::Label retnLbl;
+
+				call(ptr[rip + funcLbl]);
+				jmp(retnLbl, T_SHORT);
+				nop(2);
+
+				L(funcLbl);
+				dq(std::bit_cast<std::uintptr_t>(&Create::InitEnchantment));
+				nop(size - 0x12);
+				L(retnLbl);
+			}
+		} patch{};
+		assert(patch.getSize() == size);
+
+		REL::safe_write(hook.address(), patch.getCode(), patch.getSize());
+#endif
 	}
 
 	void Create::InitEnchantment(

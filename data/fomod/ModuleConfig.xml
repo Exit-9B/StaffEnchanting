@@ -4,16 +4,58 @@
 	<moduleImage path="FOMOD\Images\StaffEnchanting.jpg" /> 
 	<requiredInstallFiles> 
 		<folder source="Common" destination="" /> 
-		<folder source="Core\SkyrimSE" destination="" /> 
 	</requiredInstallFiles> 
 	<installSteps order="Explicit"> 
 		<installStep name="Installation"> 
 			<optionalFileGroups order="Explicit"> 
+				<group name="Game Version" type="SelectExactlyOne"> 
+					<plugins order="Explicit"> 
+						<plugin name="Skyrim Special Edition"> 
+							<description>Select this if you are playing Skyrim Special Edition/Anniversary Edition 1.6.1130+.</description> 
+							<image path="fomod\Images\SkyrimSE.jpg" /> 
+							<conditionFlags> 
+								<flag name="VR">Off</flag> 
+							</conditionFlags> 
+							<files> 
+								<folder source="Core\SkyrimSE" destination="" priority="0" /> 
+							</files> 
+							<typeDescriptor> 
+								<type name="Optional"/> 
+							</typeDescriptor> 
+						</plugin> 
+						<plugin name="Skyrim VR"> 
+							<description>Select this if you are playing Skyrim VR.</description> 
+							<image path="fomod\Images\SkyrimVR.jpg" /> 
+							<conditionFlags> 
+								<flag name="VR">On</flag> 
+							</conditionFlags> 
+							<files> 
+								<folder source="Core\SkyrimVR" destination="" priority="0" /> 
+							</files> 
+							<typeDescriptor> 
+								<dependencyType> 
+									<defaultType name="Optional"/> 
+									<patterns> 
+										<pattern> 
+											<dependencies operator="And"> 
+												<fileDependency file="SkyrimVR.esm" state="Active"/> 
+											</dependencies> 
+											<type name="Recommended"/> 
+										</pattern> 
+									</patterns> 
+								</dependencyType> 
+							</typeDescriptor> 
+						</plugin> 
+					</plugins> 
+				</group> 
 				<group name="Menu" type="SelectExactlyOne"> 
 					<plugins order="Explicit"> 
 						<plugin name="Default"> 
 							<description>Doesn't install any files. The menu will fit in with vanilla menus, or use your installed mods for the Enchanting UI.</description> 
 							<image path="FOMOD\Images\SkyrimSE.jpg" /> 
+							<conditionFlags> 
+								<flag name="SkyUI">Off</flag> 
+							</conditionFlags> 
 							<typeDescriptor> 
 								<type name="Optional"/> 
 							</typeDescriptor> 
@@ -21,9 +63,9 @@
 						<plugin name="SkyUI"> 
 							<description>Installs a Staff Enchanting menu based on the style of SkyUI.</description> 
 							<image path="FOMOD\Images\SkyUIRegular.jpg" /> 
-							<files> 
-								<folder source="Menu\SkyUI" destination="" priority="0" /> 
-							</files> 
+							<conditionFlags> 
+								<flag name="SkyUI">On</flag> 
+							</conditionFlags> 
 							<typeDescriptor> 
 								<dependencyType> 
 									<defaultType name="Optional"/> 
@@ -67,4 +109,26 @@
 			</optionalFileGroups> 
 		</installStep> 
 	</installSteps> 
+	<conditionalFileInstalls> 
+		<patterns> 
+			<pattern> 
+				<dependencies operator="And"> 
+					<flagDependency flag="SkyUI" value="On"/> 
+					<flagDependency flag="VR" value="Off"/> 
+				</dependencies> 
+				<files> 
+					<folder source="Menu\SkyUI" destination="" priority="0" /> 
+				</files> 
+			</pattern> 
+			<pattern> 
+				<dependencies operator="And"> 
+					<flagDependency flag="SkyUI" value="On"/> 
+					<flagDependency flag="VR" value="On"/> 
+				</dependencies> 
+				<files> 
+					<folder source="Menu\SkyUI-VR" destination="" priority="0" /> 
+				</files> 
+			</pattern> 
+		</patterns> 
+	</conditionalFileInstalls> 
 </config>

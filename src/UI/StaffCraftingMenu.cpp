@@ -818,6 +818,7 @@ namespace UI
 		return false;
 	}
 
+#ifndef SKYRIMVR
 	void StaffCraftingMenu::ProcessUpdate(const RE::BSUIMessageData* a_data)
 	{
 		if (!a_data) {
@@ -848,6 +849,98 @@ namespace UI
 			}
 		}
 	}
+#endif
+
+#ifdef SKYRIMVR
+	void StaffCraftingMenu::AdvanceMovie()
+	{
+		const auto controlMap = RE::ControlMap::GetSingleton();
+		if (controlMap->textEntryCount == 0) {
+			return;
+		}
+
+		const auto openVR = RE::BSOpenVR::GetSingleton();
+
+		vr::VREvent_t ev;
+		while (openVR->VROverlay()
+				   ->PollNextOverlayEvent(openVR->currentOverlay, &ev, sizeof(vr::VREvent_t))) {
+
+			switch (ev.eventType) {
+			case vr::VREvent_KeyboardClosed:
+			{
+				controlMap->AllowTextInput(false);
+				virtualKeyboardClosing = true;
+			} break;
+
+			case vr::VREvent_KeyboardDone:
+			{
+				const auto maxChars = "uMaxCustomItemNameLength:Interface"_ini.value_or(32);
+				const auto buffer = std::make_unique<char[]>(maxChars);
+				openVR->VROverlay()->GetKeyboardText(buffer.get(), maxChars);
+				TextEntered(buffer.get());
+				virtualKeyboardClosing = true;
+			} break;
+			}
+		}
+	}
+
+	bool StaffCraftingMenu::HandleMenuInput(const RE::VrWandTouchpadPositionEvent* a_event)
+	{
+		bool handled = false;
+
+		if (!a_event->unk38 && a_event->unk44 && !virtualKeyboardClosing) {
+			using func_t = std::uint32_t(
+				const RE::VrWandTouchpadPositionEvent*,
+				std::uint32_t,
+				float,
+				float);
+			REL::Relocation<func_t> getTouchpadRegion{ REL::Offset(0xC5A650) };
+			std::uint32_t input = getTouchpadRegion(a_event, 4, 0.0f, 0.0f);
+
+			switch (input) {
+			case 0:
+			{
+				if (const auto uiMessageQueue = RE::UIMessageQueue::GetSingleton()) {
+					const auto userEvents = RE::UserEvents::GetSingleton();
+					assert(userEvents);
+
+					const auto msgData = RE::UIMessageDataFactory::Create<RE::BSUIMessageData>();
+					assert(msgData);
+					msgData->fixedStr = userEvents->yButton;
+
+					uiMessageQueue
+						->AddMessage(MENU_NAME, RE::UI_MESSAGE_TYPE::kUserEvent, msgData);
+				}
+
+				handled = true;
+			} break;
+
+			case 1:
+			{
+				if (const auto uiMessageQueue = RE::UIMessageQueue::GetSingleton()) {
+					const auto userEvents = RE::UserEvents::GetSingleton();
+					assert(userEvents);
+
+					const auto msgData = RE::UIMessageDataFactory::Create<RE::BSUIMessageData>();
+					assert(msgData);
+					msgData->fixedStr = userEvents->xButton;
+
+					uiMessageQueue
+						->AddMessage(MENU_NAME, RE::UI_MESSAGE_TYPE::kUserEvent, msgData);
+				}
+
+				handled = true;
+			} break;
+			}
+		}
+
+		if (!a_event->unk38 && virtualKeyboardClosing) {
+			virtualKeyboardClosing = false;
+		}
+
+		return handled;
+	}
+#endif
 
 	void StaffCraftingMenu::TextEntered(const char* a_text)
 	{
@@ -900,7 +993,7 @@ namespace UI
 				.doneCallback = doneCallback,
 				.cancelCallback = cancelCallback,
 				.userParam = nullptr,
-				.maxChars = "uMaxCustomItemNameLength:Interface"_ini.value_or(20),
+				.maxChars = "uMaxCustomItemNameLength:Interface"_ini.value_or(32),
 			};
 
 			device->Start(&kbInfo);
@@ -1222,6 +1315,7 @@ namespace UI
 
 		RE::ControlMap::GetSingleton()->AllowTextInput(true);
 
+#ifndef SKYRIMVR
 		const bool
 			usingVirtualKeyboard = RE::BSWin32SystemUtility::GetSingleton()->isRunningOnSteamDeck;
 
@@ -1234,6 +1328,22 @@ namespace UI
 				"EditItemName",
 				std::to_array<RE::GFxValue>({ suggestedName.c_str(), maxString }));
 		}
+#else
+		const auto openVR = RE::BSOpenVR::GetSingleton();
+		openVR->VROverlay()->ShowOverlay(openVR->currentOverlay);
+
+		const auto maxChars = "uMaxCustomItemNameLength:Interface"_ini.value_or(32);
+
+		openVR->VROverlay()->ShowKeyboardForOverlay(
+			openVR->currentOverlay,
+			vr::k_EGamepadTextInputModeNormal,
+			vr::k_EGamepadTextInputLineModeSingleLine,
+			"Staff Enchanting Menu",
+			maxChars,
+			suggestedName.c_str(),
+			false,
+			0);
+#endif
 	}
 
 	void StaffCraftingMenu::Selection::Clear()

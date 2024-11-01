@@ -17,6 +17,7 @@ include(SKSEPlugin)
 set(INSTALL_SKYUI_MENU ON CACHE BOOL "Install custom menu for SkyUI.")
 
 set(SKSE_USE_XBYAK ON)
+set(SKSE_SUPPORT_VR ON)
 
 SKSEPlugin_Add(
 	${PROJECT_NAME}
@@ -67,9 +68,3 @@ if(INSTALL_SKYUI_MENU)
 endif()
 
 include(fomod.cmake)
-
-set(CPACK_INSTALL_CMAKE_PROJECTS ".;${PROJECT_NAME};fomod;/")
-set(CPACK_GENERATOR "7Z")
-set(CPACK_PACKAGE_FILE_NAME ${PROJECT_NAME}-${PROJECT_VERSION})
-set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY FALSE)
-include(CPack)

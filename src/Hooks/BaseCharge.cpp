@@ -7,7 +7,7 @@ namespace Hooks
 {
 	void BaseCharge::Install()
 	{
-		static auto hook = REL::Relocation<std::byte*>(
+		static auto hook = util::GameAddress(
 			RE::Offset::TESEnchantableForm::GetFormBaseCharge,
 			0x2D);
 
