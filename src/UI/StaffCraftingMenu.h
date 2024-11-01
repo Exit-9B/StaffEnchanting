@@ -83,7 +83,13 @@ namespace UI
 
 		bool ProcessUserEvent(const RE::BSFixedString& a_userEvent);
 
+#ifndef SKYRIMVR
 		void ProcessUpdate(const RE::BSUIMessageData* a_data);
+#endif
+
+#ifdef SKYRIMVR
+		void AdvanceMovie();
+#endif
 
 		[[nodiscard]] bool RenderItem3DOnTop() const;
 

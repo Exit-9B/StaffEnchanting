@@ -41,9 +41,9 @@ namespace UI
 		const auto menuControls = RE::MenuControls::GetSingleton();
 		menuControls->RegisterHandler(this);
 
-		const auto vrInterface = RE::BSOpenVR::GetSingleton();
-		vrInterface->VROverlay()
-			->CreateOverlay(Impl::MENU_NAME.data(), "Input Name", &vrInterface->currentOverlay);
+		const auto openVR = RE::BSOpenVR::GetSingleton();
+		openVR->VROverlay()
+			->CreateOverlay(Impl::MENU_NAME.data(), "Input Name", &openVR->currentOverlay);
 #endif
 
 		const auto uiBlurManager = RE::UIBlurManager::GetSingleton();
@@ -58,8 +58,8 @@ namespace UI
 		const auto menuControls = RE::MenuControls::GetSingleton();
 		menuControls->UnregisterHandler(this);
 
-		const auto vrInterface = RE::BSOpenVR::GetSingleton();
-		vrInterface->VROverlay()->DestroyOverlay(vrInterface->currentOverlay);
+		const auto openVR = RE::BSOpenVR::GetSingleton();
+		openVR->VROverlay()->DestroyOverlay(openVR->currentOverlay);
 #endif
 
 		const auto controlMap = RE::ControlMap::GetSingleton();
@@ -127,7 +127,9 @@ namespace UI
 	template <typename Impl>
 	inline void BaseCraftingMenu<Impl>::Update(const RE::BSUIMessageData* a_data)
 	{
-		GetImpl()->ProcessUpdate(a_data);
+		if constexpr (requires { GetImpl()->ProcessUpdate(a_data); }) {
+			GetImpl()->ProcessUpdate(a_data);
+		}
 	}
 
 	template <typename Impl>
@@ -229,6 +231,15 @@ namespace UI
 			;
 		}
 #endif
+	}
+
+	template <typename Impl>
+	inline void BaseCraftingMenu<Impl>::AdvanceMovie(float a_interval, std::uint32_t a_currentTime)
+	{
+		if constexpr (requires { GetImpl()->AdvanceMovie(); }) {
+			GetImpl()->AdvanceMovie();
+		}
+		RE::IMenu::AdvanceMovie(a_interval, a_currentTime);
 	}
 
 	template <typename Impl>

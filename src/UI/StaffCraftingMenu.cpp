@@ -814,9 +814,9 @@ namespace UI
 		return false;
 	}
 
-	void StaffCraftingMenu::ProcessUpdate([[maybe_unused]] const RE::BSUIMessageData* a_data)
-	{
 #ifndef SKYRIMVR
+	void StaffCraftingMenu::ProcessUpdate(const RE::BSUIMessageData* a_data)
+	{
 		if (!a_data) {
 			return;
 		}
@@ -844,8 +844,40 @@ namespace UI
 				ShowVirtualKeyboard();
 			}
 		}
-#endif
 	}
+#endif
+
+#ifdef SKYRIMVR
+	void StaffCraftingMenu::AdvanceMovie()
+	{
+		const auto controlMap = RE::ControlMap::GetSingleton();
+		if (controlMap->textEntryCount == 0) {
+			return;
+		}
+
+		const auto openVR = RE::BSOpenVR::GetSingleton();
+
+		vr::VREvent_t ev;
+		while (openVR->VROverlay()
+				   ->PollNextOverlayEvent(openVR->currentOverlay, &ev, sizeof(vr::VREvent_t))) {
+
+			switch (ev.eventType) {
+			case vr::VREvent_KeyboardClosed:
+			{
+				controlMap->AllowTextInput(false);
+			} break;
+
+			case vr::VREvent_KeyboardDone:
+			{
+				const auto maxChars = "uMaxCustomItemNameLength:Interface"_ini.value_or(32);
+				const auto buffer = std::make_unique<char[]>(maxChars);
+				openVR->VROverlay()->GetKeyboardText(buffer.get(), maxChars);
+				TextEntered(buffer.get());
+			} break;
+			}
+		}
+	}
+#endif
 
 	void StaffCraftingMenu::TextEntered(const char* a_text)
 	{
@@ -898,7 +930,7 @@ namespace UI
 				.doneCallback = doneCallback,
 				.cancelCallback = cancelCallback,
 				.userParam = nullptr,
-				.maxChars = "uMaxCustomItemNameLength:Interface"_ini.value_or(20),
+				.maxChars = "uMaxCustomItemNameLength:Interface"_ini.value_or(32),
 			};
 
 			device->Start(&kbInfo);
@@ -1220,9 +1252,9 @@ namespace UI
 
 		RE::ControlMap::GetSingleton()->AllowTextInput(true);
 
-		const bool usingVirtualKeyboard = IF_SKYRIMSE(
-			RE::BSWin32SystemUtility::GetSingleton()->isRunningOnSteamDeck,
-			false);
+#ifndef SKYRIMVR
+		const bool
+			usingVirtualKeyboard = RE::BSWin32SystemUtility::GetSingleton()->isRunningOnSteamDeck;
 
 		if (usingVirtualKeyboard) {
 			ShowVirtualKeyboard();
@@ -1233,6 +1265,22 @@ namespace UI
 				"EditItemName",
 				std::to_array<RE::GFxValue>({ suggestedName.c_str(), maxString }));
 		}
+#else
+		const auto openVR = RE::BSOpenVR::GetSingleton();
+		openVR->VROverlay()->ShowOverlay(openVR->currentOverlay);
+
+		const auto maxChars = "uMaxCustomItemNameLength:Interface"_ini.value_or(32);
+
+		openVR->VROverlay()->ShowKeyboardForOverlay(
+			openVR->currentOverlay,
+			vr::k_EGamepadTextInputModeNormal,
+			vr::k_EGamepadTextInputLineModeSingleLine,
+			"Staff Enchanting Menu",
+			maxChars,
+			suggestedName.c_str(),
+			false,
+			0);
+#endif
 	}
 
 	void StaffCraftingMenu::Selection::Clear()

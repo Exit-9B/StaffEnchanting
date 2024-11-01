@@ -45,6 +45,7 @@ namespace UI
 
 		// IMenu
 		RE::UI_MESSAGE_RESULTS ProcessMessage(RE::UIMessage& a_message) final;
+		void AdvanceMovie(float a_interval, std::uint32_t a_currentTime) final;
 		void PostDisplay() final;
 
 #ifndef SKYRIMVR
