@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.24)
 
 project(
 	StaffEnchanting
-	VERSION 0.0.0
+	VERSION 1.0.0
 	LANGUAGES CXX
 )
 
@@ -31,40 +31,45 @@ SKSEPlugin_Add(
 		src/common/PCH.h
 )
 
+find_package(jsoncpp CONFIG REQUIRED)
+target_link_libraries(
+		"${PROJECT_NAME}"
+		PRIVATE
+			JsonCpp::JsonCpp
+	)
+
 set_target_properties(CommonLibSSE PROPERTIES
 	FOLDER External
 )
 
-set(COMMON_DATA_DIR "${PROJECT_SOURCE_DIR}/data/Common")
-if(NOT BUILD_SKYRIMVR)
-	set(GAME_DATA_DIR "${PROJECT_SOURCE_DIR}/data/SkyrimSE")
-else()
-	set(GAME_DATA_DIR "${PROJECT_SOURCE_DIR}/data/SkyrimVR")
-endif()
+set(DATA_DIR "${PROJECT_SOURCE_DIR}/data")
 
-install(
-	FILES
-		"${COMMON_DATA_DIR}/StaffEnchanting.esp"
-	DESTINATION
-		"."
+set(TRANSLATION_FILES
+	"${DATA_DIR}/Common/Interface/Translations/StaffEnchanting_ENGLISH.txt"
 )
 
 install(
 	FILES
-		"${COMMON_DATA_DIR}/Interface/Translations/StaffEnchanting_ENGLISH.txt"
-	DESTINATION
-		"Interface/Translations"
+		"${DATA_DIR}/Common/StaffEnchanting.esp"
+	DESTINATION "."
+)
+
+install(
+	FILES ${TRANSLATION_FILES}
+	DESTINATION "Interface/Translations"
 )
 
 if(INSTALL_SKYUI_MENU)
 	install(
 		FILES
-			"${GAME_DATA_DIR}/Interface/StaffCraftingMenu.swf"
-		DESTINATION
-			"Interface"
+			"${DATA_DIR}/Menu/SkyUI/Interface/StaffCraftingMenu.swf"
+		DESTINATION "Interface"
 	)
 endif()
 
+include(fomod.cmake)
+
+set(CPACK_INSTALL_CMAKE_PROJECTS ".;${PROJECT_NAME};fomod;/")
 set(CPACK_GENERATOR "7Z")
 set(CPACK_PACKAGE_FILE_NAME ${PROJECT_NAME}-${PROJECT_VERSION})
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY FALSE)

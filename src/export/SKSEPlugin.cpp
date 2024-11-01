@@ -1,6 +1,7 @@
 #include "Hooks/BaseCharge.h"
 #include "Hooks/Create.h"
 #include "Hooks/Workbench.h"
+#include "Settings/JSONSettings.h"
 #include "UI/StaffCraftingMenu.h"
 #include "common/Forms.h"
 
@@ -42,7 +43,7 @@ extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []()
 
 	v.PluginVersion(Plugin::VERSION);
 	v.PluginName(Plugin::NAME);
-	v.AuthorName("Parapets"sv);
+	v.AuthorName("Parapets and SeaSparrow"sv);
 
 	v.UsesAddressLibrary(true);
 
@@ -93,6 +94,7 @@ static void MessageEventCallback(SKSE::MessagingInterface::Message* a_msg)
 				HelpManualXBox->AddForm(HelpStaffEnchantingLong);
 			}
 		}
+		JSONSettings::SettingsHolder::GetSingleton()->Read();
 	} break;
 	}
 }

@@ -2,6 +2,7 @@
 
 #include "RE/Misc.h"
 #include "RE/Offset.h"
+#include "Settings/JSONSettings.h"
 #include "common/Forms.h"
 
 namespace UI
@@ -600,6 +601,9 @@ namespace UI
 		if (a_spell->GetDelivery() == RE::MagicSystem::Delivery::kSelf) {
 			return false;
 		}
+		if (JSONSettings::SettingsHolder::GetSingleton()->IsProhibitedSpell(a_spell)) {
+			return false;
+		}
 
 		static constexpr RE::FormID ritualEffectID = 0x806E1;
 		static constexpr RE::FormID ritualEffectIllusionID = 0x8BB92;
@@ -702,7 +706,7 @@ namespace UI
 	{
 		if (craftItemPreview &&
 			(currentCategory == Category::Staff || currentCategory == Category::Spell ||
-			 selected.Complete())) {
+			 (currentCategory != Category::Recipe && selected.Complete()))) {
 
 			UpdateItemCard(craftItemPreview.get());
 		}
