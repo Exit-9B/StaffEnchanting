@@ -26,7 +26,7 @@ namespace UI
 		assert(uiMovie);
 
 		depthPriority = 0;
-		inputContext = IF_SKYRIMSE(Context::kItemMenu, RE::IMenu::Context::kUnk17);
+		inputContext = IF_SKYRIMSE(Context::kItemMenu, Context::kUnk17);
 		RE::SendHUDMessage::PushHudMode("InventoryMode");
 
 		const auto controlMap = RE::ControlMap::GetSingleton();
