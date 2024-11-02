@@ -72,6 +72,11 @@ install(
 	DESTINATION "SKSE/Plugins"
 )
 
+install(
+	FILES "${DATA_DIR}/Common/SKSE/Plugins/StaffEnchanting/StaffEnchanting_Vampirism.json"
+	DESTINATION "SKSE/Plugins/StaffEnchanting"
+)
+
 if(INSTALL_SKYUI_MENU)
 	install(
 		FILES

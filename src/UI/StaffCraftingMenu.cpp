@@ -237,9 +237,9 @@ namespace UI
 				if (const auto& [it, inserted] = spells.emplace(spell); inserted) {
 					const auto& entry = listEntries.emplace_back(
 						RE::make_smart<SpellEntry>(spell));
-					entry->enabled = CanCraftWithSpell(spell);
-				}
+				entry->enabled = CanCraftWithSpell(spell);
 			}
+		}
 		}
 
 		const auto invChanges = playerRef->GetInventoryChanges();
@@ -597,6 +597,9 @@ namespace UI
 
 	bool StaffCraftingMenu::IsSpellValid(const RE::SpellItem* a_spell) const
 	{
+		if (JSONSettings::SettingsHolder::GetSingleton()->IsWhitelistedSpell(a_spell)) {
+			return true;
+		}
 		const auto castingType = a_spell->GetCastingType();
 		if (!(castingType == RE::MagicSystem::CastingType::kFireAndForget ||
 			  castingType == RE::MagicSystem::CastingType::kConcentration)) {
