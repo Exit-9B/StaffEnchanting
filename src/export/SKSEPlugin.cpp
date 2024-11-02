@@ -46,6 +46,7 @@ extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []()
 	v.AuthorName("Parapets and SeaSparrow"sv);
 
 	v.UsesAddressLibrary(true);
+	v.MinimumRequiredXSEVersion({ 2, 2, 5 });
 
 	return v;
 }();
