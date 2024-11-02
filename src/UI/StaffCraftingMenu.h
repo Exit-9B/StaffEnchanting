@@ -96,6 +96,7 @@ namespace UI
 		[[nodiscard]] bool RenderItem3DOnTop() const;
 
 	private:
+		static void GetScreenDimensions(const RE::FxDelegateArgs& a_params);
 		static void SetSelectedItem(const RE::FxDelegateArgs& a_params);
 		static void SetSelectedCategory(const RE::FxDelegateArgs& a_params);
 		static void ChooseItem(const RE::FxDelegateArgs& a_params);
