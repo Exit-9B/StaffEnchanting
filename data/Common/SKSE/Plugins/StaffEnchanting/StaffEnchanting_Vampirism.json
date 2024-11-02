@@ -1,0 +1,8 @@
+{
+    "exclusions": [
+        "Skyrim.esm|0x8D5BF",
+        "Skyrim.esm|0x8D5C0",
+        "Skyrim.esm|0x8D5C1",
+        "Skyrim.esm|0x8D5C2"
+    ]
+}

@@ -70,26 +70,62 @@ namespace JSONSettings
 			}
 
 			const auto& exclusions = JSONFile["exclusions"];
-			if (!exclusions || !exclusions.isArray()) {
+			const auto& whitelists = JSONFile["whitelist"];
+			if (exclusions && !exclusions.isArray()) {
 				logger::warn(
-					"Warning: <{}> is missing exclusions, or it is not an array. File will be "
+					"Warning: <{}> has an incorrectly formatted exclusions field, file will be "
 					"ignored.",
 					path);
 				continue;
 			}
 
-			for (const auto& entry : exclusions) {
-				if (const auto& entryText = entry.isString() ? entry.asString() : "";
-					!entryText.empty()) {
-					const auto foundSpell = GetSpellFormID(entryText);
-					if (!foundSpell) {
-						logger::warn("Failed to find spell <{}> in <{}>.", entryText, path);
-						continue;
-					}
+			if (whitelists && !whitelists.isArray()) {
+				logger::warn(
+					"Warning: <{}> has an incorrectly formatted whitelist, file will be ignored.",
+					path);
+				continue;
+			}
 
-					const auto it = std::ranges::lower_bound(excludedSpells, foundSpell);
-					if (it == std::ranges::end(excludedSpells) || *it != foundSpell) {
-						excludedSpells.emplace(it, foundSpell);
+			if (!exclusions && !whitelists) {
+				logger::warn(
+					"Warning: <{}> is missing both exclusions and whitelist, file will be "
+					"ingored.",
+					path);
+				continue;
+			}
+
+			if (exclusions) {
+				for (const auto& entry : exclusions) {
+					if (const auto& entryText = entry.isString() ? entry.asString() : "";
+						!entryText.empty()) {
+						const auto foundSpell = GetSpellFormID(entryText);
+						if (!foundSpell) {
+							logger::warn("Failed to find spell <{}> in <{}>.", entryText, path);
+							continue;
+						}
+
+						const auto it = std::ranges::lower_bound(excludedSpells, foundSpell);
+						if (it == std::ranges::end(excludedSpells) || *it != foundSpell) {
+							excludedSpells.emplace(it, foundSpell);
+						}
+					}
+				}
+			}
+
+			if (whitelists) {
+				for (const auto& entry : whitelists) {
+					if (const auto& entryText = entry.isString() ? entry.asString() : "";
+						!entryText.empty()) {
+						const auto foundSpell = GetSpellFormID(entryText);
+						if (!foundSpell) {
+							logger::warn("Failed to find spell <{}> in <{}>.", entryText, path);
+							continue;
+						}
+
+						const auto it = std::ranges::lower_bound(whitelistedSpells, foundSpell);
+						if (it == std::ranges::end(whitelistedSpells) || *it != foundSpell) {
+							whitelistedSpells.emplace(it, foundSpell);
+						}
 					}
 				}
 			}
@@ -100,5 +136,11 @@ namespace JSONSettings
 	{
 		const auto it = std::ranges::lower_bound(excludedSpells, a_spell);
 		return it != std::ranges::end(excludedSpells) && *it == a_spell;
+	}
+
+	bool SettingsHolder::IsWhitelistedSpell(const RE::SpellItem* a_spell) const
+	{
+		const auto it = std::ranges::lower_bound(whitelistedSpells, a_spell);
+		return it != std::ranges::end(whitelistedSpells) && *it == a_spell;
 	}
 }

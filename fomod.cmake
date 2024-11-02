@@ -44,6 +44,14 @@ install(
 
 install(
 	FILES
+		"${DATA_DIR}/Common/SKSE/Plugins/StaffEnchanting/StaffEnchanting_Vampirism.json"
+	DESTINATION "Common/SKSE/Plugins/StaffEnchanting"
+	COMPONENT fomod
+	EXCLUDE_FROM_ALL
+)
+
+install(
+	FILES
 		"${DATA_DIR}/Menu/SkyUI/Interface/StaffCraftingMenu.swf"
 	DESTINATION "Menu/SkyUI/Interface"
 	COMPONENT fomod

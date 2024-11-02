@@ -597,6 +597,9 @@ namespace UI
 
 	bool StaffCraftingMenu::IsSpellValid(const RE::SpellItem* a_spell) const
 	{
+		if (JSONSettings::SettingsHolder::GetSingleton()->IsWhitelistedSpell(a_spell)) {
+			return true;
+		}
 		const auto castingType = a_spell->GetCastingType();
 		if (!(castingType == RE::MagicSystem::CastingType::kFireAndForget ||
 			  castingType == RE::MagicSystem::CastingType::kConcentration)) {

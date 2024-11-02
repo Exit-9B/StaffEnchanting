@@ -13,6 +13,7 @@ namespace JSONSettings
 
 		void Read();
 		[[nodiscard]] bool IsProhibitedSpell(const RE::SpellItem* a_spell) const;
+		[[nodiscard]] bool IsWhitelistedSpell(const RE::SpellItem* a_spell) const;
 
 		SettingsHolder(const SettingsHolder&) = delete;
 		SettingsHolder(SettingsHolder&&) = delete;
@@ -25,5 +26,6 @@ namespace JSONSettings
 
 	private:
 		std::vector<RE::SpellItem*> excludedSpells;
+		std::vector<RE::SpellItem*> whitelistedSpells;
 	};
 }
