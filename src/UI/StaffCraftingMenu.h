@@ -2,6 +2,8 @@
 
 #include "BaseCraftingMenu.h"
 
+#include "Settings/INISettings.h"
+
 namespace UI
 {
 	class StaffCraftingMenu final : public BaseCraftingMenu<StaffCraftingMenu>
@@ -127,7 +129,7 @@ namespace UI
 		[[nodiscard]] static bool CanSetOverrideName(RE::InventoryEntryData* a_item);
 		[[nodiscard]] static float GetEntryDataSoulCharge(RE::InventoryEntryData* a_entry);
 		[[nodiscard]] static bool MagicEffectHasDescription(RE::EffectSetting* a_effect);
-		[[nodiscard]] static bool IsSpellValid(const RE::SpellItem* a_spell);
+		[[nodiscard]] bool IsSpellValid(const RE::SpellItem* a_spell) const;
 		[[nodiscard]] static float CalculateSpellCost(const RE::SpellItem* a_spell);
 		[[nodiscard]] static SpellLevel GetSpellLevel(const RE::SpellItem* a_spell);
 		[[nodiscard]] static std::int32_t GetSpellHeartstones(const RE::SpellItem* a_spell);
@@ -217,6 +219,8 @@ namespace UI
 #ifdef SKYRIMVR
 		bool virtualKeyboardClosing{ false };
 #endif
+
+		INISettings ini;
 	};
 }
 
