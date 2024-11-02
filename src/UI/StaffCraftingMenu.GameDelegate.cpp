@@ -4,6 +4,7 @@ namespace UI
 {
 	void StaffCraftingMenu::RegisterFuncs(CallbackProcessor* a_processor)
 	{
+		a_processor->Process("GetScreenDimensions", &StaffCraftingMenu::GetScreenDimensions);
 		a_processor->Process("SetSelectedItem", &StaffCraftingMenu::SetSelectedItem);
 		a_processor->Process("SetSelectedCategory", &StaffCraftingMenu::SetSelectedCategory);
 		a_processor->Process("ChooseItem", &StaffCraftingMenu::ChooseItem);
@@ -15,6 +16,12 @@ namespace UI
 		a_processor->Process("StartMouseRotation", &StaffCraftingMenu::StartMouseRotation);
 		a_processor->Process("StopMouseRotation", &StaffCraftingMenu::StopMouseRotation);
 		a_processor->Process("AuxButtonPress", &StaffCraftingMenu::AuxButtonPress);
+	}
+
+	void StaffCraftingMenu::GetScreenDimensions(const RE::FxDelegateArgs& a_params)
+	{
+		const auto graphicsState = RE::BSGraphics::State::GetSingleton();
+		a_params.Respond(graphicsState->screenWidth, graphicsState->screenHeight);
 	}
 
 	void StaffCraftingMenu::SetSelectedItem(const RE::FxDelegateArgs& a_params)
@@ -151,10 +158,7 @@ namespace UI
 	void StaffCraftingMenu::CanFadeItemInfo(const RE::FxDelegateArgs& a_params)
 	{
 		const auto menu = static_cast<StaffCraftingMenu*>(a_params.GetHandler());
-
-		RE::FxResponseArgs<1> response;
-		response.Add(!menu->craftItemPreview || menu->currentCategory == Category::Recipe);
-		a_params.Respond(response);
+		a_params.Respond(!menu->craftItemPreview || menu->currentCategory == Category::Recipe);
 	}
 
 	void StaffCraftingMenu::EndItemRename(const RE::FxDelegateArgs& a_params)
