@@ -6,6 +6,7 @@
     "boost-stl-interfaces",
     "jsoncpp",
     "rsm-binary-io",
+    "simpleini",
     "spdlog",
     "xbyak"
   ],

@@ -31,12 +31,20 @@ SKSEPlugin_Add(
 		src/common/PCH.h
 )
 
+find_path(SIMPLEINI_INCLUDE_DIRS "SimpleIni.h")
 find_package(jsoncpp CONFIG REQUIRED)
+
+target_include_directories(
+	${PROJECT_NAME}
+	PRIVATE
+		${SIMPLEINI_INCLUDE_DIRS}
+)
+
 target_link_libraries(
-		"${PROJECT_NAME}"
-		PRIVATE
-			JsonCpp::JsonCpp
-	)
+	${PROJECT_NAME}
+	PRIVATE
+		JsonCpp::JsonCpp
+)
 
 set_target_properties(CommonLibSSE PROPERTIES
 	FOLDER External
@@ -57,6 +65,11 @@ install(
 install(
 	FILES ${TRANSLATION_FILES}
 	DESTINATION "Interface/Translations"
+)
+
+install(
+	FILES "${DATA_DIR}/Common/SKSE/Plugins/StaffEnchanting.ini"
+	DESTINATION "SKSE/Plugins"
 )
 
 if(INSTALL_SKYUI_MENU)

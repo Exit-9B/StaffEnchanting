@@ -162,6 +162,8 @@ namespace UI
 			acceptedMorpholiths.push_back(keyword);
 		}
 
+		std::vector<RE::SpellItem*> tomes;
+
 		const auto itemCount = playerRef->GetInventoryItemCount();
 		for (const auto i : std::views::iota(0, itemCount)) {
 			std::unique_ptr<RE::InventoryEntryData> item{ playerRef->GetInventoryItemAt(i) };
@@ -172,6 +174,14 @@ namespace UI
 			const auto object = item->GetObject();
 			if (!object || !object->GetName() || !object->GetPlayable()) {
 				continue;
+			}
+
+			if (ini.StaffEnchanting().bUseSpellTomes) {
+				if (const auto book = object->As<RE::TESObjectBOOK>()) {
+					if (const auto spell = book->GetSpell()) {
+						tomes.emplace_back(spell);
+					}
+				}
 			}
 
 			if (item->IsQuestObject() || item->IsEnchanted() ||
@@ -216,13 +226,19 @@ namespace UI
 
 		const auto spellLists = {
 			std::span(spellData->spells, spellData->numSpells),
-			std::span(playerRef->addedSpells)
+			std::span(playerRef->addedSpells),
+			std::span(tomes),
 		};
+
+		RE::BSTSet<RE::SpellItem*> spells;
 
 		for (const auto spell : std::views::join(spellLists)) {
 			if (IsSpellValid(spell)) {
-				const auto& entry = listEntries.emplace_back(RE::make_smart<SpellEntry>(spell));
-				entry->enabled = CanCraftWithSpell(spell);
+				if (const auto& [it, inserted] = spells.emplace(spell); inserted) {
+					const auto& entry = listEntries.emplace_back(
+						RE::make_smart<SpellEntry>(spell));
+					entry->enabled = CanCraftWithSpell(spell);
+				}
 			}
 		}
 
@@ -579,26 +595,25 @@ namespace UI
 		menu.Invoke("UpdateItemList", std::to_array<RE::GFxValue>({ a_fullRebuild }));
 	}
 
-	bool StaffCraftingMenu::IsSpellValid(const RE::SpellItem* a_spell)
+	bool StaffCraftingMenu::IsSpellValid(const RE::SpellItem* a_spell) const
 	{
 		const auto castingType = a_spell->GetCastingType();
 		if (!(castingType == RE::MagicSystem::CastingType::kFireAndForget ||
 			  castingType == RE::MagicSystem::CastingType::kConcentration)) {
 			return false;
 		}
+
 		const auto delivery = a_spell->GetDelivery();
 		if (!(delivery == RE::MagicSystem::Delivery::kAimed ||
 			  delivery == RE::MagicSystem::Delivery::kTargetActor ||
-			  delivery == RE::MagicSystem::Delivery::kTargetLocation)) {
+			  delivery == RE::MagicSystem::Delivery::kTargetLocation ||
+			  (ini.StaffEnchanting().bAllowSelfTargeted &&
+			   delivery == RE::MagicSystem::Delivery::kSelf))) {
+
 			return false;
 		}
+
 		if (CalculateSpellCost(a_spell) < 1.0f) {
-			return false;
-		}
-		if (a_spell->effects.empty()) {
-			return false;
-		}
-		if (a_spell->GetDelivery() == RE::MagicSystem::Delivery::kSelf) {
 			return false;
 		}
 		if (JSONSettings::SettingsHolder::GetSingleton()->IsProhibitedSpell(a_spell)) {
