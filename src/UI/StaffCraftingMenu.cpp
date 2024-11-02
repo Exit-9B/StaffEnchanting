@@ -237,9 +237,9 @@ namespace UI
 				if (const auto& [it, inserted] = spells.emplace(spell); inserted) {
 					const auto& entry = listEntries.emplace_back(
 						RE::make_smart<SpellEntry>(spell));
-				entry->enabled = CanCraftWithSpell(spell);
+					entry->enabled = CanCraftWithSpell(spell);
+				}
 			}
-		}
 		}
 
 		const auto invChanges = playerRef->GetInventoryChanges();
