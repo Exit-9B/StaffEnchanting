@@ -44,8 +44,8 @@ jobs:
 
     - name: Build
       run: |
-        cmake --build ${{ github.workspace }}/build --config ${{ env.BUILD_TYPE }} --parallel
-        cmake --build ${{ github.workspace }}/buildVR --config ${{ env.BUILD_TYPE }} --parallel
+        cmake --build ${{ github.workspace }}/build --config ${{ env.BUILD_TYPE }}
+        cmake --build ${{ github.workspace }}/buildVR --config ${{ env.BUILD_TYPE }}
 
     - name: Install
       run: |
