@@ -282,7 +282,7 @@ namespace UI
 	template <typename Impl>
 	inline bool BaseCraftingMenu<Impl>::ShouldHandleEvent(const RE::InputEvent* a_event)
 	{
-		static REL::Relocation<bool*> bUsingVRController{ REL::Offset(0x1E717A8) };
+		REL::Relocation<bool*> bUsingVRController{ REL::Offset(0x1E717A8) };
 
 		return *bUsingVRController && RE::IsVRWandDevice(a_event->GetDevice()) &&
 			a_event->GetEventType() == RE::INPUT_EVENT_TYPE::kVrWandTouchpadPosition &&
