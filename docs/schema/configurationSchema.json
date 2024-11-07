@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "whitelist": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9]+\\.(esp|esl|esm)\\|0x[a-fA-F0-9]+$"
+      }
+    },
+    "exclusions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9]+\\.(esp|esl|esm)\\|0x[a-fA-F0-9]+$"
+      }
+    }
+  },
+  "anyOf": [
+    { "required": [ "whitelist" ] },
+    { "required": [ "exclusions" ] }
+  ],
+  "additionalProperties": false
+}
