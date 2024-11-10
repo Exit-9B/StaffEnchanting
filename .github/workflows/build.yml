@@ -44,8 +44,8 @@ jobs:
 
     - name: Build
       run: |
-        cmake --build ${{ github.workspace }}/build --config ${{ env.BUILD_TYPE }}
-        cmake --build ${{ github.workspace }}/buildVR --config ${{ env.BUILD_TYPE }}
+        cmake --build ${{ github.workspace }}/build --config ${{ env.BUILD_TYPE }} --parallel
+        cmake --build ${{ github.workspace }}/buildVR --config ${{ env.BUILD_TYPE }} --parallel
 
     - name: Install
       run: |
@@ -56,6 +56,6 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: StaffEnchanting
+        name: ${{ github.event.repository.name }}
         path: ${{ github.workspace }}/build-fomod
 
