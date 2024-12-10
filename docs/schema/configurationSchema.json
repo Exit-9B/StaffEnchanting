@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "whitelist": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[^\\\\\\/:*?\"<>|]+\\.es[lmp]\\|(0[Xx])?[\\dA-Fa-f]{3,8}$"
+      }
+    },
+    "exclusions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[^\\\\\\/:*?\"<>|]+\\.es[lmp]\\|(0[Xx])?[\\dA-Fa-f]{3,8}$"
+      }
+    }
+  },
+  "anyOf": [
+    { "required": [ "whitelist" ] },
+    { "required": [ "exclusions" ] }
+  ],
+  "additionalProperties": false
+}
