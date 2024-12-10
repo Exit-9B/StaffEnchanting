@@ -78,22 +78,13 @@ namespace UI
 
 		void UpdateItemCard(const RE::InventoryEntryData* a_item);
 		void UpdateItemCard(const RE::TESForm* a_form);
-		void UpdateItemCard(std::nullptr_t)
-		{
-			UpdateItemCard((RE::InventoryEntryData*)nullptr);
-		}
+		void UpdateItemCard(std::nullptr_t) { UpdateItemCard((RE::InventoryEntryData*)nullptr); }
 
 		void UpdateBottomBar(RE::ActorValue a_skill);
 
 	private:
-		Impl* GetImpl()
-		{
-			return static_cast<Impl*>(this);
-		}
-		const Impl* GetImpl() const
-		{
-			return static_cast<const Impl*>(this);
-		}
+		Impl* GetImpl() { return static_cast<Impl*>(this); }
+		const Impl* GetImpl() const { return static_cast<const Impl*>(this); }
 
 		void Update(const RE::BSUIMessageData* a_data);
 		void Show();
