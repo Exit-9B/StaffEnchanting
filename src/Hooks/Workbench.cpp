@@ -1,7 +1,7 @@
 #include "Workbench.h"
 
 #include "RE/Offset.h"
-#include "UI/StaffCraftingMenu.h"
+#include "common/InterfaceStrings.h"
 
 namespace Hooks
 {
@@ -39,7 +39,7 @@ namespace Hooks
 		const auto uiMessageQueue = RE::UIMessageQueue::GetSingleton();
 		assert(uiMessageQueue);
 		uiMessageQueue
-			->AddMessage(UI::StaffCraftingMenu::MENU_NAME, RE::UI_MESSAGE_TYPE::kShow, nullptr);
+			->AddMessage(InterfaceStrings::StaffCraftingMenu, RE::UI_MESSAGE_TYPE::kShow, nullptr);
 	}
 
 	bool Workbench::CheckFurniture(RE::TESObjectREFR* a_refr)

@@ -3,13 +3,14 @@
 #include "BaseCraftingMenu.h"
 
 #include "Settings/INISettings.h"
+#include "common/InterfaceStrings.h"
 
 namespace UI
 {
 	class StaffCraftingMenu final : public BaseCraftingMenu<StaffCraftingMenu>
 	{
 	public:
-		static constexpr std::string_view MENU_NAME = "StaffCraftingMenu"sv;
+		static constexpr std::string_view MENU_NAME = InterfaceStrings::StaffCraftingMenu;
 
 	private:
 		// HACK: Values have been chosen to correspond to EnchantConstructMenu so that SkyUI
