@@ -1,19 +1,19 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
     "whitelist": {
       "type": "array",
       "items": {
         "type": "string",
-        "pattern": "^[a-zA-Z0-9]+\\.(esp|esl|esm)\\|0x[a-fA-F0-9]+$"
+        "pattern": "^[^\\\\\\/:*?\"<>|]+\\.es[lmp]\\|(0[Xx])?[\\dA-Fa-f]{3,8}$"
       }
     },
     "exclusions": {
       "type": "array",
       "items": {
         "type": "string",
-        "pattern": "^[a-zA-Z0-9]+\\.(esp|esl|esm)\\|0x[a-fA-F0-9]+$"
+        "pattern": "^[^\\\\\\/:*?\"<>|]+\\.es[lmp]\\|(0[Xx])?[\\dA-Fa-f]{3,8}$"
       }
     }
   },
