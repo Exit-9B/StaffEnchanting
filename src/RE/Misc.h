@@ -43,4 +43,15 @@ namespace RE
 
 		return sound;
 	}
+
+	inline bool IsRunningOnSteamDeck()
+	{
+		const static auto systemUtility =
+			(REL::Module::get().vendor() == REL::Vendor::Steam &&
+			 REL::Module::get().version() >= SKSE::RUNTIME_1_6_1130)
+			? static_cast<RE::BSWin32SystemUtility_Steam*>(RE::BSSystemUtility::GetSingleton())
+			: nullptr;
+
+		return systemUtility && systemUtility->isRunningOnSteamDeck;
+	}
 }

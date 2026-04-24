@@ -859,8 +859,7 @@ namespace UI
 		if (!cancelled && !isValid) {
 			RE::ControlMap::GetSingleton()->AllowTextInput(true);
 
-			const bool usingVirtualKeyboard =
-				RE::BSWin32SystemUtility::GetSingleton()->isRunningOnSteamDeck;
+			const bool usingVirtualKeyboard = RE::IsRunningOnSteamDeck();
 
 			if (usingVirtualKeyboard) {
 				ShowVirtualKeyboard();
@@ -1334,8 +1333,7 @@ namespace UI
 		RE::ControlMap::GetSingleton()->AllowTextInput(true);
 
 #ifndef SKYRIMVR
-		const bool
-			usingVirtualKeyboard = RE::BSWin32SystemUtility::GetSingleton()->isRunningOnSteamDeck;
+		const bool usingVirtualKeyboard = RE::IsRunningOnSteamDeck();
 
 		if (usingVirtualKeyboard) {
 			ShowVirtualKeyboard();

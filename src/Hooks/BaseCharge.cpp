@@ -7,7 +7,9 @@ namespace Hooks
 {
 	void BaseCharge::Install()
 	{
-		auto hook = util::GameAddress(RE::Offset::TESEnchantableForm::GetFormBaseCharge, 0x2D);
+		REL::Relocation<std::byte*> hook{
+			STATIC_OFFSET(TESEnchantableForm::GetFormBaseCharge) + 0x2D
+		};
 		REL::make_pattern<"0F B7 58 12 66 85 DB">().match_or_fail(hook.address());
 
 		REL::safe_fill(hook.address(), REL::NOP, 0x7);
