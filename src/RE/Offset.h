@@ -25,5 +25,10 @@ namespace RE
 		{
 			constexpr auto ActivateCraftingWorkbench = util::MakeOffset(52941, 0x90B2D0);
 		}
+
+		namespace TESObjectWEAP
+		{
+			constexpr auto IsThrownWeapon = util::MakeOffset(16217, 0x1FF320);
+		}
 	}
 }

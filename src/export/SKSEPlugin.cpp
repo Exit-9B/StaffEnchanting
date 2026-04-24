@@ -1,3 +1,4 @@
+#include "Hooks/AddWorn.h"
 #include "Hooks/BaseCharge.h"
 #include "Hooks/Create.h"
 #include "Hooks/Workbench.h"
@@ -111,6 +112,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 	Hooks::Workbench::Install();
 	Hooks::Create::Install();
 	Hooks::BaseCharge::Install();
+	Hooks::AddWorn::Install();
 
 	const auto messaging = SKSE::GetMessagingInterface();
 	messaging->RegisterListener(&MessageEventCallback);
