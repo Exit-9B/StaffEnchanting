@@ -86,3 +86,8 @@ if(INSTALL_SKYUI_MENU)
 endif()
 
 include(fomod.cmake)
+
+if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
+  file(WRITE "${CMAKE_BINARY_DIR}/.gitignore" "*")
+  file(WRITE "${CMAKE_BINARY_DIR}/.hgignore" "syntax: glob\n**/*")
+endif()
