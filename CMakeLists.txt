@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.24)
 
 project(
 	StaffEnchanting
-	VERSION 1.1.0
+	VERSION 1.1.1
 	LANGUAGES CXX
 )
 
@@ -86,3 +86,8 @@ if(INSTALL_SKYUI_MENU)
 endif()
 
 include(fomod.cmake)
+
+if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
+  file(WRITE "${CMAKE_BINARY_DIR}/.gitignore" "*")
+  file(WRITE "${CMAKE_BINARY_DIR}/.hgignore" "syntax: glob\n**/*")
+endif()
