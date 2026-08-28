@@ -39,8 +39,8 @@ jobs:
 
     - name: Configure CMake
       run: |
-        cmake --preset vs2022-windows -Wno-deprecated
-        cmake --preset vs2022-windows-vr -Wno-deprecated
+        cmake --preset vs2026-windows -Wno-deprecated
+        cmake --preset vs2026-windows-vr -Wno-deprecated
 
     - name: Build
       run: |
