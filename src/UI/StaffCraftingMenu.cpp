@@ -850,7 +850,7 @@ namespace UI
 
 		const auto str = a_data->str ? a_data->str->c_str() : nullptr;
 		const bool isValid = a_data->str &&
-			RE::BSScaleformManager::GetSingleton()->IsValidName(str);
+			RE::BSScaleformManager::GetSingleton()->IsNameValid(str);
 		const bool cancelled = ev == "VirtualKeyboardCancelled"sv;
 
 		const auto text = (isValid && !cancelled) ? str : nullptr;

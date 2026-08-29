@@ -173,7 +173,7 @@ namespace UI
 		if (useNewName && a_params.GetArgCount() >= 2) {
 			const auto newName = a_params[1].GetString();
 			const auto scaleformManager = RE::BSScaleformManager::GetSingleton();
-			if (newName && scaleformManager->IsValidName(newName)) {
+			if (newName && scaleformManager->IsNameValid(newName)) {
 				menu->customName = newName;
 
 				if (menu->craftItemPreview) {

@@ -360,7 +360,7 @@ namespace UI
 		if (bottomBarInfo.IsObject()) {
 			const auto playerRef = RE::PlayerCharacter::GetSingleton();
 			assert(playerRef);
-			const auto playerSkills = playerRef->skills;
+			const auto playerSkills = playerRef->PlayerCharacterData()->skills;
 			assert(playerSkills);
 			assert(playerSkills->data);
 			const auto& skillData = playerSkills->data->skills[util::to_underlying(a_skill) - 6];
