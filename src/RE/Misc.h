@@ -46,6 +46,7 @@ namespace RE
 
 	inline bool IsRunningOnSteamDeck()
 	{
+#ifndef SKYRIMVR
 		const static auto systemUtility =
 			(REL::Module::get().vendor() == REL::Vendor::Steam &&
 			 REL::Module::get().version() >= SKSE::RUNTIME_1_6_1130)
@@ -53,5 +54,8 @@ namespace RE
 			: nullptr;
 
 		return systemUtility && systemUtility->isRunningOnSteamDeck;
+#else
+		return false;
+#endif
 	}
 }
